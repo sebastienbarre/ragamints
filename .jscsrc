@@ -1,0 +1,28 @@
+{
+  "preset": "google",
+  "esnext": true,
+  // "requireMultipleVarDecl": null,
+  // "disallowMultipleVarDecl": true,
+  "maximumLineLength": null,
+  "disallowDanglingUnderscores": null,
+  "requireOperatorBeforeLineBreak": null,
+  // "requireSpaceAfterKeywords": [
+  //   "if",
+  //   "else",
+  //   "for",
+  //   "while",
+  //   "do",
+  //   "switch",
+  //   "case",
+  //   "return",
+  //   "try",
+  //   "catch",
+  //   "function",
+  //   "typeof"
+  // ],
+  "validateIndentation": 2,
+  "disallowQuotedKeysInObjects": null,
+  "requirePaddingNewLinesBeforeLineComments": null,
+  "requirePaddingNewLinesAfterBlocks": null,
+  "requireCamelCaseOrUpperCaseIdentifiers": null
+}

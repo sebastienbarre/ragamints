@@ -1,0 +1,9 @@
+*.jpg
+*.mp4
+*.sublime-*
+*.tgz
+.DS_Store
+coverage
+doc
+node_modules
+npm-debug.log

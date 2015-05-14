@@ -1,0 +1,69 @@
+{
+  "name": "ragamints",
+  "version": "0.1.0",
+  "description": "Download Instagram photos while preserving caption, photographer name, geolocation, tags, and creation time (w/ timezone) as EXIF, IPTC, and XMP fields.",
+  "scripts": {
+    "predoc": "mkdirp doc",
+    "doc:man": "pandoc -M title=\"ragamints(1)\" -f markdown_github -t man -s README.md  > doc/ragamints.1",
+    "doc": "npm run doc:man",
+    "lint": "node node_modules/eslint/bin/eslint.js index.js bin/ragamints",
+    "jscs": "jscs index.js bin/ragamints",
+    "test": "npm run lint && npm run jscs",
+    "coverage": "istanbul cover bin/ragamints -- --help",
+    "publish:pre": "npm prune && npm test && npm run doc",
+    "prepublish": "in-publish && npm run publish:pre || true"
+  },
+  "keywords": [
+    "instagram",
+    "download",
+    "backup",
+    "exif",
+    "iptc",
+    "xmp",
+    "caption"
+  ],
+  "author": {
+    "name": "Sebastien Barre",
+    "email": "sebastien.barre@gmail.com",
+    "url": "http://barre.io"
+  },
+  "bugs": {
+    "url": "https://github.com/owner/project/issues",
+    "email": "sebastien.barre@gmail.com"
+  },
+  "repository": {
+    "url": "https://github.com/npm/npm.git",
+    "type": "git"
+  },
+  "man": [
+    "./doc/ragamints.1"
+  ],
+  "engines": {
+    "node": ">=0.10.x"
+  },
+  "license": "BSD-3-Clause",
+  "preferGlobal": true,
+  "bin": "./bin/ragamints",
+  "dependencies": {
+    "babel": "^5.3.3",
+    "chalk": "^1.0.0",
+    "commander": "^2.8.1",
+    "download": "^4.1.2",
+    "es6-promise": "^2.1.1",
+    "in-publish": "^1.1.1",
+    "instagram-node": "^0.5.7",
+    "is-iojs": "^1.1.0",
+    "moment-timezone": "^0.3.1",
+    "node-fetch": "^1.2.1",
+    "sugar": "^1.4.1",
+    "suspend": "^0.6.1",
+    "tz-lookup": "^6.0.1"
+  },
+  "devDependencies": {
+    "babel-eslint": "^3.1.1",
+    "eslint": "^0.21.0",
+    "jscs": "^1.13.1",
+    "mkdirp": "^0.5.1",
+    "istanbul": "git://github.com/gotwarlost/istanbul.git#harmony"
+  }
+}

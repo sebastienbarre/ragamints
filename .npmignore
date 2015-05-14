@@ -1,0 +1,10 @@
+*.jpg
+*.mp4
+*.sublime-*
+*.tgz
+.editorconfig
+.eslintrc
+.jscsrc
+.npmignore
+coverage
+test
