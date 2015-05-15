@@ -78,7 +78,7 @@ $ export RAGAMINTS_ACCESS_TOKEN=[ACCESS_TOKEN]
 
 ### Fetch your last *n* medias
 
-Let's fetch the last 3 medias from my [Instagram feed][barre:Instagram]. `ragamints` will output how it interpreted some of its arguments, and what is being done for each media. Each step references a media by an index (`#0001`, `#0002`, ...) followed by a short excerpt from its caption (`[Back home. Done sp]`). In this example two steps can be identified for each media -- fetching the file and updating its metadata.
+Let's fetch the last 3 medias from my [Instagram feed][sebastienbarre:Instagram]. `ragamints` will output how it interpreted some of its arguments, and what is being done for each media. Each step references a media by an index (`#0001`, `#0002`, ...) followed by a short excerpt from its caption (`[Back home. Done sp]`). In this example two steps can be identified for each media -- fetching the file and updating its metadata.
 
 ```
 $ ragamints --access-token [ACCESS_TOKEN] --user-id sebastienbarre --count 3
@@ -201,14 +201,14 @@ The following metadata fields are set on each JPEG file, if the corresponding In
 **Sebastien Barre**
 
 * Email: sebastien.barre@gmail.com
-* Twitter: [sebastienbarre][barre:Twitter] or #ragamints
-* Instagram: [sebastienbarre][barre:Instagram]
+* Twitter: [sebastienbarre][sebastienbarre:Twitter] or #ragamints
+* Instagram: [sebastienbarre][sebastienbarre:Instagram]
 
 ## Contribute
 
-* Check for open issues or open a fresh issue to start a discussion around a feature idea or a bug.
-* If you feel uncomfortable or uncertain about an issue or your changes, feel free to email me and I will happily give you a hand.
-* Fork the repository on GitHub to start making your changes to the *master branch (or branch off of it).
+* Check for [open issues][ragamints:issue] or open a fresh issue to start a discussion around a feature idea or a bug.
+* If you feel uncomfortable or uncertain about an issue or your changes, feel free to [email me][sebastienbarre:email] and I will happily give you a hand.
+* Fork the [repository][ragamints:repo] on GitHub to start making your changes to the *master* branch (or branch off of it).
 * Write a test which shows that the bug was fixed or that the feature works as expected.
 * Send a pull request and notify me :) Thanks.
 
@@ -240,18 +240,21 @@ All notable changes to this project will be documented here. This project adhere
 ### Unreleased
 - N/A
 
+### 0.1.1 - 2015-05-14
+#### Added
+- Links to Github repo.
+
 ### 0.1.0 - 2015-05-13
 #### Added
 - Everything. First release.
 
 [Adobe Lightroom]: https://lightroom.adobe.com/
 [archibald:promises]: http://www.html5rocks.com/en/tutorials/es6/promises/
-[barre:gravatar:100]: https://s.gravatar.com/avatar/d5ee99874438d76112d264a976e5d290?s=100
-[barre:Instagram]: https://instagram.com/sebastienbarre/
-[barre:Twitter]: https://twitter.com/sebastienbarre/
 [BSD License]: http://opensource.org/licenses/BSD-3-Clause
 [darkskyapp]: https://github.com/darkskyapp
+[EDT]: http://www.timeanddate.com/time/zones/edt
 [EXIF]: http://en.wikipedia.org/wiki/Exchangeable_image_file_format
+[ExifTool FAQ]: http://www.sno.phy.queensu.ca/~phil/exiftool/faq.html#Q5
 [ExifTool]:  http://www.sno.phy.queensu.ca/~phil/exiftool/
 [Google+]: https://plus.google.com/
 [Homebrew]: http://brew.sh/
@@ -266,21 +269,24 @@ All notable changes to this project will be documented here. This project adhere
 [IPTC]: http://en.wikipedia.org/wiki/IPTC_Information_Interchange_Model
 [Jake Archibald]: http://jakearchibald.com/
 [John MacFarlane]: http://johnmacfarlane.net/
+[JST]: http://www.timeanddate.com/time/zones/jst
+[Keep a CHANGELOG]: http://keepachangelog.com/
 [mattbornski]: https://github.com/mattbornski
 [maximilianschmitt]: https://github.com/maximilianschmitt
 [momentjs:contributors]: https://github.com/moment/moment/graphs/contributors
 [momentjs]:http://momentjs.com/
 [Node.js]: https://nodejs.org/
 [pandoc]: http://pandoc.org/
+[ragamints:issue]: https://github.com/sebastienbarre/ragamints/issues
+[ragamints:repo]: https://github.com/sebastienbarre/ragamints
 [Retrieve the access token for your Instagram account]: http://jenwachter.com/2013/04/22/retrive-the-access-token-for-your-instagram-account/
+[sebastienbarre:email]: mailto:sebastien.barre@gmail.com
+[sebastienbarre:Instagram]: https://instagram.com/sebastienbarre/
+[sebastienbarre:Twitter]: https://twitter.com/sebastienbarre/
+[Semantic Versioning]: http://semver.org/
+[sugarjs]: http://sugarjs.com/features#date
 [totemstech]: https://github.com/totemstech
 [tz-lookup]: https://github.com/darkskyapp/tz-lookup
 [tzwhere]: https://github.com/mattbornski/tzwhere
-[XMP]: http://en.wikipedia.org/wiki/Extensible_Metadata_Platform
-[sugarjs]: http://sugarjs.com/features#date
-[Semantic Versioning]: http://semver.org/
-[Keep a CHANGELOG]: http://keepachangelog.com/
 [Unix Timestamp]: http://en.wikipedia.org/wiki/Unix_time
-[ExifTool FAQ]: http://www.sno.phy.queensu.ca/~phil/exiftool/faq.html#Q5
-[EDT]: http://www.timeanddate.com/time/zones/edt
-[JST]: http://www.timeanddate.com/time/zones/jst
+[XMP]: http://en.wikipedia.org/wiki/Extensible_Metadata_Platform

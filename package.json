@@ -1,6 +1,6 @@
 {
   "name": "ragamints",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Download Instagram photos while preserving caption, photographer name, geolocation, tags, and creation time (w/ timezone) as EXIF, IPTC, and XMP fields.",
   "scripts": {
     "predoc": "mkdirp doc",
@@ -28,11 +28,11 @@
     "url": "http://barre.io"
   },
   "bugs": {
-    "url": "https://github.com/owner/project/issues",
+    "url": "https://github.com/sebastienbarre/ragamints/issues",
     "email": "sebastien.barre@gmail.com"
   },
   "repository": {
-    "url": "https://github.com/npm/npm.git",
+    "url": "https://github.com/sebastienbarre/ragamints.git",
     "type": "git"
   },
   "man": [
