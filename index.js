@@ -77,8 +77,8 @@ function logForMedia(media, msg) {
   // Let's clean up the caption -- remove all UTF8 emojis, for example.
   let caption = media.caption ? media.caption.text.replace(/[\u007F-\uFFFF]/g, '').substr(0, excerpt_max_len) : null;
   let excerpt = padRight(caption || id, ' ', excerpt_max_len);
-  let index = '#' + padLeftZero(media.fetch_index + 1, 4);
-  console.log(notice(index + ' [' + excerpt + ']') + ' ' + msg);
+  let index = '#' + padLeftZero((media.fetch_index || 0) + 1, 4);
+  console.log(notice(index + ' [' + excerpt + ']') + (msg ? ' ' + msg : ''));
 }
 
 /**
@@ -125,10 +125,6 @@ function getExifToolArgs(media, options) {
 
   let software = 'ragamints';
   add_metadata('EXIF:Software', software);
-  add_metadata('EXIF:DateTimeOriginal', created_ymd_hms);
-  add_metadata('IPTC:DateCreated', created_ymd);
-  add_metadata('IPTC:TimeCreated', created_hms);
-  add_metadata('XMP:DateCreated', created_ymd_hms);
   add_metadata('XMP:CreatorTool', software);
 
   if (media.caption && media.caption.text.length) {
@@ -154,6 +150,11 @@ function getExifToolArgs(media, options) {
     add_metadata('IPTC:Keywords', keywords);
     add_metadata('XMP:Subject', keywords);
   }
+
+  add_metadata('EXIF:DateTimeOriginal', created_ymd_hms);
+  add_metadata('IPTC:DateCreated', created_ymd);
+  add_metadata('IPTC:TimeCreated', created_hms);
+  add_metadata('XMP:DateCreated', created_ymd_hms);
 
   if (media.location) {
     add_metadata('EXIF:GPSLatitude', media.location.latitude);
@@ -181,38 +182,32 @@ function updateMetadata(media, filename, options) {
       if (!options.quiet) {
         logForMedia(media, warn('Ignored non-image ' + basename));
       }
-      resolve();
+      resolve(false);
       return;
     }
     let args = getExifToolArgs(media, options);
     args.push(filename);
     // console.log(args); return;
 
-    let exif = child_process.spawn('exiftool', args);
-    let response = '';
+    let exiftool = child_process.spawn('exiftool', args);
     let error_message = '';
 
-    exif.on('error', function(err) {
-      reject(new Error('Could not spawn exiftool (' + err.message + ')'));
-    });
-
-    exif.stdout.on('data', function(data) {
-      response += data;
-    });
-
-    exif.stderr.on('data', function(data) {
-      console.log(warn(data.toString()));
+    exiftool.stderr.on('data', function(data) {
       error_message += data.toString();
     });
 
-    exif.on('close', function() {
+    exiftool.on('error', function(err) {
+      reject(new Error('Could not spawn exiftool (' + err.message + ')'));
+    });
+
+    exiftool.on('close', function() {
       if (error_message) {
         reject(Error(error_message));
       } else {
         if (!options.quiet) {
           logForMedia(media, 'Updated metadata in ' + success(basename));
         }
-        resolve();
+        resolve(true);
       }
     });
   });
@@ -492,7 +487,7 @@ function resolveOptions(options) {
  *   {String} userId User Id
  *
  * @param {object} options Query options
- * @return {Promise} Promise resolving when done, rejecting on error
+ * @return {Promise} Promise resolving with all medias when done, rejecting on error
   */
 function query(options) {
   return new Promise(function(resolve, reject) {
@@ -500,6 +495,7 @@ function query(options) {
       try {
         options = yield resolveOptions(options);
         let all_promises = [];
+        let all_medias = [];
         let it = getRecentMedias(options.userId, options);
         while (it) {
           let chunk = yield it;
@@ -516,12 +512,13 @@ function query(options) {
               });
           });
           all_promises = all_promises.concat(chunk_promises);
+          all_medias = all_medias.concat(chunk.medias);
           it = chunk.next;
         }
         // Make sure everything has completed
         yield Promise.all(all_promises);
         console.log('Done processing ' + success(all_promises.length) + ' media(s). Easy peasy.');
-        resolve();
+        resolve(all_medias);
       }
       catch (err) {
         reject(err);

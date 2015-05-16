@@ -7,4 +7,5 @@
 .jscsrc
 .npmignore
 coverage
+spec
 test
