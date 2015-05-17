@@ -238,7 +238,9 @@ Ragamints is released under the [BSD License].
 All notable changes to this project will be documented here. This project adheres to [Semantic Versioning] and [Keep a CHANGELOG].
 
 ### Unreleased
-- N/A
+#### Added
+- Tests.
+- Travis CI support.
 
 ### 0.1.1 - 2015-05-14
 #### Added
