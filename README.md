@@ -9,6 +9,7 @@ Ragamints may come handy when importing Instagram photos back to applications th
 ## Installation
 
 [![NPM](https://nodei.co/npm/ragamints.png?downloads=true)](https://nodei.co/npm/ragamints/)
+
 Using [npm]:
 
 ```bash
@@ -231,10 +232,13 @@ Ragamints is released under the [BSD License].
 
 ## FAQ
 
-1. Ragamints?! What's with the weird name?
-   *Think about it...*
-2. You can't write English, can you?
-   *You should hear my accent. With that being said, I'd be happy to fix any mistakes.*
+#### Ragamints?! What's with the weird name?
+
+Think about it...
+
+#### You can't write English, can you?
+
+You should hear my accent. With that being said, I'd be happy to fix any mistakes.
 
 ## Change Log
 
