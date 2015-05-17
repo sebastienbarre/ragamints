@@ -1,6 +1,6 @@
 # Ragamints
 
-[![Build Status](https://travis-ci.org/sebastienbarre/ragamints.svg?branch=master)](https://travis-ci.org/sebastienbarre/ragamints)
+[![Build Status](https://img.shields.io/travis/sebastienbarre/ragamints.svg)](https://travis-ci.org/sebastienbarre/ragamints) [![Coverage Status](https://img.shields.io/coveralls/sebastienbarre/ragamints.svg)](https://coveralls.io/r/sebastienbarre/ragamints?branch=master) ![Dependencies Status](https://img.shields.io/gemnasium/sebastienbarre/ragamints.svg) [![License](https://img.shields.io/npm/l/ragamints.svg)][BSD License]
 
 Ragamints is a command-line interface for Node.js. It is intended for downloading Instagram photos while preserving caption, photographer name, geolocation, tags, and creation time as EXIF, IPTC, and XMP fields.
 
@@ -8,10 +8,11 @@ Ragamints may come handy when importing Instagram photos back to applications th
 
 ## Installation
 
-Using npm:
+[![NPM](https://nodei.co/npm/ragamints.png?downloads=true)](https://nodei.co/npm/ragamints/)
+Using [npm]:
 
 ```bash
-$ npm install -g ragamints
+$ npm install ragamints -g
 ```
 
 Don't forget `-g`. Note that there are two specific **requirements** to meet for `ragamints` to work -- an *Instagram Access Token* and *ExifTool*. Read on.
@@ -280,6 +281,7 @@ All notable changes to this project will be documented here. This project adhere
 [momentjs:contributors]: https://github.com/moment/moment/graphs/contributors
 [momentjs]:http://momentjs.com/
 [Node.js]: https://nodejs.org/
+[npm]: https://www.npmjs.com/
 [pandoc]: http://pandoc.org/
 [ragamints:issue]: https://github.com/sebastienbarre/ragamints/issues
 [ragamints:repo]: https://github.com/sebastienbarre/ragamints
