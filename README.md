@@ -1,5 +1,7 @@
 # Ragamints
 
+[![Build Status](https://travis-ci.org/sebastienbarre/ragamints.svg?branch=master)](https://travis-ci.org/sebastienbarre/ragamints)
+
 Ragamints is a command-line interface for Node.js. It is intended for downloading Instagram photos while preserving caption, photographer name, geolocation, tags, and creation time as EXIF, IPTC, and XMP fields.
 
 Ragamints may come handy when importing Instagram photos back to applications that can interpret such metadata. [Adobe Lightroom] or [Google+] will happily re-use the caption and GPS location originally set from Instagram, for example.
