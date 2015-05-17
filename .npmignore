@@ -7,5 +7,6 @@
 .jscsrc
 .npmignore
 coverage
+site
 spec
 test
