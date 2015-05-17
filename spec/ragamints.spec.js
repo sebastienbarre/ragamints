@@ -568,18 +568,18 @@ describe('resolveOptions', function() {
 
   it('resolves options', function(done) {
     var options = {
-      minTimestamp: '2015-01-01 23:10:10',
-      maxTimestamp: '2015-12-31 13:10:10',
-      userId: 'sebastienbarre',
+      maxId: media.link,
       minId: media.link,
-      maxId: media.link
+      userId: 'sebastienbarre',
+      maxTimestamp: 'Thu, 09 Apr 2015 01:19:46 +0000',
+      minTimestamp: 'Thu, 09 Apr 2015 01:19:46 +0000'
     };
     var resolved_options = {
-      maxId: media.id,
-      minId: media.id,
+      minTimestamp: 1428542386,
+      maxTimestamp: 1428542386,
       userId: '26667401',
-      maxTimestamp: 1451585410,
-      minTimestamp: 1420171810,
+      minId: media.id,
+      maxId: media.id,
       accessToken: 'token'
     };
     ragamints.__set__('process', {env: {RAGAMINTS_ACCESS_TOKEN: 'token'}});
