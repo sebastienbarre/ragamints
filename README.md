@@ -1,6 +1,6 @@
 # Ragamints
 
-[![Build Status](https://img.shields.io/travis/sebastienbarre/ragamints.svg)](https://travis-ci.org/sebastienbarre/ragamints) [![Coverage Status](https://img.shields.io/coveralls/sebastienbarre/ragamints.svg)](https://coveralls.io/r/sebastienbarre/ragamints?branch=master) ![Dependencies Status](https://img.shields.io/gemnasium/sebastienbarre/ragamints.svg) [![License](https://img.shields.io/npm/l/ragamints.svg)][BSD License]
+[![Build Status](https://img.shields.io/travis/sebastienbarre/ragamints.svg)](https://travis-ci.org/sebastienbarre/ragamints) [![Coverage Status](https://img.shields.io/coveralls/sebastienbarre/ragamints.svg)](https://coveralls.io/r/sebastienbarre/ragamints?branch=master) [![Dependencies Status](https://img.shields.io/gemnasium/sebastienbarre/ragamints.svg)](https://gemnasium.com/sebastienbarre/ragamints) [![License](https://img.shields.io/npm/l/ragamints.svg)][BSD License]
 
 Ragamints is a command-line interface for Node.js. It is intended for downloading Instagram photos while preserving caption, photographer name, geolocation, tags, and creation time as EXIF, IPTC, and XMP fields.
 
@@ -241,9 +241,13 @@ Ragamints is released under the [BSD License].
 All notable changes to this project will be documented here. This project adheres to [Semantic Versioning] and [Keep a CHANGELOG].
 
 ### Unreleased
+N/A
+
+### 0.1.2 - 2015-05-17
 #### Added
 - Tests.
-- Travis CI support.
+- Coverage.
+- Travis CI, Coveralls.io, and Gemnasium support.
 
 ### 0.1.1 - 2015-05-14
 #### Added
