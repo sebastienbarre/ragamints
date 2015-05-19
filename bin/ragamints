@@ -4,12 +4,10 @@
 var chalk = require('chalk');
 var iojs  = require('is-iojs');
 
-const error = chalk.red.bold;
-
 // Thanks for maximilianschmitt for this launcher
 // https://gist.github.com/maximilianschmitt/8ef57cb679fbf764b108
 if (!iojs) {
-  var pjson = require('./package.json');
+  var pjson = require('../package.json');
   require('babel/register')({
     ignore: new RegExp(pjson.name + '/node_modules')
   });
@@ -19,7 +17,7 @@ require('../index.js').main(process.argv).then(function() {
   process.exit(0);
 }).catch(function(err) {
   if (err) {
-    console.log(error(err.error_message || err.message || err.body));
+    console.log(chalk.red.bold(err.error_message || err.message || err.body));
   }
   process.exit(1);
 });
