@@ -129,13 +129,13 @@ describe('logForMedia', function() {
     spyOn(console, 'log');
   });
 
-  it('logs message with respcet to a media', function() {
+  it('logs message with respect to a media', function() {
     logForMedia(media, 'logging');
     var msg = '#0001 [Back home. #foo #o] logging';
     expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual(msg);
   });
 
-  it('logs message with respcet to a media even w/o caption or msg', function() {
+  it('logs message with respect to a media even w/o caption or msg', function() {
     var media_wo_caption = extend({}, media);
     delete media_wo_caption.caption;
     logForMedia(media_wo_caption);
