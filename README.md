@@ -10,7 +10,7 @@ Ragamints may come handy when importing Instagram photos back to applications th
 
 [![NPM](https://nodei.co/npm/ragamints.png?downloads=true)](https://nodei.co/npm/ragamints/)
 
-Using [npm]:
+Using [npm] >= 0.11:
 
 ```bash
 $ npm install ragamints -g
