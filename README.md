@@ -6,7 +6,7 @@ Ragamints is a command-line interface for Node.js. It is intended for downloadin
 
 Ragamints may come handy when importing Instagram photos back to applications that can interpret such metadata. [Adobe Lightroom] or [Google+] will happily re-use the caption and GPS location originally set from Instagram, for example.
 
-![Example](./doc/ragamints.gif =564x)
+<img src="doc/ragamints.gif" width="564px" />
 
 ## Installation
 
