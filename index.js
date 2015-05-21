@@ -494,33 +494,52 @@ function query(options) {
     suspend(function*() {
       try {
         options = yield resolveOptions(options);
-        let all_promises = [];
+        let all_promises = options.sequential ? Promise.resolve() : [];
         let all_medias = [];
         let it = getRecentMedias(options.userId, options);
         while (it) {
           let chunk = yield it;
-          // We have a chunk of medias, let's append all the corresponding
-          // promises, which will start fetching and updating right away.
-          // Note that we still need to catch errors here because errors are
-          // only bubbling up from a yield inside the generator, not where we
-          // map our medias to promises.
-          let chunk_promises = chunk.medias.map(function(media) {
-            return fetchMedia(media, options).then(function(filename) {
+          // Note that in either cases below we still need to catch errors
+          // because errors are only bubbling up to the try {} catch from a
+          // yield'ed promise inside the generator.
+          if (options.sequential) {
+            // In sequential mode, let's iterate over the newly retrieved
+            // medias and *chain* the corresponding promises to our original
+            // promise. This ensures everything is done in order, but slower.
+            chunk.medias.forEach(function(media) {
+              all_promises = all_promises.then(function() {
+                return fetchMedia(media, options);
+              }).then(function(filename) {
                 return updateMetadata(media, filename, options);
               }).catch(function(err) {
-                reject(err);
+                throw err;
               });
-          });
-          all_promises = all_promises.concat(chunk_promises);
+            });
+          } else {
+            // In parallel mode, let's iterate over the newly retrieved
+            // medias and *collect* the corresponding promises, which will
+            // start fetching and updating right away.
+            let chunk_promises = chunk.medias.map(function(media) {
+              return fetchMedia(media, options).then(function(filename) {
+                  return updateMetadata(media, filename, options);
+                }).catch(function(err) {
+                  throw err;
+                });
+            });
+            all_promises = all_promises.concat(chunk_promises);
+          }
           all_medias = all_medias.concat(chunk.medias);
           it = chunk.next;
         }
-        // Make sure everything has completed
-        yield Promise.all(all_promises);
-        console.log('Done processing ' + success(all_promises.length) + ' media(s). Easy peasy.');
+        // Make sure everything has completed. In sequential mode, we only
+        // have one promise chain to deal with. In parallel mode we have an
+        // array of promises, hence Promise.all().
+        yield options.sequential ? all_promises : Promise.all(all_promises);
+        console.log('Done processing ' + success(all_medias.length) + ' media(s). Easy peasy.');
         resolve(all_medias);
       }
       catch (err) {
+        // console.log('Woot?');
         reject(err);
       }
     })();
@@ -544,6 +563,7 @@ function main(argv) {
   .option('-p, --max-timestamp <timestamp|string>', 'Fetch media before this UNIX timestamp')
   .option('-d, --dest [dir]', 'Destination dir, current dir otherwise', './')
   .option('-a, --always-download', 'Always download, even if media is saved already')
+  .option('-s, --sequential', 'Process everything sequentially (slower)')
   .option('-v, --verbose', 'Output more info (timezone, creation time)')
   .option('-q, --quiet', 'Output less info')
   .on('--help', function() {

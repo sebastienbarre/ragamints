@@ -635,7 +635,7 @@ describe('query', function() {
     ragamints.__set__('updateMetadata', updateMetadataSpy);
   });
 
-  it('queries and process medias', function(done) {
+  it('queries and process medias in parallel', function(done) {
     var options = {userId: '26667401'};
     query(options).then(function(res) {
       expect(resolveOptionsSpy).toHaveBeenCalled();
@@ -651,13 +651,42 @@ describe('query', function() {
     });
   });
 
-  it('rejects on fetch error', function(done) {
+  it('queries and process medias sequentially', function(done) {
+    var options = {userId: '26667401', sequential: true};
+    query(options).then(function(res) {
+      expect(resolveOptionsSpy).toHaveBeenCalled();
+      expect(getRecentMediasSpy).toHaveBeenCalled();
+      expect(getRecentMediasSpy.calls.argsFor(0)[0]).toEqual(options.userId);
+      expect(fetchMediaSpy.calls.argsFor(0)).toEqual([{}, options]);
+      expect(fetchMediaSpy.calls.count()).toEqual(ig_page_size);
+      expect(updateMetadataSpy.calls.argsFor(0)).toEqual([{}, media_basename, options]);
+      expect(updateMetadataSpy.calls.count()).toEqual(ig_page_size);
+      expect(res.length).toEqual(ig_page_size);
+      expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual('Done processing ' + ig_page_size + ' media(s). Easy peasy.');
+      done();
+    });
+  });
+
+  it('rejects on fetch error in parallel', function(done) {
     fetchMediaSpy = jasmine.createSpy('fetchMedia').and.callFake(function() {
       return Promise.reject(Error('boom'));
     });
     ragamints.__set__('fetchMedia', fetchMediaSpy);
     query({}).catch(function(err) {
       expect(err.message).toEqual('boom');
+      expect(console.log.calls.count()).toEqual(0);
+      done();
+    });
+  });
+
+  it('rejects on fetch error sequentially', function(done) {
+    fetchMediaSpy = jasmine.createSpy('fetchMedia').and.callFake(function() {
+      return Promise.reject(Error('boom'));
+    });
+    ragamints.__set__('fetchMedia', fetchMediaSpy);
+    query({sequential: true}).catch(function(err) {
+      expect(err.message).toEqual('boom');
+      expect(console.log.calls.count()).toEqual(0);
       done();
     });
   });
@@ -669,6 +698,7 @@ describe('query', function() {
     ragamints.__set__('getRecentMedias', getRecentMediasSpy);
     query({}).catch(function(err) {
       expect(err.message).toEqual('boom');
+      expect(console.log.calls.count()).toEqual(0);
       done();
     });
   });
