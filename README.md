@@ -6,6 +6,8 @@ Ragamints is a command-line interface for Node.js. It is intended for downloadin
 
 Ragamints may come handy when importing Instagram photos back to applications that can interpret such metadata. [Adobe Lightroom] or [Google+] will happily re-use the caption and GPS location originally set from Instagram, for example.
 
+![Example](./doc/ragamints.gif =564x)
+
 ## Installation
 
 [![NPM](https://nodei.co/npm/ragamints.png?downloads=true)](https://nodei.co/npm/ragamints/)
@@ -67,6 +69,7 @@ $ ragamints
     -o, --max-timestamp <timestamp|string>  Fetch media before this UNIX timestamp
     -d, --dest [dir]                        Destination dir, current dir otherwise
     -a, --always-download                   Always download, even if media is saved already
+    -s, --sequential                        Process everything sequentially (slower)
     -v, --verbose                           Output more info (timezone, creation time)
     -q, --quiet                             Output less info
 

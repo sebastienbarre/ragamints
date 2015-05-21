@@ -4,7 +4,7 @@
 *.tgz
 .DS_Store
 coverage
-doc
+doc/*.1
 node_modules
 npm-debug.log
 site
