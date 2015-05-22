@@ -250,6 +250,12 @@ All notable changes to this project will be documented here. This project adhere
 ### Unreleased
 N/A
 
+### 0.1.4 - 2015-05-21
+#### Added
+- New --sequential mode
+- Fix some error reporting
+- New screencap
+
 ### 0.1.3 - 2015-05-19
 #### Added
 - Fix Node.js support (development is done with io.js)
