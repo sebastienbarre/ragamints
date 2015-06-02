@@ -7,6 +7,7 @@
 .eslintrc
 .jscsrc
 .npmignore
+.travis.yml
 coverage
 site
 spec

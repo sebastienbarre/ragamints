@@ -40,13 +40,13 @@
     "./doc/ragamints.1"
   ],
   "engines": {
-    "node": ">=0.10.x"
+    "node": ">=0.11.x"
   },
   "license": "BSD-3-Clause",
   "preferGlobal": true,
   "bin": "./bin/ragamints",
   "dependencies": {
-    "babel": "^5.4.3",
+    "babel": "^5.4.7",
     "chalk": "^1.0.0",
     "commander": "^2.8.1",
     "download": "^4.1.2",
@@ -54,17 +54,17 @@
     "in-publish": "^1.1.1",
     "instagram-node": "^0.5.7",
     "is-iojs": "^1.1.0",
-    "moment-timezone": "^0.3.1",
+    "moment-timezone": "^0.4.0",
     "node-fetch": "^1.2.1",
     "sugar": "^1.4.1",
     "suspend": "^0.6.1",
     "tz-lookup": "^6.0.1"
   },
   "devDependencies": {
-    "babel-eslint": "^3.1.4",
+    "babel-eslint": "^3.1.10",
     "coveralls": "^2.11.2",
-    "eslint": "^0.21.1",
-    "istanbul": "git://github.com/gotwarlost/istanbul.git#harmony",
+    "eslint": "^0.22.1",
+    "istanbul": "^0.3.14",
     "jasmine": "^2.3.1",
     "jscs": "^1.13.1",
     "mkdirp": "^0.5.1",
