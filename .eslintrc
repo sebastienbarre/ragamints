@@ -6,18 +6,27 @@
     "classes": true,
     "destructuring": true,
     "modules": true,
-    "spread": true
+    "spread": true,
+    "templateStrings": true
    },
   "env": {
     "es6": true,
     "jasmine": true,
     "node": true
   },
+  "plugins": [
+    "smells"
+  ],
   "rules": {
     "camelcase": [0],
     "complexity": [2, 8],
+    "consistent-this": [0, "self"],
     "max-depth": [1, 3],
-    "max-statements": [2, 20],
+    "max-len": [2, 79],
+    "max-nested-callbacks": [2, 3],
+    "max-params": [1, 3],
+    "max-statements": [2, 25],
+    "no-extra-bind": 1,
     "no-else-return": 1,
     "no-loop-func": 0,
     "no-param-reassign": 1,
@@ -35,6 +44,11 @@
     "no-unneeded-ternary": 1,
     "quotes": [2, "single"],
     "radix": 1,
+    "smells/no-complex-switch-case": 1,
+    "smells/no-setinterval": 1,
+    "smells/no-this-assign": 1,
+    "smells/no-complex-string-concat": 1,
+    "smells/no-complex-chaining": 0,
     "strict": 0
   }
 }

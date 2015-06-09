@@ -162,11 +162,11 @@ Min Timestamp: 30 days ago is 2015-04-14T13:21:45-04:00 (1429030905)
 Max Timestamp: 23 days ago is 2015-04-21T13:21:45-04:00 (1429635705)
 Found 2 media(s), nothing more.
 #0001 [After a long journ] Fetched 2015-04-21_1429621553.jpg
-#0001 [After a long journ] Found in Asia/Tokyo timezone
+#0001 [After a long journ] Timezone is Asia/Tokyo
 #0001 [After a long journ] Creation time stored as 2015-04-21T22:05:53+09:00
 #0001 [After a long journ] Updated metadata in 2015-04-21_1429621553.jpg
 #0002 [PSA: Spring is her] Fetched 2015-04-19_1429475496.jpg
-#0002 [PSA: Spring is her] Found in America/New_York timezone
+#0002 [PSA: Spring is her] Timezone is America/New_York
 #0002 [PSA: Spring is her] Creation time stored as 2015-04-19T16:31:36-04:00
 #0002 [PSA: Spring is her] Updated metadata in 2015-04-19_1429475496.jpg
 Done processing 2 media(s). Easy peasy.

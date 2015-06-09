@@ -38,7 +38,6 @@ const success = chalk.green;
  *   type                           ('image')
  *   user.full_name                 ('Sebastien B.')
  */
-// const fake = '[{"tags":["99","Osaka"],"type":"image","location":{"latitude":58.298348257,"name":"Port of Juneau -Alaska- USA","longitude":-134.403743603,"id":270494303},"created_time":"1430734958","link":"https://instagram.com/p/2Qams1JYsp/","images":{"low_resolution":{"url":"https://scontent.cdninstagram.com/hphotos-xat1/t51.2885-15/s306x306/e15/11193066_896012850450861_10425589_n.jpg","width":306,"height":306},"thumbnail":{"url":"https://scontent.cdninstagram.com/hphotos-xat1/t51.2885-15/s150x150/e15/11193066_896012850450861_10425589_n.jpg","width":150,"height":150},"standard_resolution":{"url":"https://scontent.cdninstagram.com/hphotos-xat1/t51.2885-15/e15/11193066_896012850450861_10425589_n.jpg","width":640,"height":640}},"caption":{"created_time":"1430734958","text":"Back home. Done spamming your Insta with Japan. Now go check it out, it\'s beautiful and fun. 🇯🇵🇺🇸 #99"},"id":"977398127825095465_26667401","user":{"username":"sebastienbarre","full_name":"Sébastien B"}}]';
 
 /**
  * Pad string to the right.
@@ -75,10 +74,13 @@ function logForMedia(media, msg) {
   let excerpt_max_len = 18;
   let id = media.id.substr(0, 18);
   // Let's clean up the caption -- remove all UTF8 emojis, for example.
-  let caption = media.caption ? media.caption.text.replace(/[\u007F-\uFFFF]/g, '').substr(0, excerpt_max_len) : null;
+  let regexp = /[\u007F-\uFFFF]/g;
+  let caption = media.caption
+    ? media.caption.text.replace(regexp, '').substr(0, excerpt_max_len)
+    : null;
   let excerpt = padRight(caption || id, ' ', excerpt_max_len);
   let index = '#' + padLeftZero((media.fetch_index || 0) + 1, 4);
-  console.log(notice(index + ' [' + excerpt + ']') + (msg ? ' ' + msg : ''));
+  console.log(notice(`${index} [${excerpt}]`), (msg ? msg : ''));
 }
 
 /**
@@ -89,20 +91,88 @@ function logForMedia(media, msg) {
  * @return {string} -key or -key=value CLI arg
  */
 function cliArg(key, value) {
-  return value === undefined ? '-' + key : '-' + key + '=' + value;
+  return value === undefined ? `-${key}` : `-${key}=${value}`;
 }
 
 /**
- * Get the created time and proper timezone given a media
+ * Get the exiftool arguments needed to reference this software.
  *
- * Supported options are:
- *   {Boolean} verbose Display more info
+ * @return {Array} array of command-line arguments
+ */
+function getExifToolSoftwareArgs() {
+  let args = [];
+  let software = 'ragamints';
+  args.push(cliArg('EXIF:Software', software));
+  args.push(cliArg('XMP:CreatorTool', software));
+  return args;
+}
+
+/**
+ * Get the exiftool arguments needed to update the metadata for a given media,
+ * pertaining to its caption.
+ *
+ * @param {object} media Media object
+ * @return {Array} array of command-line arguments
+ */
+function getExifToolCaptionArgs(media) {
+  let args = [];
+  if (media.caption && media.caption.text.length) {
+    args.push(cliArg('EXIF:ImageDescription', media.caption.text));
+    args.push(cliArg('IPTC:Caption-Abstract', media.caption.text));
+    args.push(cliArg('XMP:Description', media.caption.text));
+  }
+  return args;
+}
+
+/**
+ * Get the exiftool arguments needed to update the metadata for a given media,
+ * pertaining to its user.
+ *
+ * @param {object} media Media object
+ * @return {Array} array of command-line arguments
+ */
+function getExifToolUserArgs(media) {
+  let args = [];
+  if (media.user.full_name.length) {
+    let copyright = 'Copyright ' + media.user.full_name;
+    args.push(cliArg('EXIF:Artist', media.user.full_name));
+    args.push(cliArg('EXIF:Copyright', copyright));
+    args.push(cliArg('IPTC:CopyrightNotice', copyright));
+    args.push(cliArg('XMP:Creator', media.user.full_name));
+    args.push(cliArg('XMP:Rights', copyright));
+  }
+  return args;
+}
+
+/**
+ * Get the exiftool arguments needed to update the metadata for a given media,
+ * pertaining to its tags.
+ *
+ * @param {object} media Media object
+ * @return {Array} array of command-line arguments
+ */
+function getExifToolTagArgs(media) {
+  let args = [];
+  if (media.tags.length) {
+    let keywords_sep = ', ';
+    let keywords = media.tags.join(keywords_sep);
+    args.push(cliArg('sep'));
+    args.push(keywords_sep); // can't use -sep= here, for some reasons
+    args.push(cliArg('IPTC:Keywords', keywords));
+    args.push(cliArg('XMP:Subject', keywords));
+  }
+  return args;
+}
+
+/**
+ * Get the exiftool arguments needed to update the metadata for a given media,
+ * pertaining to its creation time.
  *
  * @param {object} media Media object
  * @param {object} options Get options
- * @return {object} Created timestamp, as returned by Moment.js
+ * @return {Array} array of command-line arguments
  */
-function getMediaCreatedTime(media, options) {
+function getExifToolCreatedArgs(media, options) {
   let created = moment.unix(media.created_time);
   if (media.location) {
     // How to get a time zone from a location using latitude and longitude?
@@ -110,16 +180,46 @@ function getMediaCreatedTime(media, options) {
     let tz = tzlookup(media.location.latitude, media.location.longitude);
     created.tz(tz);
     if (options.verbose && !options.quiet) {
-      logForMedia(media, 'Found in ' + success(tz) + ' timezone');
-      logForMedia(media, 'Creation time stored as ' + success(created.format()));
+      let formatted = created.format();
+      logForMedia(media, 'Timezone is ' + success(tz));
+      logForMedia(media, 'Creation time stored as ' + success(formatted));
     }
   } else {
     if (options.verbose && !options.quiet) {
-      logForMedia(media, 'No location, assume ' + warn('local') + ' timezone');
-      logForMedia(media, 'Creation time stored as ' + success(created.local().format()));
+      let formatted = created.local().format();
+      logForMedia(media, 'No location, assume timezone is ' + warn('local'));
+      logForMedia(media, 'Creation time stored as ' + success(formatted));
     }
   }
-  return created;
+  let created_ymd = created.format('YYYY:MM:DD');
+  let created_hms = created.format('HH:mm:ssZ');
+  let created_ymd_hms = `${created_ymd} ${created_hms}`;
+  let args = [];
+  args.push(cliArg('EXIF:DateTimeOriginal', created_ymd_hms));
+  args.push(cliArg('IPTC:DateCreated', created_ymd));
+  args.push(cliArg('IPTC:TimeCreated', created_hms));
+  args.push(cliArg('XMP:DateCreated', created_ymd_hms));
+  return args;
+}
+
+/**
+ * Get the exiftool arguments needed to update the metadata for a given media,
+ * pertaining to its location.
+ *
+ * @param {object} media Media object
+ * @return {Array} array of command-line arguments
+ */
+function getExifToolLocationArgs(media) {
+  let args = [];
+  if (media.location) {
+    args.push(cliArg('EXIF:GPSLatitude', media.location.latitude));
+    let lat_ref = media.location.latitude >= 0 ? 'N' : 'S';
+    let long_ref = media.location.longitude >= 0 ? 'E' : 'W';
+    args.push(cliArg('EXIF:GPSLatitudeRef', lat_ref));
+    args.push(cliArg('EXIF:GPSLongitude', media.location.longitude));
+    args.push(cliArg('EXIF:GPSLongitudeRef', long_ref));
+  }
+  return args;
 }
 
 /**
@@ -134,57 +234,18 @@ function getMediaCreatedTime(media, options) {
  */
 function getExifToolArgs(media, options) {
   let args = [];
-
   args.push(cliArg('q')); // hide informational messages
-  args.push(cliArg('q')); // hide minor warnings (IPTC:Caption-Abstract exceeds)
+  args.push(cliArg('q')); // hide minor warnings (IPTC:Caption-Abstract...)
   args.push(cliArg('codedcharacterset', 'utf8'));
   args.push(cliArg('overwrite_original'));
-
-  let software = 'ragamints';
-  args.push(cliArg('EXIF:Software', software));
-  args.push(cliArg('XMP:CreatorTool', software));
-
-  if (media.caption && media.caption.text.length) {
-    args.push(cliArg('EXIF:ImageDescription', media.caption.text));
-    args.push(cliArg('IPTC:Caption-Abstract', media.caption.text));
-    args.push(cliArg('XMP:Description', media.caption.text));
-  }
-
-  if (media.user.full_name.length) {
-    let copyright = 'Copyright ' + media.user.full_name;
-    args.push(cliArg('EXIF:Artist', media.user.full_name));
-    args.push(cliArg('EXIF:Copyright', copyright));
-    args.push(cliArg('IPTC:CopyrightNotice', copyright));
-    args.push(cliArg('XMP:Creator', media.user.full_name));
-    args.push(cliArg('XMP:Rights', copyright));
-  }
-
-  if (media.tags.length) {
-    let keywords_sep = ', ';
-    let keywords = media.tags.join(keywords_sep);
-    args.push('-sep');
-    args.push(keywords_sep);
-    args.push(cliArg('IPTC:Keywords', keywords));
-    args.push(cliArg('XMP:Subject', keywords));
-  }
-
-  let created = getMediaCreatedTime(media, options);
-  let created_ymd = created.format('YYYY:MM:DD');
-  let created_hms = created.format('HH:mm:ssZ');
-  let created_ymd_hms = created_ymd + ' ' + created_hms;
-
-  args.push(cliArg('EXIF:DateTimeOriginal', created_ymd_hms));
-  args.push(cliArg('IPTC:DateCreated', created_ymd));
-  args.push(cliArg('IPTC:TimeCreated', created_hms));
-  args.push(cliArg('XMP:DateCreated', created_ymd_hms));
-
-  if (media.location) {
-    args.push(cliArg('EXIF:GPSLatitude', media.location.latitude));
-    args.push(cliArg('EXIF:GPSLatitudeRef', media.location.latitude >= 0 ? 'N' : 'S'));
-    args.push(cliArg('EXIF:GPSLongitude', media.location.longitude));
-    args.push(cliArg('EXIF:GPSLongitudeRef', media.location.longitude >= 0 ? 'E' : 'W'));
-  }
-
+  args = args.concat(
+    getExifToolSoftwareArgs(),
+    getExifToolCaptionArgs(media),
+    getExifToolUserArgs(media),
+    getExifToolTagArgs(media),
+    getExifToolCreatedArgs(media, options),
+    getExifToolLocationArgs(media)
+    );
   return args;
 }
 
@@ -195,7 +256,7 @@ function getExifToolArgs(media, options) {
  * @param {object} media Media object
  * @param {String} filename Name of file to update metadata for
  * @param {object} options Update options
- * @return {Promise} Promise resolving on update, rejecting on error
+ * @return {Promise} resolving on update, or rejecting
  */
 function updateMetadata(media, filename, options) {
   return new Promise(function(resolve, reject) {
@@ -219,7 +280,7 @@ function updateMetadata(media, filename, options) {
     });
 
     exiftool.on('error', function(err) {
-      reject(new Error('Could not spawn exiftool (' + err.message + ')'));
+      reject(new Error(`Could not spawn exiftool (${err.message})`));
     });
 
     exiftool.on('close', function() {
@@ -243,8 +304,9 @@ function updateMetadata(media, filename, options) {
  */
 function getFetchBasename(media) {
   let created = moment.unix(media.created_time);
+  let formatted = created.utc().format('YYYY-MM-DD');
   let ext = media.type === 'image' ? '.jpg' : '.mp4';
-  return created.utc().format('YYYY-MM-DD') + '_' + media.created_time + ext;
+  return `${formatted}_${media.created_time}${ext}`;
 }
 
 /**
@@ -256,7 +318,7 @@ function getFetchBasename(media) {
  *
  * @param {object} media Media object
  * @param {object} options Fetch options
- * @return {Promise} Promise resolving with a filename once fetched, rejecting on error
+ * @return {Promise} resolving w/ filename once fetched, or rejecting
  */
 function fetchMedia(media, options) {
   return new Promise(function(resolve, reject) {
@@ -271,7 +333,9 @@ function fetchMedia(media, options) {
         }
         resolve(filename);
       } else {
-        let url = media.videos ? media.videos.standard_resolution.url : media.images.standard_resolution.url;
+        let url = media.videos
+          ? media.videos.standard_resolution.url
+          : media.images.standard_resolution.url;
         new Download()
         .get(url)
         .dest(dest)
@@ -281,7 +345,8 @@ function fetchMedia(media, options) {
             reject(download_err);
           } else {
             if (!options.quiet) {
-              logForMedia(media, 'Fetched ' + success(path.basename(files[0].path)));
+              let file_basename = path.basename(files[0].path);
+              logForMedia(media, 'Fetched ' + success(file_basename));
             }
             resolve(files[0].path);
           }
@@ -322,11 +387,12 @@ function fetchMedia(media, options) {
  *
  * @param {String} user_id User ID
  * @param {object} options Query options
- * @return {Promise} Promise resolving with {medias:, next: } once fetched, rejecting on error
+ * @return {Promise} resolving w/ {medias:, next: } once fetched, or rejecting
  */
 function getRecentMedias(user_id, options) {
   let current_count = 0;
-  let ig_handler = function ig_handler(resolve, reject, err, medias, pagination) {
+  /*eslint-disable max-params */
+  let handler = function handler(resolve, reject, err, medias, pagination) {
     if (err) {
       reject(err);
       return;
@@ -342,14 +408,19 @@ function getRecentMedias(user_id, options) {
     if (pagination.next &&
         (!options.count || (options.count && current_count < options.count))) {
       next = new Promise(function(next_resolve, next_reject) {
-        pagination.next(ig_handler.bind(null, next_resolve, next_reject));
+        pagination.next(handler.bind(null, next_resolve, next_reject));
       });
     } else if (options.count && current_count > options.count) {
-      medias.splice(options.count - current_count, current_count - options.count);
+      let pos = options.count - current_count;
+      medias.splice(pos, -pos);
     }
-    console.log('Found ' + (current_count > medias.length ? 'another ' : '') + success(medias.length) + ' media(s)' + (next ? ', more to come...' : ', nothing more.'));
+    let another = current_count > medias.length ? 'another ' : '';
+    let media_count = success(medias.length) + ' media(s)';
+    let more = next ? ', more to come...' : ', nothing more.';
+    console.log(`Found ${another}${media_count}${more}`);
     resolve({medias: medias, next: next});
   };
+  /*eslint-enable max-params */
   // Get the promise to return the first batch
   return new Promise(function(resolve, reject) {
     ig.user_media_recent(
@@ -360,7 +431,7 @@ function getRecentMedias(user_id, options) {
         min_timestamp: options.minTimestamp,
         max_timestamp: options.maxTimestamp
       },
-      ig_handler.bind(null, resolve, reject)
+      handler.bind(null, resolve, reject)
     );
   });
 }
@@ -380,7 +451,7 @@ function isUserId(id) {
  * Name, if needed.
  *
  * @param  {String} user_id User ID or User Name
- * @return {Promise} Promise resolving with a user ID, rejecting on error
+ * @return {Promise} resolving with a user ID, or rejecting
  */
 function resolveUserId(user_id) {
   return new Promise(function(resolve, reject) {
@@ -397,7 +468,8 @@ function resolveUserId(user_id) {
         } else if (!users.length) {
           reject(Error('Could not find user ID for: ' + user_id));
         } else {
-          console.log('Found user ID: ' + success(users[0].id) + ' for username: ' + notice(user_id));
+          console.log('Found user ID:', success(users[0].id), 'for username:',
+            notice(user_id));
           resolve(users[0].id);
         }
       });
@@ -439,14 +511,16 @@ function isUnixTimestamp(timestamp) {
  * Url, if needed.
  *
  * @param  {String} media_id Media ID or Media Name
- * @return {Promise} Promise resolving with a media ID, rejecting on error
+ * @return {Promise} resolving with a media ID, or rejecting
  */
 function resolveMediaId(media_id) {
   if (isMediaId(media_id) || media_id === undefined) {
     return Promise.resolve(media_id);
   }
   let media_url_prefix = 'http://instagram.com/p/';
-  var media_url = isMediaUrl(media_id) ? media_id : media_url_prefix + media_id + '/';
+  var media_url = isMediaUrl(media_id)
+    ? media_id
+    : `${media_url_prefix}${media_id}/`;
   let endpoint = 'http://api.instagram.com/oembed?callback=&url=' + media_url;
   return fetch(endpoint).then(function(response) {
     if (response.ok) {
@@ -454,7 +528,8 @@ function resolveMediaId(media_id) {
     }
     throw new Error('Could not retrieve Media Id for: ' + media_url);
   }).then(function(json) {
-    console.log('Found media ID: ' + success(json.media_id) + ' for media url: ' + notice(media_url));
+    console.log('Found media ID:', success(json.media_id), 'for media url:',
+      notice(media_url));
     return json.media_id;
   });
 }
@@ -464,14 +539,15 @@ function resolveMediaId(media_id) {
  * resolving through the Instagram API (user id from user name for example).
  *
  * @param  {object} options Options to resolve
- * @return {Promise} Promise resolving with resolved options, rejecting on error
+ * @return {Promise} resolving with resolved options, or rejecting
  */
 function resolveOptions(options) {
   let options2 = extend({}, options);
   if (options2.accessToken === undefined) {
     if (process.env.RAGAMINTS_ACCESS_TOKEN) {
       options2.accessToken = process.env.RAGAMINTS_ACCESS_TOKEN;
-      console.log('Using', success('RAGAMINTS_ACCESS_TOKEN'), 'environment variable to set Instagram Access Token');
+      console.log('Using', success('RAGAMINTS_ACCESS_TOKEN'),
+        'environment variable to set Instagram Access Token');
     } else {
       return Promise.reject(Error('Need access token'));
     }
@@ -482,13 +558,19 @@ function resolveOptions(options) {
   if (!options2.userId) {
     return Promise.reject(Error('Need user'));
   }
-  if (options.minTimestamp) {
-    options2.minTimestamp = isUnixTimestamp(options.minTimestamp) ? options.minTimestamp : Math.floor(Date.create(options.minTimestamp).getTime() / 1000);
-    console.log('Min Timestamp:', notice(options.minTimestamp), 'is', success(moment.unix(options2.minTimestamp).format()), '(' + options2.minTimestamp + ')');
-  }
-  if (options.maxTimestamp) {
-    options2.maxTimestamp = isUnixTimestamp(options.maxTimestamp) ? options.maxTimestamp : Math.floor(Date.create(options.maxTimestamp).getTime() / 1000);
-    console.log('Max Timestamp:', notice(options.maxTimestamp), 'is', success(moment.unix(options2.maxTimestamp).format()), '(' + options2.maxTimestamp + ')');
+  let timestamps = {
+    minTimestamp: 'Min Timestamp',
+    maxTimestamp: 'Max Timestamp'
+  };
+  for (let timestamp in timestamps) {
+    if (options[timestamp]) {
+      options2[timestamp] = isUnixTimestamp(options[timestamp])
+        ? options[timestamp]
+        : Math.floor(Date.create(options[timestamp]).getTime() / 1000);
+      console.log(timestamps[timestamp] + ':', notice(options[timestamp]),
+        'is', success(moment.unix(options2[timestamp]).format()),
+        '(Unix:', options2[timestamp] + ')');
+    }
   }
   return Promise.all([
     resolveUserId(options.userId),
@@ -509,7 +591,7 @@ function resolveOptions(options) {
  *   {String} userId User Id
  *
  * @param {object} options Query options
- * @return {Promise} Promise resolving with all medias when done, rejecting on error
+ * @return {Promise} resolving with all medias when done, or rejecting
   */
 function query(unresolved_options) {
   return new Promise(function(resolve, reject) {
@@ -557,7 +639,8 @@ function query(unresolved_options) {
         // have one promise chain to deal with. In parallel mode we have an
         // array of promises, hence Promise.all().
         yield options.sequential ? all_promises : Promise.all(all_promises);
-        console.log('Done processing ' + success(all_medias.length) + ' media(s). Easy peasy.');
+        console.log('Done processing', success(all_medias.length),
+          'media(s). Easy peasy.');
         resolve(all_medias);
       }
       catch (err) {
@@ -572,26 +655,50 @@ function query(unresolved_options) {
  * Main. Parses CLI args
  *
  * @param {argv} command-line arguments
- * @return {Promise} Promise resolving when done, rejecting on error
+ * @return {Promise} resolving when done, or rejecting
  */
 function main(argv) {
-  program
-  .option('-t, --access-token <token>', 'Instagram Access Token')
-  .option('-u, --user-id <id|name>', 'Instagram User ID, or User Name')
-  .option('-c, --count <count>', 'Maximum count of media to download', parseInt)
-  .option('-m, --min-id <id|url>', 'Fetch media later than this min_id (included)')
-  .option('-n, --max-id <id|url>', 'Fetch media earlier than this max_id (excluded)')
-  .option('-o, --min-timestamp <timestamp|string>', 'Fetch media after this UNIX timestamp')
-  .option('-p, --max-timestamp <timestamp|string>', 'Fetch media before this UNIX timestamp')
-  .option('-d, --dest [dir]', 'Destination dir, current dir otherwise', './')
-  .option('-a, --always-download', 'Always download, even if media is saved already')
-  .option('-s, --sequential', 'Process everything sequentially (slower)')
-  .option('-v, --verbose', 'Output more info (timezone, creation time)')
-  .option('-q, --quiet', 'Output less info')
-  .on('--help', function() {
+  program.option(
+    '-t, --access-token <token>',
+    'Instagram Access Token'
+  ).option(
+    '-u, --user-id <id|name>',
+    'Instagram User ID, or User Name'
+  ).option(
+    '-c, --count <count>',
+    'Maximum count of media to download',
+    parseInt
+  ).option(
+    '-m, --min-id <id|url>',
+    'Fetch media later than this min_id (included)'
+  ).option(
+    '-n, --max-id <id|url>',
+    'Fetch media earlier than this max_id (excluded)'
+  ).option(
+    '-o, --min-timestamp <timestamp|string>',
+    'Fetch media after this UNIX timestamp'
+  ).option(
+    '-p, --max-timestamp <timestamp|string>',
+    'Fetch media before this UNIX timestamp'
+  ).option(
+    '-d, --dest [dir]',
+    'Destination dir, current dir otherwise',
+    './'
+  ).option(
+    '-a, --always-download',
+    'Always download, even if media is saved already'
+  ).option(
+    '-s, --sequential',
+    'Process everything sequentially (slower)'
+  ).option(
+    '-v, --verbose',
+    'Output more info (timezone, creation time)'
+  ).option(
+    '-q, --quiet',
+    'Output less info'
+  ).on('--help', function() {
     console.log('  Check the man page or README file for more.');
-  })
-  .parse(argv);
+  }).parse(argv);
 
   if (!argv.slice(2).length) {
     program.outputHelp();
