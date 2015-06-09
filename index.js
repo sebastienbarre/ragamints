@@ -82,16 +82,27 @@ function logForMedia(media, msg) {
 }
 
 /**
- * Get the exiftool arguments needed to update the metadata for a given media.
+ * Convert a key or key=value parameter into a CLI args suitable for exiftools.
+ *
+ * @param {string} key Key
+ * @param {mixed} value Optional value
+ * @return {string} -key or -key=value CLI arg
+ */
+function cliArg(key, value) {
+  return value === undefined ? '-' + key : '-' + key + '=' + value;
+}
+
+/**
+ * Get the created time and proper timezone given a media
  *
  * Supported options are:
  *   {Boolean} verbose Display more info
  *
  * @param {object} media Media object
  * @param {object} options Get options
- * @return {Array} array of command-line arguments
+ * @return {object} Created timestamp, as returned by Moment.js
  */
-function getExifToolArgs(media, options) {
+function getMediaCreatedTime(media, options) {
   let created = moment.unix(media.created_time);
   if (media.location) {
     // How to get a time zone from a location using latitude and longitude?
@@ -108,38 +119,44 @@ function getExifToolArgs(media, options) {
       logForMedia(media, 'Creation time stored as ' + success(created.local().format()));
     }
   }
-  let created_ymd = created.format('YYYY:MM:DD');
-  let created_hms = created.format('HH:mm:ssZ');
-  let created_ymd_hms = created_ymd + ' ' + created_hms;
+  return created;
+}
 
-  let args = [
-    '-q',  // hide informational messages
-    '-q',  // hide minor warnings (IPTC:Caption-Abstract exceeds length limit)
-    '-codedcharacterset=utf8',
-    '-overwrite_original'
-  ];
+/**
+ * Get the exiftool arguments needed to update the metadata for a given media.
+ *
+ * Supported options are:
+ *   {Boolean} verbose Display more info
+ *
+ * @param {object} media Media object
+ * @param {object} options Get options
+ * @return {Array} array of command-line arguments
+ */
+function getExifToolArgs(media, options) {
+  let args = [];
 
-  function add_metadata(prop, value) {
-    args.push('-' + prop + '=' + value);
-  }
+  args.push(cliArg('q')); // hide informational messages
+  args.push(cliArg('q')); // hide minor warnings (IPTC:Caption-Abstract exceeds)
+  args.push(cliArg('codedcharacterset', 'utf8'));
+  args.push(cliArg('overwrite_original'));
 
   let software = 'ragamints';
-  add_metadata('EXIF:Software', software);
-  add_metadata('XMP:CreatorTool', software);
+  args.push(cliArg('EXIF:Software', software));
+  args.push(cliArg('XMP:CreatorTool', software));
 
   if (media.caption && media.caption.text.length) {
-    add_metadata('EXIF:ImageDescription', media.caption.text);
-    add_metadata('IPTC:Caption-Abstract', media.caption.text);
-    add_metadata('XMP:Description', media.caption.text);
+    args.push(cliArg('EXIF:ImageDescription', media.caption.text));
+    args.push(cliArg('IPTC:Caption-Abstract', media.caption.text));
+    args.push(cliArg('XMP:Description', media.caption.text));
   }
 
   if (media.user.full_name.length) {
     let copyright = 'Copyright ' + media.user.full_name;
-    add_metadata('EXIF:Artist', media.user.full_name);
-    add_metadata('EXIF:Copyright', copyright);
-    add_metadata('IPTC:CopyrightNotice', copyright);
-    add_metadata('XMP:Creator', media.user.full_name);
-    add_metadata('XMP:Rights', copyright);
+    args.push(cliArg('EXIF:Artist', media.user.full_name));
+    args.push(cliArg('EXIF:Copyright', copyright));
+    args.push(cliArg('IPTC:CopyrightNotice', copyright));
+    args.push(cliArg('XMP:Creator', media.user.full_name));
+    args.push(cliArg('XMP:Rights', copyright));
   }
 
   if (media.tags.length) {
@@ -147,20 +164,25 @@ function getExifToolArgs(media, options) {
     let keywords = media.tags.join(keywords_sep);
     args.push('-sep');
     args.push(keywords_sep);
-    add_metadata('IPTC:Keywords', keywords);
-    add_metadata('XMP:Subject', keywords);
+    args.push(cliArg('IPTC:Keywords', keywords));
+    args.push(cliArg('XMP:Subject', keywords));
   }
 
-  add_metadata('EXIF:DateTimeOriginal', created_ymd_hms);
-  add_metadata('IPTC:DateCreated', created_ymd);
-  add_metadata('IPTC:TimeCreated', created_hms);
-  add_metadata('XMP:DateCreated', created_ymd_hms);
+  let created = getMediaCreatedTime(media, options);
+  let created_ymd = created.format('YYYY:MM:DD');
+  let created_hms = created.format('HH:mm:ssZ');
+  let created_ymd_hms = created_ymd + ' ' + created_hms;
+
+  args.push(cliArg('EXIF:DateTimeOriginal', created_ymd_hms));
+  args.push(cliArg('IPTC:DateCreated', created_ymd));
+  args.push(cliArg('IPTC:TimeCreated', created_hms));
+  args.push(cliArg('XMP:DateCreated', created_ymd_hms));
 
   if (media.location) {
-    add_metadata('EXIF:GPSLatitude', media.location.latitude);
-    add_metadata('EXIF:GPSLatitudeRef', media.location.latitude >= 0 ? 'N' : 'S');
-    add_metadata('EXIF:GPSLongitude', media.location.longitude);
-    add_metadata('EXIF:GPSLongitudeRef', media.location.longitude >= 0 ? 'E' : 'W');
+    args.push(cliArg('EXIF:GPSLatitude', media.location.latitude));
+    args.push(cliArg('EXIF:GPSLatitudeRef', media.location.latitude >= 0 ? 'N' : 'S'));
+    args.push(cliArg('EXIF:GPSLongitude', media.location.longitude));
+    args.push(cliArg('EXIF:GPSLongitudeRef', media.location.longitude >= 0 ? 'E' : 'W'));
   }
 
   return args;
@@ -304,7 +326,7 @@ function fetchMedia(media, options) {
  */
 function getRecentMedias(user_id, options) {
   let current_count = 0;
-  let ig_handler = function(resolve, reject, err, medias, pagination) {
+  let ig_handler = function ig_handler(resolve, reject, err, medias, pagination) {
     if (err) {
       reject(err);
       return;
@@ -489,11 +511,11 @@ function resolveOptions(options) {
  * @param {object} options Query options
  * @return {Promise} Promise resolving with all medias when done, rejecting on error
   */
-function query(options) {
+function query(unresolved_options) {
   return new Promise(function(resolve, reject) {
     suspend(function*() {
       try {
-        options = yield resolveOptions(options);
+        let options = yield resolveOptions(unresolved_options);
         let all_promises = options.sequential ? Promise.resolve() : [];
         let all_medias = [];
         let it = getRecentMedias(options.userId, options);
