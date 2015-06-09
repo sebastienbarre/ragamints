@@ -130,9 +130,11 @@ describe('logForMedia', function() {
   });
 
   it('logs message with respect to a media', function() {
-    logForMedia(media, 'logging');
-    var msg = '#0001 [Back home. #foo #o] logging';
-    expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual(msg);
+    var prefix = '#0001 [Back home. #foo #o]';
+    var msg = 'logging';
+    logForMedia(media, msg);
+    expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual(prefix);
+    expect(strip_ansi(console.log.calls.argsFor(0)[1])).toEqual(msg);
   });
 
   it('logs message with respect to a media even w/o caption or msg', function() {
@@ -646,7 +648,8 @@ describe('query', function() {
       expect(updateMetadataSpy.calls.argsFor(0)).toEqual([{}, media_basename, options]);
       expect(updateMetadataSpy.calls.count()).toEqual(ig_page_size);
       expect(res.length).toEqual(ig_page_size);
-      expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual('Done processing ' + ig_page_size + ' media(s). Easy peasy.');
+      expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual('Done processing');
+      expect(strip_ansi(console.log.calls.argsFor(0)[1])).toEqual(ig_page_size.toString());
       done();
     });
   });
@@ -662,7 +665,8 @@ describe('query', function() {
       expect(updateMetadataSpy.calls.argsFor(0)).toEqual([{}, media_basename, options]);
       expect(updateMetadataSpy.calls.count()).toEqual(ig_page_size);
       expect(res.length).toEqual(ig_page_size);
-      expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual('Done processing ' + ig_page_size + ' media(s). Easy peasy.');
+      expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual('Done processing');
+      expect(strip_ansi(console.log.calls.argsFor(0)[1])).toEqual(ig_page_size.toString());
       done();
     });
   });
