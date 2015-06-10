@@ -10,6 +10,7 @@ var strip_ansi = require('strip-ansi');
 
 var ragamints = rewire('../index.js');
 
+var cdn = 'https://scontent.cdninstagram.com/hphotos-xat1/t51.2885-15/e15/';
 var media = {
   'id': '977398127825095465_26667401',
   'user': {
@@ -30,7 +31,7 @@ var media = {
   'link': 'https://instagram.com/p/2Qams1JYsp/',
   'images': {
     'standard_resolution': {
-      'url': 'https://scontent.cdninstagram.com/hphotos-xat1/t51.2885-15/e15/11193066_896012850450861_10425589_n.jpg',
+      'url': cdn + '11193066_896012850450861_10425589_n.jpg',
       'width': 640,
       'height': 640
     }
@@ -49,7 +50,7 @@ var video_media = extend({}, media);
 video_media.type = 'video';
 video_media.videos = {
   'standard_resolution': {
-    'url': 'https://scontent.cdninstagram.com/hphotos-xat1/t51.2885-15/e15/11193066_896012850450861_10425589_n.mp4'
+    'url': cdn + '11193066_896012850450861_10425589_n.mp4'
   }
 };
 delete video_media.images;
@@ -90,7 +91,7 @@ var exiftool_args = exiftool_args_common.concat([
 var created = moment.unix(media.created_time);  // local time
 var created_ymd = created.format('YYYY:MM:DD');
 var created_hms = created.format('HH:mm:ssZ');
-var created_ymd_hms = created_ymd + ' ' + created_hms;
+var created_ymd_hms = `${created_ymd} ${created_hms}`;
 
 var exiftool_args_no_gps = exiftool_args_common.concat([
   '-EXIF:DateTimeOriginal=' + created_ymd_hms,
@@ -129,7 +130,7 @@ describe('logForMedia', function() {
     spyOn(console, 'log');
   });
 
-  it('logs message with respect to a media', function() {
+  it('logs message w/ respect to a media', function() {
     var prefix = '#0001 [Back home. #foo #o]';
     var msg = 'logging';
     logForMedia(media, msg);
@@ -137,7 +138,7 @@ describe('logForMedia', function() {
     expect(strip_ansi(console.log.calls.argsFor(0)[1])).toEqual(msg);
   });
 
-  it('logs message with respect to a media even w/o caption or msg', function() {
+  it('logs message w/ respect to a media even w/o caption or msg', function() {
     var media_wo_caption = extend({}, media);
     delete media_wo_caption.caption;
     logForMedia(media_wo_caption);
@@ -155,13 +156,14 @@ describe('getExifToolArgs', function() {
     ragamints.__set__('logForMedia', logForMediaSpy);
   });
 
-  it('gathers arguments for exiftool and uses GPS location', function() {
+  it('gathers args for exiftool and uses GPS location', function() {
     expect(getExifToolArgs(media, {verbose: true})).toEqual(exiftool_args);
     expect(logForMediaSpy.calls.count()).toEqual(2);
   });
 
-  it('gathers arguments for exiftool and assumes local when no GPS', function() {
-    expect(getExifToolArgs(media_no_gps, {verbose: true})).toEqual(exiftool_args_no_gps);
+  it('gathers args for exiftool and assumes local when no GPS', function() {
+    expect(getExifToolArgs(media_no_gps, {verbose: true})).toEqual(
+      exiftool_args_no_gps);
     expect(logForMediaSpy.calls.count()).toEqual(2);
   });
 });
@@ -376,8 +378,10 @@ describe('getRecentMedias', function() {
         expect(ig.user_media_recent.calls.argsFor(0)[0]).toEqual('26667401');
         expect(medias.length).toEqual(count);
         expect(medias[count - 1].fetch_index).toEqual(count - 1);
-        expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual('Found 33 media(s), more to come...');
-        expect(strip_ansi(console.log.calls.argsFor(1)[0])).toEqual('Found another 16 media(s), nothing more.');
+        expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual(
+          'Found 33 media(s), more to come...');
+        expect(strip_ansi(console.log.calls.argsFor(1)[0])).toEqual(
+          'Found another 16 media(s), nothing more.');
         done();
       });
     });
@@ -457,7 +461,8 @@ describe('resolveUserId', function() {
     spyOn(ig, 'user_search').and.callFake(user_search);
     resolveUserId('sebastienbarre').catch(function(err) {
       expect(ig.user_search.calls.argsFor(0)[0]).toEqual('sebastienbarre');
-      expect(err.message).toEqual('Could not find user ID for: sebastienbarre');
+      expect(err.message).toEqual(
+        'Could not find user ID for: sebastienbarre');
       done();
     });
   });
@@ -543,7 +548,8 @@ describe('resolveMediaId', function() {
     ragamints.__set__('fetch', fetch_spy);
     resolveMediaId(media.link).catch(function(err) {
       expect(fetch_spy).toHaveBeenCalled();
-      expect(err.message).toEqual('Could not retrieve Media Id for: ' + media.link);
+      expect(err.message).toEqual(
+        'Could not retrieve Media Id for: ' + media.link);
       done();
     });
   });
@@ -558,11 +564,15 @@ describe('resolveOptions', function() {
   beforeEach(function() {
     spyOn(console, 'log');
     spyOn(ig, 'use');
-    resolveUserIdSpy = jasmine.createSpy('resolveUserId').and.callFake(function() {
+    resolveUserIdSpy = jasmine.createSpy(
+      'resolveUserId'
+    ).and.callFake(function() {
       return Promise.resolve('26667401');
     });
     ragamints.__set__('resolveUserId', resolveUserIdSpy);
-    resolveMediaIdSpy = jasmine.createSpy('resolveMediaId').and.callFake(function() {
+    resolveMediaIdSpy = jasmine.createSpy(
+      'resolveMediaId'
+    ).and.callFake(function() {
       return Promise.resolve(media.id);
     });
     ragamints.__set__('resolveMediaId', resolveMediaIdSpy);
@@ -619,11 +629,15 @@ describe('query', function() {
 
   beforeEach(function() {
     spyOn(console, 'log');
-    resolveOptionsSpy = jasmine.createSpy('resolveOptions').and.callFake(function(options) {
+    resolveOptionsSpy = jasmine.createSpy(
+      'resolveOptions'
+    ).and.callFake(function(options) {
       return Promise.resolve(options);
     });
     ragamints.__set__('resolveOptions', resolveOptionsSpy);
-    getRecentMediasSpy = jasmine.createSpy('getRecentMedias').and.callFake(function() {
+    getRecentMediasSpy = jasmine.createSpy(
+      'getRecentMedias'
+    ).and.callFake(function() {
       return Promise.resolve({medias: fill_array(ig_page_size), next: false});
     });
     ragamints.__set__('getRecentMedias', getRecentMediasSpy);
@@ -631,7 +645,9 @@ describe('query', function() {
       return Promise.resolve(media_basename);
     });
     ragamints.__set__('fetchMedia', fetchMediaSpy);
-    updateMetadataSpy = jasmine.createSpy('updateMetadata').and.callFake(function() {
+    updateMetadataSpy = jasmine.createSpy(
+      'updateMetadata'
+    ).and.callFake(function() {
       return Promise.resolve();
     });
     ragamints.__set__('updateMetadata', updateMetadataSpy);
@@ -645,11 +661,14 @@ describe('query', function() {
       expect(getRecentMediasSpy.calls.argsFor(0)[0]).toEqual(options.userId);
       expect(fetchMediaSpy.calls.argsFor(0)).toEqual([{}, options]);
       expect(fetchMediaSpy.calls.count()).toEqual(ig_page_size);
-      expect(updateMetadataSpy.calls.argsFor(0)).toEqual([{}, media_basename, options]);
+      expect(updateMetadataSpy.calls.argsFor(0)).toEqual(
+        [{}, media_basename, options]);
       expect(updateMetadataSpy.calls.count()).toEqual(ig_page_size);
       expect(res.length).toEqual(ig_page_size);
-      expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual('Done processing');
-      expect(strip_ansi(console.log.calls.argsFor(0)[1])).toEqual(ig_page_size.toString());
+      expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual(
+        'Done processing');
+      expect(strip_ansi(console.log.calls.argsFor(0)[1])).toEqual(
+        ig_page_size.toString());
       done();
     });
   });
@@ -662,11 +681,14 @@ describe('query', function() {
       expect(getRecentMediasSpy.calls.argsFor(0)[0]).toEqual(options.userId);
       expect(fetchMediaSpy.calls.argsFor(0)).toEqual([{}, options]);
       expect(fetchMediaSpy.calls.count()).toEqual(ig_page_size);
-      expect(updateMetadataSpy.calls.argsFor(0)).toEqual([{}, media_basename, options]);
+      expect(updateMetadataSpy.calls.argsFor(0)).toEqual(
+        [{}, media_basename, options]);
       expect(updateMetadataSpy.calls.count()).toEqual(ig_page_size);
       expect(res.length).toEqual(ig_page_size);
-      expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual('Done processing');
-      expect(strip_ansi(console.log.calls.argsFor(0)[1])).toEqual(ig_page_size.toString());
+      expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual(
+        'Done processing');
+      expect(strip_ansi(console.log.calls.argsFor(0)[1])).toEqual(
+        ig_page_size.toString());
       done();
     });
   });
@@ -696,7 +718,9 @@ describe('query', function() {
   });
 
   it('rejects on getting recent medias error', function(done) {
-    getRecentMediasSpy = jasmine.createSpy('getRecentMedias').and.callFake(function() {
+    getRecentMediasSpy = jasmine.createSpy(
+      'getRecentMedias'
+    ).and.callFake(function() {
       return Promise.reject(Error('boom'));
     });
     ragamints.__set__('getRecentMedias', getRecentMediasSpy);
@@ -778,6 +802,7 @@ describe('main', function() {
       '--help'
     ];
     main(argv);
-    expect(console.log).toHaveBeenCalledWith('  Check the man page or README file for more.');
+    expect(console.log).toHaveBeenCalledWith(
+      '  Check the man page or README file for more.');
   });
 });
