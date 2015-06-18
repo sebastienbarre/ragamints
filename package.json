@@ -5,14 +5,14 @@
   "scripts": {
     "doc:man": "pandoc -M title=\"ragamints(1)\" -f markdown_github -t man -s README.md  > doc/ragamints.1",
     "doc": "mkdirp doc && npm run doc:man",
-    "check:lint": "node node_modules/eslint/bin/eslint.js index.js bin/ragamints",
-    "check:jscs": "jscs index.js bin/ragamints",
-    "check:jsinspect": "jsinspect -C index.js bin/ragamints",
+    "check:lint": "node --harmony node_modules/eslint/bin/eslint.js index.js bin/ragamints",
+    "check:jscs": "node --harmony node_modules/jscs/bin/jscs index.js bin/ragamints",
+    "check:jsinspect": "node --harmony node_modules/jsinspect/bin/jsinspect -C index.js bin/ragamints",
     "check": "npm run check:lint && npm run check:jscs && npm run check:jsinspect",
     "test:jasmine": "node --harmony node_modules/jasmine/bin/jasmine.js",
     "test:jasmine-es6": "node --harmony node_modules/jasmine-es6/dist/bin/jasmine.js",
     "test": "npm run check && npm run test:jasmine-es6",
-    "coverage": "node --harmony node_modules/istanbul/lib/cli.js cover node_modules/jasmine/bin/jasmine.js",
+    "coverage": "node --harmony node_modules/istanbul/lib/cli.js cover node_modules/jasmine-es6/dist/bin/jasmine.js",
     "coverage:coveralls:push": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "publish:pre": "npm prune && npm test && npm run doc",
     "prepublish": "in-publish && npm run publish:pre || true"
