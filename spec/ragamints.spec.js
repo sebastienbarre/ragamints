@@ -41,7 +41,9 @@ var media = {
     'text': 'Back home. #foo #osaka'
   }
 };
-var media_basename = '2015-05-04_1430734958.jpg';
+var media_file_name = '2015-05-04_1430734958';
+var media_basename = media_file_name + '.jpg';
+var media_object_basename = media_file_name + '.json';
 
 var media_no_gps = extend({}, media);
 delete media_no_gps.location;
@@ -54,7 +56,7 @@ video_media.videos = {
   }
 };
 delete video_media.images;
-var video_media_basename = '2015-05-04_1430734958.mp4';
+var video_media_basename = media_file_name + '.mp4';
 
 var exiftool_args_common = [
   '-q',
@@ -168,8 +170,8 @@ describe('getExifToolArgs', function() {
   });
 });
 
-describe('updateMetadata', function() {
-  var updateMetadata = ragamints.__get__('updateMetadata');
+describe('updateFileMetadata', function() {
+  var updateFileMetadata = ragamints.__get__('updateFileMetadata');
   var exiftool_process = {
     on: function(event, callback) {
       if (event === 'close') {
@@ -191,7 +193,7 @@ describe('updateMetadata', function() {
     var video = {
       type: 'video'
     };
-    updateMetadata(video, 'foo.jpg', {}).then(function(res) {
+    updateFileMetadata(video, 'foo.jpg', {}).then(function(res) {
       expect(res).toBe(false);
       expect(logForMediaSpy).toHaveBeenCalled();
       done();
@@ -201,7 +203,7 @@ describe('updateMetadata', function() {
   it('spawns a child process to invoke exiftool', function(done) {
     var child_process = ragamints.__get__('child_process');
     spyOn(child_process, 'spawn').and.returnValue(exiftool_process);
-    updateMetadata(media, media_basename, {}).then(function(res) {
+    updateFileMetadata(media, media_basename, {}).then(function(res) {
       var spawn_args = exiftool_args.concat([media_basename]);
       expect(child_process.spawn).toHaveBeenCalledWith('exiftool', spawn_args);
       expect(res).toBe(true);
@@ -219,7 +221,9 @@ describe('updateMetadata', function() {
     };
     var child_process = ragamints.__get__('child_process');
     spyOn(child_process, 'spawn').and.returnValue(process);
-    updateMetadata(media, media_basename, {quiet: true}).catch(function(err) {
+    updateFileMetadata(
+      media, media_basename, {quiet: true}
+    ).catch(function(err) {
       expect(child_process.spawn).toHaveBeenCalled();
       expect(err.message).toBe('Could not spawn exiftool (boom)');
       done();
@@ -235,7 +239,9 @@ describe('updateMetadata', function() {
     };
     var child_process = ragamints.__get__('child_process');
     spyOn(child_process, 'spawn').and.returnValue(process);
-    updateMetadata(media, media_basename, {quiet: true}).catch(function(err) {
+    updateFileMetadata(
+      media, media_basename, {quiet: true}
+    ).catch(function(err) {
       expect(child_process.spawn).toHaveBeenCalled();
       expect(err.message).toBe('boom');
       done();
@@ -243,11 +249,11 @@ describe('updateMetadata', function() {
   });
 });
 
-describe('getFetchBasename', function() {
-  var getFetchBasename = ragamints.__get__('getFetchBasename');
+describe('createMediaFileName', function() {
+  var createMediaFileName = ragamints.__get__('createMediaFileName');
 
-  it('returns a basename for the fetched file', function() {
-    expect(getFetchBasename(media)).toBe(media_basename);
+  it('creates a file name for the fetched file to be saved as', function() {
+    expect(createMediaFileName(media)).toBe(media_file_name);
   });
 });
 
@@ -327,7 +333,7 @@ describe('fetchMedia', function() {
     });
   });
 
-  it('rejects if download failed', function(done) {
+  it('rejects if fetching failed', function(done) {
     spyOn(fs, 'lstat').and.callFake(function(filename, callback) {
       callback(true, stats_is_file);
     });
@@ -342,6 +348,43 @@ describe('fetchMedia', function() {
     ragamints.__set__('Download', DownloadSpy);
     fetchMedia(media, {}).catch(function(err) {
       expect(DownloadSpy).toHaveBeenCalled();
+      expect(err.message).toEqual('boom');
+      done();
+    });
+  });
+});
+
+describe('saveMediaObject', function() {
+  var saveMediaObject = ragamints.__get__('saveMediaObject');
+  var fs = ragamints.__get__('fs');
+  var logForMediaSpy;
+
+  beforeEach(function() {
+    logForMediaSpy = jasmine.createSpy('logForMedia');
+    ragamints.__set__('logForMedia', logForMediaSpy);
+  });
+
+  it('saves a media object', function(done) {
+    spyOn(fs, 'writeFile').and.callFake(function(filename, data, callback) {
+      callback();
+    });
+    var dest = 'foo';
+    var media_filename = path.join(dest, media_object_basename);
+    saveMediaObject(media, {dest: dest}).then(function(filename) {
+      let data = JSON.stringify(media, null, 2);
+      expect(fs.writeFile.calls.argsFor(0)[1]).toEqual(data);
+      expect(logForMediaSpy).toHaveBeenCalled();
+      expect(filename).toBe(media_filename);
+      done();
+    });
+  });
+
+  it('rejects if saving failed', function(done) {
+    spyOn(fs, 'writeFile').and.callFake(function(filename, data, callback) {
+      callback(Error('boom'));
+    });
+    saveMediaObject(media, {}).catch(function(err) {
+      expect(fs.writeFile).toHaveBeenCalled();
       expect(err.message).toEqual('boom');
       done();
     });
@@ -625,7 +668,8 @@ describe('query', function() {
   var resolveOptionsSpy;
   var getRecentMediasSpy;
   var fetchMediaSpy;
-  var updateMetadataSpy;
+  var updateFileMetadataSpy;
+  var saveMediaObjectSpy;
 
   beforeEach(function() {
     spyOn(console, 'log');
@@ -645,25 +689,33 @@ describe('query', function() {
       return Promise.resolve(media_basename);
     });
     ragamints.__set__('fetchMedia', fetchMediaSpy);
-    updateMetadataSpy = jasmine.createSpy(
-      'updateMetadata'
+    updateFileMetadataSpy = jasmine.createSpy(
+      'updateFileMetadata'
     ).and.callFake(function() {
       return Promise.resolve();
     });
-    ragamints.__set__('updateMetadata', updateMetadataSpy);
+    ragamints.__set__('updateFileMetadata', updateFileMetadataSpy);
+    saveMediaObjectSpy = jasmine.createSpy(
+      'saveMediaObject'
+    ).and.callFake(function() {
+      return Promise.resolve();
+    });
+    ragamints.__set__('saveMediaObject', saveMediaObjectSpy);
   });
 
   it('queries and process medias in parallel', function(done) {
-    var options = {userId: '26667401'};
+    var options = {userId: '26667401', json: true};
     query(options).then(function(res) {
       expect(resolveOptionsSpy).toHaveBeenCalled();
       expect(getRecentMediasSpy).toHaveBeenCalled();
       expect(getRecentMediasSpy.calls.argsFor(0)[0]).toEqual(options.userId);
       expect(fetchMediaSpy.calls.argsFor(0)).toEqual([{}, options]);
       expect(fetchMediaSpy.calls.count()).toEqual(ig_page_size);
-      expect(updateMetadataSpy.calls.argsFor(0)).toEqual(
+      expect(updateFileMetadataSpy.calls.argsFor(0)).toEqual(
         [{}, media_basename, options]);
-      expect(updateMetadataSpy.calls.count()).toEqual(ig_page_size);
+      expect(updateFileMetadataSpy.calls.count()).toEqual(ig_page_size);
+      expect(saveMediaObjectSpy.calls.argsFor(0)).toEqual([{}, options]);
+      expect(saveMediaObjectSpy.calls.count()).toEqual(ig_page_size);
       expect(res.length).toEqual(ig_page_size);
       expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual(
         'Done processing');
@@ -674,16 +726,18 @@ describe('query', function() {
   });
 
   it('queries and process medias sequentially', function(done) {
-    var options = {userId: '26667401', sequential: true};
+    var options = {userId: '26667401', sequential: true, json: true};
     query(options).then(function(res) {
       expect(resolveOptionsSpy).toHaveBeenCalled();
       expect(getRecentMediasSpy).toHaveBeenCalled();
       expect(getRecentMediasSpy.calls.argsFor(0)[0]).toEqual(options.userId);
       expect(fetchMediaSpy.calls.argsFor(0)).toEqual([{}, options]);
       expect(fetchMediaSpy.calls.count()).toEqual(ig_page_size);
-      expect(updateMetadataSpy.calls.argsFor(0)).toEqual(
+      expect(updateFileMetadataSpy.calls.argsFor(0)).toEqual(
         [{}, media_basename, options]);
-      expect(updateMetadataSpy.calls.count()).toEqual(ig_page_size);
+      expect(updateFileMetadataSpy.calls.count()).toEqual(ig_page_size);
+      expect(saveMediaObjectSpy.calls.argsFor(0)).toEqual([{}, options]);
+      expect(saveMediaObjectSpy.calls.count()).toEqual(ig_page_size);
       expect(res.length).toEqual(ig_page_size);
       expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual(
         'Done processing');
@@ -705,12 +759,40 @@ describe('query', function() {
     });
   });
 
+  it('rejects on save media object error in parallel', function(done) {
+    saveMediaObjectSpy = jasmine.createSpy(
+      'saveMediaObject'
+    ).and.callFake(function() {
+      return Promise.reject(Error('boom'));
+    });
+    ragamints.__set__('saveMediaObject', saveMediaObjectSpy);
+    query({json: true}).catch(function(err) {
+      expect(err.message).toEqual('boom');
+      expect(console.log.calls.count()).toEqual(0);
+      done();
+    });
+  });
+
   it('rejects on fetch error sequentially', function(done) {
     fetchMediaSpy = jasmine.createSpy('fetchMedia').and.callFake(function() {
       return Promise.reject(Error('boom'));
     });
     ragamints.__set__('fetchMedia', fetchMediaSpy);
     query({sequential: true}).catch(function(err) {
+      expect(err.message).toEqual('boom');
+      expect(console.log.calls.count()).toEqual(0);
+      done();
+    });
+  });
+
+  it('rejects on save media object error sequentially', function(done) {
+    saveMediaObjectSpy = jasmine.createSpy(
+      'saveMediaObject'
+    ).and.callFake(function() {
+      return Promise.reject(Error('boom'));
+    });
+    ragamints.__set__('saveMediaObject', saveMediaObjectSpy);
+    query({sequential: true, json: true}).catch(function(err) {
       expect(err.message).toEqual('boom');
       expect(console.log.calls.count()).toEqual(0);
       done();

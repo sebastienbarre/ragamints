@@ -168,6 +168,10 @@ function getExifToolTagArgs(media) {
  * Get the exiftool arguments needed to update the metadata for a given media,
  * pertaining to its creation time.
  *
+ * Supported options are:
+ *   {Boolean} verbose Display more info
+ *   {Boolean} quiet Output less info
+ *
  * @param {object} media Media object
  * @param {object} options Get options
  * @return {Array} array of command-line arguments
@@ -250,15 +254,19 @@ function getExifToolArgs(media, options) {
 }
 
 /**
- * Update (asynchronously) the metadata on a filename given a specific media.
+ * Update (asynchronously) a file's metadata given its filename and a media
+ * object containing the metadata information to store as EXIF fields.
  * This requires exiftool to be installed.
+ *
+ * Supported options are:
+ *   {Boolean} quiet Output less info
  *
  * @param {object} media Media object
  * @param {String} filename Name of file to update metadata for
  * @param {object} options Update options
  * @return {Promise} resolving on update, or rejecting
  */
-function updateMetadata(media, filename, options) {
+function updateFileMetadata(media, filename, options) {
   return new Promise(function(resolve, reject) {
     let basename = path.basename(filename);
     if (media.type !== 'image') {
@@ -297,16 +305,16 @@ function updateMetadata(media, filename, options) {
 }
 
 /**
- * Get the basename of the file to save media as.
+ * Create a file 'name' based on a media object. A full filename will require
+ * a path/dir to be prepended and a file extension to be appended.
  *
  * @param {object} media Media object
- * @return {String} Basename
+ * @return {String} File name
  */
-function getFetchBasename(media) {
+function createMediaFileName(media) {
   let created = moment.unix(media.created_time);
   let formatted = created.utc().format('YYYY-MM-DD');
-  let ext = media.type === 'image' ? '.jpg' : '.mp4';
-  return `${formatted}_${media.created_time}${ext}`;
+  return `${formatted}_${media.created_time}`;
 }
 
 /**
@@ -315,6 +323,7 @@ function getFetchBasename(media) {
  * Supported options are:
  *   {String} dest Destination directory
  *   {Boolean} alwaysDownload Always download, even if on disk already
+ *   {Boolean} quiet Output less info
  *
  * @param {object} media Media object
  * @param {object} options Fetch options
@@ -322,7 +331,8 @@ function getFetchBasename(media) {
  */
 function fetchMedia(media, options) {
   return new Promise(function(resolve, reject) {
-    let basename = getFetchBasename(media);
+    let ext = media.type === 'image' ? '.jpg' : '.mp4';
+    let basename = createMediaFileName(media) + ext;
     let dest = options.dest || './';
     let filename = path.join(dest, basename);
     fs.lstat(filename, function(lstat_err, stats) {
@@ -351,6 +361,35 @@ function fetchMedia(media, options) {
             resolve(files[0].path);
           }
         });
+      }
+    });
+  });
+}
+
+/**
+ * Save a media description (asynchronously)
+ *
+ * Supported options are:
+ *   {String} dest Destination directory
+ *   {Boolean} quiet Output less info
+ *
+ * @param {object} media Media object
+ * @param {object} options Fetch options
+ * @return {Promise} resolving w/ filename once saved, or rejecting
+ */
+function saveMediaObject(media, options) {
+  return new Promise(function(resolve, reject) {
+    let basename = createMediaFileName(media) + '.json';
+    let dest = options.dest || './';
+    let filename = path.join(dest, basename);
+    fs.writeFile(filename, JSON.stringify(media, null, 2), function(err) {
+      if (err) {
+        reject(err);
+      } else {
+        if (!options.quiet) {
+          logForMedia(media, 'Saved ' + success(basename));
+        }
+        resolve(filename);
       }
     });
   });
@@ -585,7 +624,7 @@ function resolveOptions(options) {
 }
 
 /**
- * Query Instagram (i.e., let's go)
+ * Query Instagram and process (i.e., let's go), asynchronous version
  *
  * Supported options are:
  *   {String} userId User Id
@@ -598,53 +637,75 @@ function query(unresolved_options) {
     suspend(function*() {
       try {
         let options = yield resolveOptions(unresolved_options);
-        let all_promises = options.sequential ? Promise.resolve() : [];
         let all_medias = [];
         let it = getRecentMedias(options.userId, options);
-        while (it) {
-          let chunk = yield it;
-          // Note that in either cases below we still need to catch errors
-          // because errors are only bubbling up to the try {} catch from a
-          // yield'ed promise inside the generator.
-          if (options.sequential) {
+        // Note that we still need to catch errors in catch() below
+        // because errors are only bubbling up to the try {} catch from a
+        // yield'ed promise inside the generator.
+        if (options.sequential) {
+          let all_promises = Promise.resolve();
+          while (it) {
+            let chunk = yield it;
             // In sequential mode, let's iterate over the newly retrieved
             // medias and *chain* the corresponding promises to our original
-            // promise. This ensures everything is done in order, but slower.
+            // promise. This ensures everything is done in order (but slower).
             chunk.medias.forEach(function(media) {
               all_promises = all_promises.then(function() {
                 return fetchMedia(media, options);
               }).then(function(filename) {
-                return updateMetadata(media, filename, options);
+                return updateFileMetadata(media, filename, options);
               }).catch(function(err) {
                 throw err;
               });
-            });
-          } else {
-            // In parallel mode, let's iterate over the newly retrieved
-            // medias and *collect* the corresponding promises, which will
-            // start fetching and updating right away.
-            let chunk_promises = chunk.medias.map(function(media) {
-              return fetchMedia(media, options).then(function(filename) {
-                  return updateMetadata(media, filename, options);
+              if (options.json) {
+                all_promises = all_promises.then(function() {
+                  return saveMediaObject(media, options);
                 }).catch(function(err) {
                   throw err;
                 });
+              }
+            });
+            all_medias = all_medias.concat(chunk.medias);
+            it = chunk.next;
+          }
+          // Make sure everything has completed. In sequential mode, we only
+          // have one promise chain to deal with, yield it.
+          yield all_promises;
+        } else {
+          let all_promises = [];
+          while (it) {
+            let chunk = yield it;
+            // In parallel mode, let's iterate over the newly retrieved
+            // medias and *collect* the corresponding promises, which will
+            // start fetching and updating right away.
+            let chunk_promises = [];
+            chunk.medias.forEach(function(media) {
+              let fp = fetchMedia(media, options).then(function(filename) {
+                return updateFileMetadata(media, filename, options);
+              }).catch(function(err) {
+                throw err;
+              });
+              chunk_promises.push(fp);
+              if (options.json) {
+                let sp = saveMediaObject(media, options).catch(function(err) {
+                  throw err;
+                });
+                chunk_promises.push(sp);
+              }
             });
             all_promises = all_promises.concat(chunk_promises);
+            all_medias = all_medias.concat(chunk.medias);
+            it = chunk.next;
           }
-          all_medias = all_medias.concat(chunk.medias);
-          it = chunk.next;
+          // Make sure everything has completed. In parallel mode we have an
+          // array of promises, hence Promise.all().
+          yield Promise.all(all_promises);
         }
-        // Make sure everything has completed. In sequential mode, we only
-        // have one promise chain to deal with. In parallel mode we have an
-        // array of promises, hence Promise.all().
-        yield options.sequential ? all_promises : Promise.all(all_promises);
         console.log('Done processing', success(all_medias.length),
           'media(s). Easy peasy.');
         resolve(all_medias);
       }
       catch (err) {
-        // console.log('Woot?');
         reject(err);
       }
     })();
@@ -687,6 +748,9 @@ function main(argv) {
   ).option(
     '-a, --always-download',
     'Always download, even if media is saved already'
+  ).option(
+    '-j, --json',
+    'Download the json object describing the media'
   ).option(
     '-s, --sequential',
     'Process everything sequentially (slower)'

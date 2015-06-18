@@ -66,9 +66,10 @@ $ ragamints
     -m, --min-id <id|url>                   Fetch media later than this min_id (included)
     -n, --max-id <id|url>                   Fetch media earlier than this max_id (excluded)
     -o, --min-timestamp <timestamp|string>  Fetch media after this UNIX timestamp
-    -o, --max-timestamp <timestamp|string>  Fetch media before this UNIX timestamp
+    -p, --max-timestamp <timestamp|string>  Fetch media before this UNIX timestamp
     -d, --dest [dir]                        Destination dir, current dir otherwise
     -a, --always-download                   Always download, even if media is saved already
+    -j, --json                              Download the json object describing the media
     -s, --sequential                        Process everything sequentially (slower)
     -v, --verbose                           Output more info (timezone, creation time)
     -q, --quiet                             Output less info
@@ -90,7 +91,7 @@ Let's fetch the last 3 medias from my [Instagram feed][sebastienbarre:Instagram]
 ```
 $ ragamints --access-token [ACCESS_TOKEN] --user-id sebastienbarre --count 3
 Found user ID: 26667401 for username: sebastienbarre
-Found 3 media(s)
+Found 3 media(s), nothing more.
 #0001 [Back home. Done sp] Fetched 2015-05-04_1430734958.jpg
 #0001 [Back home. Done sp] Updated metadata in 2015-05-04_1430734958.jpg
 #0002 [The Dtonbori canal] Fetched 2015-05-04_1430734351.jpg
@@ -115,7 +116,7 @@ Let's fetch the medias I had posted *later in time than (but including)* https:/
 $ ragamints --access-token [ACCESS_TOKEN] --user-id 26667401 --min-id https://instagram.com/p/2QY1JYJYqN/ --max-id https://instagram.com/p/2QZcrCpYrM/
 Found media ID: 977393040662825676_26667401 for media url: https://instagram.com/p/2QZcrCpYrM/
 Found media ID: 977390324456721037_26667401 for media url: https://instagram.com/p/2QY1JYJYqN/
-Found 2 media(s)
+Found 2 media(s), nothing more.
 #0001 [Neither Times Squa] Saved already as 2015-05-04_1430734239.jpg
 #0001 [Neither Times Squa] Updated metadata in 2015-05-04_1430734239.jpg
 #0002 [Last sunset in Osa] Fetched 2015-05-04_1430734027.jpg
@@ -248,7 +249,7 @@ You should hear my accent. With that being said, I'd be happy to fix any mistake
 All notable changes to this project will be documented here. This project adheres to [Semantic Versioning] and [Keep a CHANGELOG].
 
 ### Unreleased
-N/A
+- New `--json` option
 
 ### 0.1.4 - 2015-05-21
 #### Added
