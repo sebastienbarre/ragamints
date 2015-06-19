@@ -733,7 +733,9 @@ describe('query', function() {
     getRecentMediasSpy = jasmine.createSpy(
       'getRecentMedias'
     ).and.callFake(function() {
-      return Promise.resolve({medias: fill_array(ig_page_size), next: false});
+      let medias = fill_array(ig_page_size);
+      medias[ig_page_size - 1].type = 'video'; // last one is a video
+      return Promise.resolve({medias: medias, next: false});
     });
     ragamints.__set__('getRecentMedias', getRecentMediasSpy);
     fetchMediaSpy = jasmine.createSpy('fetchMedia').and.callFake(function() {
@@ -757,22 +759,37 @@ describe('query', function() {
   it('queries and process medias in parallel', function(done) {
     var options = {userId: '26667401', json: true};
     query(options).then(function(res) {
+      let processed_count = ig_page_size - 1;
       expect(resolveOptionsSpy).toHaveBeenCalled();
       expect(getRecentMediasSpy).toHaveBeenCalled();
       expect(getRecentMediasSpy.calls.argsFor(0)[0]).toEqual(options.userId);
       expect(fetchMediaSpy.calls.argsFor(0)).toEqual(
         [{}, media_default_resolution, options]);
-      expect(fetchMediaSpy.calls.count()).toEqual(ig_page_size);
+      expect(fetchMediaSpy.calls.count()).toEqual(processed_count);
       expect(updateFileMetadataSpy.calls.argsFor(0)).toEqual(
         [{}, media_basename, options]);
-      expect(updateFileMetadataSpy.calls.count()).toEqual(ig_page_size);
+      expect(updateFileMetadataSpy.calls.count()).toEqual(processed_count);
       expect(saveMediaObjectSpy.calls.argsFor(0)).toEqual([{}, options]);
-      expect(saveMediaObjectSpy.calls.count()).toEqual(ig_page_size);
-      expect(res.length).toEqual(ig_page_size);
+      expect(saveMediaObjectSpy.calls.count()).toEqual(processed_count);
+      expect(res.length).toEqual(processed_count);
       expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual(
         'Done processing');
       expect(strip_ansi(console.log.calls.argsFor(0)[1])).toEqual(
-        ig_page_size.toString());
+        processed_count.toString());
+      done();
+    });
+  });
+
+  it('queries and process videos in parallel', function(done) {
+    var options = {userId: '26667401', json: true, includeVideos: true};
+    query(options).then(function(res) {
+      let processed_count = ig_page_size;
+      expect(fetchMediaSpy.calls.count()).toEqual(processed_count);
+      expect(updateFileMetadataSpy.calls.count()).toEqual(processed_count);
+      expect(saveMediaObjectSpy.calls.count()).toEqual(processed_count);
+      expect(res.length).toEqual(processed_count);
+      expect(strip_ansi(console.log.calls.argsFor(0)[1])).toEqual(
+        processed_count.toString());
       done();
     });
   });
@@ -780,22 +797,23 @@ describe('query', function() {
   it('queries and process medias sequentially', function(done) {
     var options = {userId: '26667401', sequential: true, json: true};
     query(options).then(function(res) {
+      let processed_count = ig_page_size - 1;
       expect(resolveOptionsSpy).toHaveBeenCalled();
       expect(getRecentMediasSpy).toHaveBeenCalled();
       expect(getRecentMediasSpy.calls.argsFor(0)[0]).toEqual(options.userId);
       expect(fetchMediaSpy.calls.argsFor(0)).toEqual(
         [{}, media_default_resolution, options]);
-      expect(fetchMediaSpy.calls.count()).toEqual(ig_page_size);
+      expect(fetchMediaSpy.calls.count()).toEqual(processed_count);
       expect(updateFileMetadataSpy.calls.argsFor(0)).toEqual(
         [{}, media_basename, options]);
-      expect(updateFileMetadataSpy.calls.count()).toEqual(ig_page_size);
+      expect(updateFileMetadataSpy.calls.count()).toEqual(processed_count);
       expect(saveMediaObjectSpy.calls.argsFor(0)).toEqual([{}, options]);
-      expect(saveMediaObjectSpy.calls.count()).toEqual(ig_page_size);
-      expect(res.length).toEqual(ig_page_size);
+      expect(saveMediaObjectSpy.calls.count()).toEqual(processed_count);
+      expect(res.length).toEqual(processed_count);
       expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual(
         'Done processing');
       expect(strip_ansi(console.log.calls.argsFor(0)[1])).toEqual(
-        ig_page_size.toString());
+        processed_count.toString());
       done();
     });
   });
