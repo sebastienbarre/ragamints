@@ -8,6 +8,7 @@ var extend        = require('util')._extend;
 var fetch         = require('node-fetch');
 var fs            = require('fs');
 var ig            = require('instagram-node').instagram();
+var mkdirp        = require('mkdirp');
 var moment        = require('moment-timezone');
 var path          = require('path');
 var program       = require('commander');
@@ -381,15 +382,21 @@ function saveMediaObject(media, options) {
   return new Promise(function(resolve, reject) {
     let basename = createMediaFileName(media) + '.json';
     let dest = options.dest || './';
-    let filename = path.join(dest, basename);
-    fs.writeFile(filename, JSON.stringify(media, null, 2), function(err) {
-      if (err) {
-        reject(err);
+    mkdirp(dest, function (mkdirp_err) {
+      if (mkdirp_err) {
+        reject(mkdirp_err);
       } else {
-        if (!options.quiet) {
-          logForMedia(media, 'Saved ' + success(basename));
-        }
-        resolve(filename);
+        let filename = path.join(dest, basename);
+        fs.writeFile(filename, JSON.stringify(media, null, 2), function(err) {
+          if (err) {
+            reject(err);
+          } else {
+            if (!options.quiet) {
+              logForMedia(media, 'Saved ' + success(basename));
+            }
+            resolve(filename);
+          }
+        });
       }
     });
   });
@@ -750,7 +757,7 @@ function main(argv) {
     'Always download, even if media is saved already'
   ).option(
     '-j, --json',
-    'Download the json object describing the media'
+    'Save the json object describing the media'
   ).option(
     '-s, --sequential',
     'Process everything sequentially (slower)'

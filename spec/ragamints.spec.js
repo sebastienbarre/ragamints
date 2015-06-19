@@ -10,7 +10,7 @@ var strip_ansi = require('strip-ansi');
 
 var ragamints = rewire('../index.js');
 
-var cdn = 'https://scontent.cdninstagram.com/hphotos-xat1/t51.2885-15/e15/';
+var cdn = 'https://scontent.cdninstagram.com/hphotos-xat1/t51.2885-15/';
 var media = {
   'id': '977398127825095465_26667401',
   'user': {
@@ -30,8 +30,18 @@ var media = {
   'created_time': '1430734958',
   'link': 'https://instagram.com/p/2Qams1JYsp/',
   'images': {
+    'low_resolution': {
+      'url': cdn + 's320x320/e15/11193066_896012850450861_10425589_n.jpg',
+      'width': 320,
+      'height': 320
+    },
+    'thumbnail': {
+      'url': cdn + 's150x150/e15/11193066_896012850450861_10425589_n.jpg',
+      'width': 150,
+      'height': 150
+    },
     'standard_resolution': {
-      'url': cdn + '11193066_896012850450861_10425589_n.jpg',
+      'url': cdn + 'e15/11193066_896012850450861_10425589_n.jpg',
       'width': 640,
       'height': 640
     }
@@ -358,6 +368,19 @@ describe('saveMediaObject', function() {
   var saveMediaObject = ragamints.__get__('saveMediaObject');
   var fs = ragamints.__get__('fs');
   var logForMediaSpy;
+  var mkdirp_spy;
+  var writeFile_success = function(filename, data, callback) {
+    callback();
+  };
+  var writeFile_fail = function(filename, data, callback) {
+    callback(Error('boom'));
+  };
+  var mkdirp_success = function(dest, callback) {
+    callback();
+  };
+  var mkdirp_fail = function(dest, callback) {
+    callback(Error('boom2'));
+  };
 
   beforeEach(function() {
     logForMediaSpy = jasmine.createSpy('logForMedia');
@@ -365,13 +388,14 @@ describe('saveMediaObject', function() {
   });
 
   it('saves a media object', function(done) {
-    spyOn(fs, 'writeFile').and.callFake(function(filename, data, callback) {
-      callback();
-    });
+    mkdirp_spy = jasmine.createSpy('mkdirp').and.callFake(mkdirp_success);
+    ragamints.__set__('mkdirp', mkdirp_spy);
+    spyOn(fs, 'writeFile').and.callFake(writeFile_success);
     var dest = 'foo';
     var media_filename = path.join(dest, media_object_basename);
     saveMediaObject(media, {dest: dest}).then(function(filename) {
       let data = JSON.stringify(media, null, 2);
+      expect(mkdirp_spy.calls.argsFor(0)[0]).toEqual(dest);
       expect(fs.writeFile.calls.argsFor(0)[1]).toEqual(data);
       expect(logForMediaSpy).toHaveBeenCalled();
       expect(filename).toBe(media_filename);
@@ -379,10 +403,23 @@ describe('saveMediaObject', function() {
     });
   });
 
-  it('rejects if saving failed', function(done) {
-    spyOn(fs, 'writeFile').and.callFake(function(filename, data, callback) {
-      callback(Error('boom'));
+  it('rejects if creating destination directory failed', function(done) {
+    mkdirp_spy = jasmine.createSpy('mkdirp').and.callFake(mkdirp_fail);
+    ragamints.__set__('mkdirp', mkdirp_spy);
+    spyOn(fs, 'writeFile').and.callFake(writeFile_success);
+    var dest = 'foo';
+    saveMediaObject(media, {dest: dest}).catch(function(err) {
+      expect(mkdirp_spy.calls.argsFor(0)[0]).toEqual(dest);
+      expect(fs.writeFile.calls.count()).toEqual(0);
+      expect(err.message).toEqual('boom2');
+      done();
     });
+  });
+
+  it('rejects if saving failed', function(done) {
+    mkdirp_spy = jasmine.createSpy('mkdirp').and.callFake(mkdirp_success);
+    ragamints.__set__('mkdirp', mkdirp_spy);
+    spyOn(fs, 'writeFile').and.callFake(writeFile_fail);
     saveMediaObject(media, {}).catch(function(err) {
       expect(fs.writeFile).toHaveBeenCalled();
       expect(err.message).toEqual('boom');
