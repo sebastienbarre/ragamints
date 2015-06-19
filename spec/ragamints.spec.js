@@ -54,6 +54,7 @@ var media = {
 var media_file_name = '2015-05-04_1430734958';
 var media_basename = media_file_name + '.jpg';
 var media_object_basename = media_file_name + '.json';
+var media_default_resolution = 'standard_resolution';
 
 var media_no_gps = extend({}, media);
 delete media_no_gps.location;
@@ -205,7 +206,6 @@ describe('updateFileMetadata', function() {
     };
     updateFileMetadata(video, 'foo.jpg', {}).then(function(res) {
       expect(res).toBe(false);
-      expect(logForMediaSpy).toHaveBeenCalled();
       done();
     });
   });
@@ -275,6 +275,12 @@ describe('fetchMedia', function() {
       return true;
     }
   };
+  var lstat_file_exists = function(filename, callback) {
+      callback(null, stats_is_file);
+  };
+  var lstat_file_does_not_exist = function(filename, callback) {
+      callback(true, stats_is_file);
+  };
   var Download = function() {
     var _basename;
     var _dest;
@@ -306,10 +312,8 @@ describe('fetchMedia', function() {
   });
 
   it('skips if the file is already there', function(done) {
-    spyOn(fs, 'lstat').and.callFake(function(filename, callback) {
-      callback(false, stats_is_file);
-    });
-    fetchMedia(media, {}).then(function(filename) {
+    spyOn(fs, 'lstat').and.callFake(lstat_file_exists);
+    fetchMedia(media, media_default_resolution, {}).then(function(filename) {
       expect(DownloadSpy.calls.any()).toEqual(false);
       expect(logForMediaSpy).toHaveBeenCalled();
       expect(filename).toBe(media_basename);
@@ -318,12 +322,12 @@ describe('fetchMedia', function() {
   });
 
   it('fetches a media', function(done) {
-    spyOn(fs, 'lstat').and.callFake(function(filename, callback) {
-      callback(true, stats_is_file);
-    });
+    spyOn(fs, 'lstat').and.callFake(lstat_file_does_not_exist);
     var dest = 'foo';
     var media_filename = path.join(dest, media_basename);
-    fetchMedia(media, {dest: dest}).then(function(filename) {
+    fetchMedia(
+      media, media_default_resolution, {dest: dest}
+    ).then(function(filename) {
       expect(DownloadSpy).toHaveBeenCalled();
       expect(logForMediaSpy).toHaveBeenCalled();
       expect(filename).toBe(media_filename);
@@ -332,10 +336,10 @@ describe('fetchMedia', function() {
   });
 
   it('fetches a media even if it exists when forcing', function(done) {
-    spyOn(fs, 'lstat').and.callFake(function(filename, callback) {
-      callback(false, stats_is_file);
-    });
-    fetchMedia(video_media, {alwaysDownload: true}).then(function(filename) {
+    spyOn(fs, 'lstat').and.callFake(lstat_file_exists);
+    fetchMedia(
+      video_media, media_default_resolution, {alwaysDownload: true}
+    ).then(function(filename) {
       expect(DownloadSpy).toHaveBeenCalled();
       expect(logForMediaSpy).toHaveBeenCalled();
       expect(filename).toBe(video_media_basename);
@@ -344,9 +348,7 @@ describe('fetchMedia', function() {
   });
 
   it('rejects if fetching failed', function(done) {
-    spyOn(fs, 'lstat').and.callFake(function(filename, callback) {
-      callback(true, stats_is_file);
-    });
+    spyOn(fs, 'lstat').and.callFake(lstat_file_does_not_exist);
     var Download_failed = function() {
       var d = Download();
       d.run = function(callback) {
@@ -356,9 +358,21 @@ describe('fetchMedia', function() {
     };
     DownloadSpy = jasmine.createSpy('Download').and.callFake(Download_failed);
     ragamints.__set__('Download', DownloadSpy);
-    fetchMedia(media, {}).catch(function(err) {
+    fetchMedia(media, media_default_resolution, {}).catch(function(err) {
       expect(DownloadSpy).toHaveBeenCalled();
       expect(err.message).toEqual('boom');
+      done();
+    });
+  });
+
+  it('rejects if resolution not found', function(done) {
+    spyOn(fs, 'lstat').and.callFake(lstat_file_does_not_exist);
+    DownloadSpy = jasmine.createSpy('Download');
+    ragamints.__set__('Download', DownloadSpy);
+    fetchMedia(media, 'foobar', {}).catch(function(err) {
+      expect(fs.lstat.calls.any()).toEqual(false);
+      expect(DownloadSpy.calls.any()).toEqual(false);
+      expect(err.message).toEqual('Resolution not found in media: foobar');
       done();
     });
   });
@@ -410,7 +424,7 @@ describe('saveMediaObject', function() {
     var dest = 'foo';
     saveMediaObject(media, {dest: dest}).catch(function(err) {
       expect(mkdirp_spy.calls.argsFor(0)[0]).toEqual(dest);
-      expect(fs.writeFile.calls.count()).toEqual(0);
+      expect(fs.writeFile.calls.any()).toEqual(false);
       expect(err.message).toEqual('boom2');
       done();
     });
@@ -502,7 +516,7 @@ describe('resolveUserId', function() {
   it('resolves a user id to itself', function(done) {
     spyOn(ig, 'user_search');
     resolveUserId('26667401').then(function(user_id) {
-      expect(ig.user_search.calls.count()).toEqual(0);
+      expect(ig.user_search.calls.any()).toEqual(false);
       expect(user_id).toEqual('26667401');
       done();
     });
@@ -592,7 +606,7 @@ describe('resolveMediaId', function() {
     fetch_spy = jasmine.createSpy('fetch');
     ragamints.__set__('fetch', fetch_spy);
     resolveMediaId(media.id).then(function(media_id) {
-      expect(fetch_spy.calls.count()).toEqual(0);
+      expect(fetch_spy.calls.any()).toEqual(false);
       expect(media_id).toEqual(media.id);
       done();
     });
@@ -746,7 +760,8 @@ describe('query', function() {
       expect(resolveOptionsSpy).toHaveBeenCalled();
       expect(getRecentMediasSpy).toHaveBeenCalled();
       expect(getRecentMediasSpy.calls.argsFor(0)[0]).toEqual(options.userId);
-      expect(fetchMediaSpy.calls.argsFor(0)).toEqual([{}, options]);
+      expect(fetchMediaSpy.calls.argsFor(0)).toEqual(
+        [{}, media_default_resolution, options]);
       expect(fetchMediaSpy.calls.count()).toEqual(ig_page_size);
       expect(updateFileMetadataSpy.calls.argsFor(0)).toEqual(
         [{}, media_basename, options]);
@@ -768,7 +783,8 @@ describe('query', function() {
       expect(resolveOptionsSpy).toHaveBeenCalled();
       expect(getRecentMediasSpy).toHaveBeenCalled();
       expect(getRecentMediasSpy.calls.argsFor(0)[0]).toEqual(options.userId);
-      expect(fetchMediaSpy.calls.argsFor(0)).toEqual([{}, options]);
+      expect(fetchMediaSpy.calls.argsFor(0)).toEqual(
+        [{}, media_default_resolution, options]);
       expect(fetchMediaSpy.calls.count()).toEqual(ig_page_size);
       expect(updateFileMetadataSpy.calls.argsFor(0)).toEqual(
         [{}, media_basename, options]);
@@ -791,7 +807,7 @@ describe('query', function() {
     ragamints.__set__('fetchMedia', fetchMediaSpy);
     query({}).catch(function(err) {
       expect(err.message).toEqual('boom');
-      expect(console.log.calls.count()).toEqual(0);
+      expect(console.log.calls.any()).toEqual(false);
       done();
     });
   });
@@ -805,7 +821,7 @@ describe('query', function() {
     ragamints.__set__('saveMediaObject', saveMediaObjectSpy);
     query({json: true}).catch(function(err) {
       expect(err.message).toEqual('boom');
-      expect(console.log.calls.count()).toEqual(0);
+      expect(console.log.calls.any()).toEqual(false);
       done();
     });
   });
@@ -817,7 +833,7 @@ describe('query', function() {
     ragamints.__set__('fetchMedia', fetchMediaSpy);
     query({sequential: true}).catch(function(err) {
       expect(err.message).toEqual('boom');
-      expect(console.log.calls.count()).toEqual(0);
+      expect(console.log.calls.any()).toEqual(false);
       done();
     });
   });
@@ -831,7 +847,7 @@ describe('query', function() {
     ragamints.__set__('saveMediaObject', saveMediaObjectSpy);
     query({sequential: true, json: true}).catch(function(err) {
       expect(err.message).toEqual('boom');
-      expect(console.log.calls.count()).toEqual(0);
+      expect(console.log.calls.any()).toEqual(false);
       done();
     });
   });
@@ -845,7 +861,7 @@ describe('query', function() {
     ragamints.__set__('getRecentMedias', getRecentMediasSpy);
     query({}).catch(function(err) {
       expect(err.message).toEqual('boom');
-      expect(console.log.calls.count()).toEqual(0);
+      expect(console.log.calls.any()).toEqual(false);
       done();
     });
   });
@@ -874,7 +890,8 @@ describe('main', function() {
       '--min-timestamp', '2015-01-01 23:10:10',
       '--max-timestamp', '2015-12-31 13:10:10',
       '--min-id', media.link,
-      '--max-id', media.link
+      '--max-id', media.link,
+      '--resolution', 'thumbnail,low_resolution'
     ];
     var options = {
       accessToken: 'token',
@@ -883,7 +900,8 @@ describe('main', function() {
       minTimestamp: '2015-01-01 23:10:10',
       maxTimestamp: '2015-12-31 13:10:10',
       minId: media.link,
-      maxId: media.link
+      maxId: media.link,
+      resolution: ['thumbnail', 'low_resolution']
     };
     main(argv).then(function(res) {
       var query_calls = querySpy.calls.argsFor(0)[0];

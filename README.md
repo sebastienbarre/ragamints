@@ -69,7 +69,8 @@ $ ragamints
     -p, --max-timestamp <timestamp|string>  Fetch media before this UNIX timestamp
     -d, --dest [dir]                        Destination dir, current dir otherwise
     -a, --always-download                   Always download, even if media is saved already
-    -j, --json                              Download the json object describing the media
+    -j, --json                              Save the json object describing the media
+    -r, --resolution <resolutions>          Resolution(s) to fetch (thumbnail,low_resolution,standard_resolution)
     -s, --sequential                        Process everything sequentially (slower)
     -v, --verbose                           Output more info (timezone, creation time)
     -q, --quiet                             Output less info
@@ -249,7 +250,11 @@ You should hear my accent. With that being said, I'd be happy to fix any mistake
 All notable changes to this project will be documented here. This project adheres to [Semantic Versioning] and [Keep a CHANGELOG].
 
 ### Unreleased
+
+### 0.1.5 - 2015-06-18
+#### Added
 - New `--json` option
+- New `--resolution` option
 
 ### 0.1.4 - 2015-05-21
 #### Added

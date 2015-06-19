@@ -23,7 +23,7 @@
     "consistent-this": [0, "self"],
     "max-depth": [1, 3],
     "max-len": [2, 79],
-    "max-nested-callbacks": [2, 3],
+    "max-nested-callbacks": [2, 4],
     "max-params": [1, 3],
     "max-statements": [2, 25],
     "new-cap": [2, {

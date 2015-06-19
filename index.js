@@ -29,8 +29,8 @@ const success = chalk.green;
  *   caption.text                   ('Back home!')
  *   created_time                   (1430734958)
  *   id                             (977399508246039160)
- *   images.standard_resolution.url (url to image or video cover file, .jpg)
- *   videos.standard_resolution.url (url to video file, .mp4)
+ *   images.[resolution].url        (url to image or video cover file, .jpg)
+ *   videos.[resolution].url        (url to video file, .mp4)
  *   link                           (https://instagram.com/p/2Qams1JYsp/)
  *   likes.count                    (15)
  *   location.latitude              (58.298348257)
@@ -271,9 +271,6 @@ function updateFileMetadata(media, filename, options) {
   return new Promise(function(resolve, reject) {
     let basename = path.basename(filename);
     if (media.type !== 'image') {
-      if (!options.quiet) {
-        logForMedia(media, warn('Ignored non-image ' + basename));
-      }
       resolve(false);
       return;
     }
@@ -327,43 +324,53 @@ function createMediaFileName(media) {
  *   {Boolean} quiet Output less info
  *
  * @param {object} media Media object
+ * @param {String} resolution Resolution to fetch
  * @param {object} options Fetch options
  * @return {Promise} resolving w/ filename once fetched, or rejecting
  */
-function fetchMedia(media, options) {
+function fetchMedia(media, resolution, options) {
   return new Promise(function(resolve, reject) {
-    let ext = media.type === 'image' ? '.jpg' : '.mp4';
-    let basename = createMediaFileName(media) + ext;
-    let dest = options.dest || './';
-    let filename = path.join(dest, basename);
-    fs.lstat(filename, function(lstat_err, stats) {
-      // Do not re-download if the file already exists
-      if (!lstat_err && stats.isFile() && !options.alwaysDownload) {
-        if (!options.quiet) {
-          logForMedia(media, 'Saved already as ' + success(basename));
-        }
-        resolve(filename);
-      } else {
-        let url = media.videos
-          ? media.videos.standard_resolution.url
-          : media.images.standard_resolution.url;
-        new Download()
-        .get(url)
-        .dest(dest)
-        .rename(basename)
-        .run(function(download_err, files) {
-          if (download_err) {
-            reject(download_err);
-          } else {
-            if (!options.quiet) {
-              let file_basename = path.basename(files[0].path);
-              logForMedia(media, 'Fetched ' + success(file_basename));
-            }
-            resolve(files[0].path);
+    let urls = media.videos ? media.videos : media.images;
+    if (urls[resolution] === undefined) {
+      reject(Error('Resolution not found in media: ' + resolution));
+    } else {
+      let resolution_suffix = {
+        'thumbnail': '-thumbnail',
+        'low_resolution': '-low',
+        'standard_resolution': ''
+      };
+      let name = createMediaFileName(media);
+      let suffix = media.type === 'image' ? resolution_suffix[resolution] : '';
+      let ext = media.type === 'image' ? '.jpg' : '.mp4';
+      let basename = `${name}${suffix}${ext}`;
+      let dest = options.dest || './';
+      let filename = path.join(dest, basename);
+      fs.lstat(filename, function(lstat_err, stats) {
+        // Do not re-download if the file already exists
+        if (!lstat_err && stats.isFile() && !options.alwaysDownload) {
+          if (!options.quiet) {
+            logForMedia(media, 'Saved already as ' + success(basename));
           }
-        });
-      }
-    });
+          resolve(filename);
+        } else {
+          new Download()
+          .get(urls[resolution].url)
+          .dest(dest)
+          .rename(basename)
+          .run(function(download_err, files) {
+            if (download_err) {
+              reject(download_err);
+            } else {
+              if (!options.quiet) {
+                let file_basename = path.basename(files[0].path);
+                logForMedia(media, 'Fetched ' + success(file_basename));
+              }
+              resolve(files[0].path);
+            }
+          });
+        }
+      });
+    }
   });
 }
 
@@ -382,7 +389,7 @@ function saveMediaObject(media, options) {
   return new Promise(function(resolve, reject) {
     let basename = createMediaFileName(media) + '.json';
     let dest = options.dest || './';
-    mkdirp(dest, function (mkdirp_err) {
+    mkdirp(dest, function(mkdirp_err) {
       if (mkdirp_err) {
         reject(mkdirp_err);
       } else {
@@ -657,12 +664,16 @@ function query(unresolved_options) {
             // medias and *chain* the corresponding promises to our original
             // promise. This ensures everything is done in order (but slower).
             chunk.medias.forEach(function(media) {
-              all_promises = all_promises.then(function() {
-                return fetchMedia(media, options);
-              }).then(function(filename) {
-                return updateFileMetadata(media, filename, options);
-              }).catch(function(err) {
-                throw err;
+              let resolutions = media.type === 'image'
+                ? options.resolution : ['standard_resolution'];
+              resolutions.forEach(function(resolution) {
+                all_promises = all_promises.then(function() {
+                  return fetchMedia(media, resolution, options);
+                }).then(function(filename) {
+                  return updateFileMetadata(media, filename, options);
+                }).catch(function(err) {
+                  throw err;
+                });
               });
               if (options.json) {
                 all_promises = all_promises.then(function() {
@@ -687,12 +698,18 @@ function query(unresolved_options) {
             // start fetching and updating right away.
             let chunk_promises = [];
             chunk.medias.forEach(function(media) {
-              let fp = fetchMedia(media, options).then(function(filename) {
-                return updateFileMetadata(media, filename, options);
-              }).catch(function(err) {
-                throw err;
+              let resolutions = media.type === 'image'
+                ? options.resolution : ['standard_resolution'];
+              resolutions.forEach(function(resolution) {
+                let fp = fetchMedia(
+                  media, resolution, options
+                ).then(function(filename) {
+                  return updateFileMetadata(media, filename, options);
+                }).catch(function(err) {
+                  throw err;
+                });
+                chunk_promises.push(fp);
               });
-              chunk_promises.push(fp);
               if (options.json) {
                 let sp = saveMediaObject(media, options).catch(function(err) {
                   throw err;
@@ -726,6 +743,9 @@ function query(unresolved_options) {
  * @return {Promise} resolving when done, or rejecting
  */
 function main(argv) {
+  function program_list(val) {
+    return val.split(',');
+  }
   program.option(
     '-t, --access-token <token>',
     'Instagram Access Token'
@@ -758,6 +778,11 @@ function main(argv) {
   ).option(
     '-j, --json',
     'Save the json object describing the media'
+  ).option(
+    '-r, --resolution <resolutions>',
+    'Resolution(s) to fetch (thumbnail,low_resolution,standard_resolution)',
+    program_list,
+    ['standard_resolution']
   ).option(
     '-s, --sequential',
     'Process everything sequentially (slower)'
