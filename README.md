@@ -250,6 +250,7 @@ You should hear my accent. With that being said, I'd be happy to fix any mistake
 All notable changes to this project will be documented here. This project adheres to [Semantic Versioning] and [Keep a CHANGELOG].
 
 ### Unreleased
+- New `--include-videos` option
 
 ### 0.1.5 - 2015-06-18
 #### Added

@@ -664,6 +664,10 @@ function query(unresolved_options) {
             // medias and *chain* the corresponding promises to our original
             // promise. This ensures everything is done in order (but slower).
             chunk.medias.forEach(function(media) {
+              if (media.type === 'video' && !options.includeVideos) {
+                return;
+              }
+              all_medias.push(media);
               let resolutions = media.type === 'image'
                 ? options.resolution : ['standard_resolution'];
               resolutions.forEach(function(resolution) {
@@ -683,7 +687,6 @@ function query(unresolved_options) {
                 });
               }
             });
-            all_medias = all_medias.concat(chunk.medias);
             it = chunk.next;
           }
           // Make sure everything has completed. In sequential mode, we only
@@ -698,6 +701,10 @@ function query(unresolved_options) {
             // start fetching and updating right away.
             let chunk_promises = [];
             chunk.medias.forEach(function(media) {
+              if (media.type === 'video' && !options.includeVideos) {
+                return;
+              }
+              all_medias.push(media);
               let resolutions = media.type === 'image'
                 ? options.resolution : ['standard_resolution'];
               resolutions.forEach(function(resolution) {
@@ -718,7 +725,6 @@ function query(unresolved_options) {
               }
             });
             all_promises = all_promises.concat(chunk_promises);
-            all_medias = all_medias.concat(chunk.medias);
             it = chunk.next;
           }
           // Make sure everything has completed. In parallel mode we have an
@@ -774,10 +780,12 @@ function main(argv) {
     './'
   ).option(
     '-a, --always-download',
-    'Always download, even if media is saved already'
+    'Always download, even if media is saved already',
+    false
   ).option(
     '-j, --json',
-    'Save the json object describing the media'
+    'Save the json object describing the media',
+    false
   ).option(
     '-r, --resolution <resolutions>',
     'Resolution(s) to fetch (thumbnail,low_resolution,standard_resolution)',
@@ -785,13 +793,20 @@ function main(argv) {
     ['standard_resolution']
   ).option(
     '-s, --sequential',
-    'Process everything sequentially (slower)'
+    'Process everything sequentially (slower)',
+    false
+  ).option(
+    '-i, --include-videos',
+    'Fetch videos as well (skipped by default)',
+    false
   ).option(
     '-v, --verbose',
-    'Output more info (timezone, creation time)'
+    'Output more info (timezone, creation time)',
+    false
   ).option(
     '-q, --quiet',
-    'Output less info'
+    'Output less info',
+    false
   ).on('--help', function() {
     console.log('  Check the man page or README file for more.');
   }).parse(argv);
