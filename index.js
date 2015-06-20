@@ -24,6 +24,10 @@ const warn    = chalk.yellow;
 const notice  = chalk.cyan;
 const success = chalk.green;
 
+const SOFTWARE = 'ragamints';
+const ERROR_PREFIX = SOFTWARE + ':';
+const ACCESS_TOKEN_ENV_VAR = 'RAGAMINTS_ACCESS_TOKEN';
+
 /*
  * Given a media object, fields of interest:
  *   caption.text                   ('Back home!')
@@ -102,9 +106,8 @@ function cliArg(key, value) {
  */
 function getExifToolSoftwareArgs() {
   let args = [];
-  let software = 'ragamints';
-  args.push(cliArg('EXIF:Software', software));
-  args.push(cliArg('XMP:CreatorTool', software));
+  args.push(cliArg('EXIF:Software', SOFTWARE));
+  args.push(cliArg('XMP:CreatorTool', SOFTWARE));
   return args;
 }
 
@@ -286,12 +289,13 @@ function updateFileMetadata(media, filename, options) {
     });
 
     exiftool.on('error', function(err) {
-      reject(new Error(`Could not spawn exiftool (${err.message})`));
+      reject(new Error(
+        `${ERROR_PREFIX} Could not spawn exiftool (${err.message})`));
     });
 
     exiftool.on('close', function() {
       if (error_message) {
-        reject(Error(error_message));
+        reject(new Error(`${ERROR_PREFIX} ${error_message}`));
       } else {
         if (!options.quiet) {
           logForMedia(media, 'Updated metadata in ' + success(basename));
@@ -332,7 +336,8 @@ function fetchMedia(media, resolution, options) {
   return new Promise(function(resolve, reject) {
     let urls = media.videos ? media.videos : media.images;
     if (urls[resolution] === undefined) {
-      reject(Error('Resolution not found in media: ' + resolution));
+      reject(new Error(
+        `${ERROR_PREFIX} Could not find resolution in media: ${resolution}`));
     } else {
       let resolution_suffix = {
         'thumbnail': '-thumbnail',
@@ -519,7 +524,8 @@ function resolveUserId(user_id) {
         if (err) {
           reject(err);
         } else if (!users.length) {
-          reject(Error('Could not find user ID for: ' + user_id));
+          reject(new Error(
+            `${ERROR_PREFIX} Could not find user ID for: ${user_id}`));
         } else {
           console.log('Found user ID:', success(users[0].id), 'for username:',
             notice(user_id));
@@ -579,7 +585,8 @@ function resolveMediaId(media_id) {
     if (response.ok) {
       return response.json();
     }
-    throw new Error('Could not retrieve Media Id for: ' + media_url);
+    throw new Error(
+      `${ERROR_PREFIX} Could not retrieve Media Id for: ${media_url}`);
   }).then(function(json) {
     console.log('Found media ID:', success(json.media_id), 'for media url:',
       notice(media_url));
@@ -595,21 +602,21 @@ function resolveMediaId(media_id) {
  * @return {Promise} resolving with resolved options, or rejecting
  */
 function resolveOptions(options) {
-  let options2 = extend({}, options);
-  if (options2.accessToken === undefined) {
-    if (process.env.RAGAMINTS_ACCESS_TOKEN) {
-      options2.accessToken = process.env.RAGAMINTS_ACCESS_TOKEN;
-      console.log('Using', success('RAGAMINTS_ACCESS_TOKEN'),
+  let resolved_options = extend({}, options);
+  if (resolved_options.accessToken === undefined) {
+    if (process.env[ACCESS_TOKEN_ENV_VAR]) {
+      resolved_options.accessToken = process.env[ACCESS_TOKEN_ENV_VAR];
+      console.log('Using', success(ACCESS_TOKEN_ENV_VAR),
         'environment variable to set Instagram Access Token');
     } else {
-      return Promise.reject(Error('Need access token'));
+      return Promise.reject(new Error(`${ERROR_PREFIX} Need access token`));
     }
   }
   ig.use({
-    access_token: options2.accessToken
+    access_token: resolved_options.accessToken
   });
-  if (!options2.userId) {
-    return Promise.reject(Error('Need user'));
+  if (!resolved_options.userId) {
+    return Promise.reject(new Error(`${ERROR_PREFIX} Need user`));
   }
   let timestamps = {
     minTimestamp: 'Min Timestamp',
@@ -617,23 +624,23 @@ function resolveOptions(options) {
   };
   for (let timestamp in timestamps) {
     if (options[timestamp]) {
-      options2[timestamp] = isUnixTimestamp(options[timestamp])
+      resolved_options[timestamp] = isUnixTimestamp(options[timestamp])
         ? options[timestamp]
         : Math.floor(Date.create(options[timestamp]).getTime() / 1000);
       console.log(timestamps[timestamp] + ':', notice(options[timestamp]),
-        'is', success(moment.unix(options2[timestamp]).format()),
-        '(Unix:', options2[timestamp] + ')');
+        'is', success(moment.unix(resolved_options[timestamp]).format()),
+        '(Unix:', resolved_options[timestamp] + ')');
     }
   }
   return Promise.all([
     resolveUserId(options.userId),
     resolveMediaId(options.minId),
     resolveMediaId(options.maxId)
-    ]).then(function(resolved_options) {
-      options2.userId = resolved_options[0];
-      options2.minId = resolved_options[1];
-      options2.maxId = resolved_options[2];
-      return options2;
+    ]).then(function(values) {
+      resolved_options.userId = values[0];
+      resolved_options.minId = values[1];
+      resolved_options.maxId = values[2];
+      return resolved_options;
     });
 }
 

@@ -10,6 +10,10 @@ var strip_ansi = require('strip-ansi');
 
 var ragamints = rewire('../index.js');
 
+const SOFTWARE             = ragamints.__get__('SOFTWARE');
+const ERROR_PREFIX         = ragamints.__get__('ERROR_PREFIX');
+const ACCESS_TOKEN_ENV_VAR = ragamints.__get__('ACCESS_TOKEN_ENV_VAR');
+
 var cdn = 'https://scontent.cdninstagram.com/hphotos-xat1/t51.2885-15/';
 var media = {
   'id': '977398127825095465_26667401',
@@ -74,8 +78,8 @@ var exiftool_args_common = [
   '-q',
   '-codedcharacterset=utf8',
   '-overwrite_original',
-  '-EXIF:Software=ragamints',
-  '-XMP:CreatorTool=ragamints',
+  '-EXIF:Software=' + SOFTWARE,
+  '-XMP:CreatorTool=' + SOFTWARE,
   '-EXIF:ImageDescription=Back home. #foo #osaka',
   '-IPTC:Caption-Abstract=Back home. #foo #osaka',
   '-XMP:Description=Back home. #foo #osaka',
@@ -235,7 +239,8 @@ describe('updateFileMetadata', function() {
       media, media_basename, {quiet: true}
     ).catch(function(err) {
       expect(child_process.spawn).toHaveBeenCalled();
-      expect(err.message).toBe('Could not spawn exiftool (boom)');
+      expect(err.message).toBe(
+        `${ERROR_PREFIX} Could not spawn exiftool (boom)`);
       done();
     });
   });
@@ -253,7 +258,7 @@ describe('updateFileMetadata', function() {
       media, media_basename, {quiet: true}
     ).catch(function(err) {
       expect(child_process.spawn).toHaveBeenCalled();
-      expect(err.message).toBe('boom');
+      expect(err.message).toBe(`${ERROR_PREFIX} boom`);
       done();
     });
   });
@@ -372,7 +377,8 @@ describe('fetchMedia', function() {
     fetchMedia(media, 'foobar', {}).catch(function(err) {
       expect(fs.lstat.calls.any()).toEqual(false);
       expect(DownloadSpy.calls.any()).toEqual(false);
-      expect(err.message).toEqual('Resolution not found in media: foobar');
+      expect(err.message).toEqual(
+        `${ERROR_PREFIX} Could not find resolution in media: foobar`);
       done();
     });
   });
@@ -556,7 +562,7 @@ describe('resolveUserId', function() {
     resolveUserId('sebastienbarre').catch(function(err) {
       expect(ig.user_search.calls.argsFor(0)[0]).toEqual('sebastienbarre');
       expect(err.message).toEqual(
-        'Could not find user ID for: sebastienbarre');
+        `${ERROR_PREFIX} Could not find user ID for: sebastienbarre`);
       done();
     });
   });
@@ -643,7 +649,7 @@ describe('resolveMediaId', function() {
     resolveMediaId(media.link).catch(function(err) {
       expect(fetch_spy).toHaveBeenCalled();
       expect(err.message).toEqual(
-        'Could not retrieve Media Id for: ' + media.link);
+        `${ERROR_PREFIX} Could not retrieve Media Id for: ${media.link}`);
       done();
     });
   });
@@ -688,7 +694,9 @@ describe('resolveOptions', function() {
       maxId: media.id,
       accessToken: 'token'
     };
-    ragamints.__set__('process', {env: {RAGAMINTS_ACCESS_TOKEN: 'token'}});
+    var env = {};
+    env[ACCESS_TOKEN_ENV_VAR] = 'token';
+    ragamints.__set__('process', {env: env});
     resolveOptions(options).then(function(res) {
       expect(resolveUserIdSpy.calls.argsFor(0)[0]).toEqual('sebastienbarre');
       expect(resolveMediaIdSpy.calls.argsFor(0)[0]).toEqual(media.link);
@@ -701,14 +709,14 @@ describe('resolveOptions', function() {
   it('rejects when no access token is found', function(done) {
     ragamints.__set__('process', {env: {}});
     resolveOptions({}).catch(function(err) {
-      expect(err.message).toEqual('Need access token');
+      expect(err.message).toEqual(`${ERROR_PREFIX} Need access token`);
       done();
     });
   });
 
   it('rejects when no user id is found', function(done) {
     resolveOptions({accessToken: 'token'}).catch(function(err) {
-      expect(err.message).toEqual('Need user');
+      expect(err.message).toEqual(`${ERROR_PREFIX} Need user`);
       done();
     });
   });
