@@ -72,6 +72,7 @@ $ ragamints
     -j, --json                              Save the json object describing the media
     -r, --resolution <resolutions>          Resolution(s) to fetch (thumbnail,low_resolution,standard_resolution)
     -s, --sequential                        Process everything sequentially (slower)
+    -i, --include-videos                    Fetch videos as well (skipped by default)
     -v, --verbose                           Output more info (timezone, creation time)
     -q, --quiet                             Output less info
 
@@ -108,6 +109,8 @@ $ ls -lh *.jpg | awk '{print $9, $5}'
 ```
 
 Note that I reordered the indexes numerically for clarity. All network requests being performed in parallel for performance, it is unlikely such ordering will occur. Whichever file finishes downloading first (likely the smallest) will appear first.
+
+The *standard* (largest) image resolution is fetched but `--resolution` can be used to download specific resolutions -- Instagram stores three on its servers. Video files are not fetched by default, unless `--include-videos` is specified.
 
 ### Fetch all medias found between two specific medias
 
@@ -176,7 +179,7 @@ Done processing 2 media(s). Easy peasy.
 
 ## Supported Metadata
 
-The following metadata fields are set on each JPEG file, if the corresponding Instagram fields are found. Video files are fetched, but no metadata is updated.
+The following metadata fields are set on each JPEG file, if the corresponding Instagram fields are found. Video files are not updated -- they are not fetched by default either, unless `--include-videos` is used.
 
 | Metadata Field          | Instagram Field            |
 |-------------------------|----------------------------|
@@ -251,6 +254,7 @@ All notable changes to this project will be documented here. This project adhere
 
 ### Unreleased
 - New `--include-videos` option
+- Video files are no longer fetched by default
 
 ### 0.1.5 - 2015-06-18
 #### Added
