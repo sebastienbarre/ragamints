@@ -253,6 +253,10 @@ You should hear my accent. With that being said, I'd be happy to fix any mistake
 All notable changes to this project will be documented here. This project adheres to [Semantic Versioning] and [Keep a CHANGELOG].
 
 ### Unreleased
+N/A
+
+### 0.1.6 - 2015-06-30
+#### Added
 - New `--include-videos` option
 - Video files are no longer fetched by default
 
