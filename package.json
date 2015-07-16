@@ -12,7 +12,7 @@
     "test:jasmine": "node --harmony node_modules/jasmine/bin/jasmine.js",
     "test:jasmine-es6": "node --harmony node_modules/jasmine-es6/bin/jasmine.js",
     "test:jasmine-runner": "node --harmony spec/support/jasmine-runner.js",
-    "test": "npm run check && npm run test:jasmine-runner",
+    "test": "npm run check && npm run test:jasmine-es6",
     "coverage": "node --harmony node_modules/istanbul/lib/cli.js cover node_modules/jasmine-es6/bin/jasmine.js",
     "coverage:coveralls:push": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "publish:pre": "npm prune && npm test && npm run doc",
