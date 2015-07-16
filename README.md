@@ -238,15 +238,11 @@ The following metadata fields are set on each JPEG file, if the corresponding In
 
 Ragamints is released under the [BSD License].
 
-## FAQ
+## Troubleshooting
 
-#### Ragamints?! What's with the weird name?
+#### `npm WARN optional dep failed, continuing fsevents@n.n.n`
 
-Think about it...
-
-#### You can't write English, can you?
-
-You should hear my accent. With that being said, I'd be happy to fix any mistakes.
+You may see this message when installing `ragamints` on Windows. It is *not* indicative of a problem and originates from the [`chokidar`](https://github.com/paulmillr/chokidar) npm module, a dependency of the [`babel`](https://github.com/babel/babel) module, the ES6 transpiler. [FSEvents](http://en.wikipedia.org/wiki/FSEvents) is an API only available on OS X. The [`fsevents`](https://github.com/strongloop/fsevents) npm module, which provides a node interface to that OS API, cannot be built on systems other than OS X and thus is marked as "optional dependency" by modules such as `chokidar`, and reported as such.
 
 ## Change Log
 
