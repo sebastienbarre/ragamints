@@ -8,7 +8,7 @@ var Promise    = require('es6-promise').Promise;
 var rewire     = require('rewire');
 var strip_ansi = require('strip-ansi');
 
-var ragamints = rewire('../index.js');
+var ragamints = rewire('../lib/ragamints.js');
 
 const SOFTWARE             = ragamints.__get__('SOFTWARE');
 const ERROR_PREFIX         = ragamints.__get__('ERROR_PREFIX');

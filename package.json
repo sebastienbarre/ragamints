@@ -5,9 +5,9 @@
   "scripts": {
     "doc:man": "pandoc -M title=\"ragamints(1)\" -f markdown_github -t man -s README.md  > doc/ragamints.1",
     "doc": "mkdirp doc && npm run doc:man",
-    "check:lint": "node --harmony node_modules/eslint/bin/eslint.js index.js bin/ragamints",
-    "check:jscs": "node --harmony node_modules/jscs/bin/jscs index.js bin/ragamints",
-    "check:jsinspect": "node --harmony node_modules/jsinspect/bin/jsinspect -C index.js bin/ragamints",
+    "check:lint": "node --harmony node_modules/eslint/bin/eslint.js lib/ragamints.js bin/ragamints",
+    "check:jscs": "node --harmony node_modules/jscs/bin/jscs lib/ragamints.js bin/ragamints",
+    "check:jsinspect": "node --harmony node_modules/jsinspect/bin/jsinspect -C lib/ragamints.js bin/ragamints",
     "check": "npm run check:lint && npm run check:jscs",
     "test:jasmine": "node --harmony node_modules/jasmine/bin/jasmine.js",
     "test:jasmine-es6": "node --harmony node_modules/jasmine-es6/bin/jasmine.js",

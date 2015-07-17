@@ -13,7 +13,7 @@ if (!iojs) {
   });
 }
 
-require('../index.js').main(process.argv).then(function() {
+require('../lib/ragamints.js').main(process.argv).then(function() {
   process.exit(0);
 }).catch(function(err) {
   if (err) {
