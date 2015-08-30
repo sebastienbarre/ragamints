@@ -69,7 +69,7 @@ $ ragamints
     -p, --max-timestamp <timestamp|string>  Fetch media before this UNIX timestamp
     -d, --dest [dir]                        Destination dir, current dir otherwise
     -a, --always-download                   Always download, even if media is saved already
-    -j, --json                              Save the json object describing the media
+    -j, --json [keys]                       Save the json object describing the media (optionally plucking keys)
     -r, --resolution <resolutions>          Resolution(s) to fetch (thumbnail,low_resolution,standard_resolution)
     -s, --sequential                        Process everything sequentially (slower)
     -i, --include-videos                    Fetch videos as well (skipped by default)
@@ -250,6 +250,10 @@ All notable changes to this project will be documented here. This project adhere
 
 ### Unreleased
 N/A
+
+### 0.1.7 - 2015-08-30
+#### Added
+- `--json`now accepts an optional [keys] parameter to pluck only certain keys
 
 ### 0.1.6 - 2015-06-30
 #### Added

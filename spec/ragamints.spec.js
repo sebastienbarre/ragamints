@@ -3,6 +3,7 @@
 
 var extend     = require('util')._extend;
 var moment     = require('moment-timezone');
+var objectPath = require('object-path');
 var path       = require('path');
 var Promise    = require('es6-promise').Promise;
 var rewire     = require('rewire');
@@ -415,6 +416,29 @@ describe('saveMediaObject', function() {
     var media_filename = path.join(dest, media_object_basename);
     saveMediaObject(media, {dest: dest}).then(function(filename) {
       let data = JSON.stringify(media, null, 2);
+      expect(mkdirp_spy.calls.argsFor(0)[0]).toEqual(dest);
+      expect(fs.writeFile.calls.argsFor(0)[1]).toEqual(data);
+      expect(logForMediaSpy).toHaveBeenCalled();
+      expect(filename).toBe(media_filename);
+      done();
+    });
+  });
+
+  it('saves a media object filtered by keys', function(done) {
+    mkdirp_spy = jasmine.createSpy('mkdirp').and.callFake(mkdirp_success);
+    ragamints.__set__('mkdirp', mkdirp_spy);
+    spyOn(fs, 'writeFile').and.callFake(writeFile_success);
+    var dest = 'foo';
+    var media_filename = path.join(dest, media_object_basename);
+    var keys = 'id,caption.created_time'
+    saveMediaObject(media, {dest: dest, json: keys}).then(function(filename) {
+      let filtered_media = {};
+      objectPath.set(filtered_media, 'id', objectPath.get(media, 'id'));
+      objectPath.set(
+        filtered_media,
+        'caption.created_time',
+        objectPath.get(media, 'caption.created_time'));
+      let data = JSON.stringify(filtered_media, null, 2);
       expect(mkdirp_spy.calls.argsFor(0)[0]).toEqual(dest);
       expect(fs.writeFile.calls.argsFor(0)[1]).toEqual(data);
       expect(logForMediaSpy).toHaveBeenCalled();
