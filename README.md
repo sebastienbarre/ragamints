@@ -218,7 +218,7 @@ The following metadata fields are set on each JPEG file, if the corresponding In
 
 ## Contribute
 
-* Check for [open issues][ragamints:issue] or open a fresh issue to start a discussion around a feature idea or a bug.
+* Check for [open issues][ragamints:issue], especially the ones [up-for-grabs][ragamints:up-for-grabs], or open a fresh issue to start a discussion around a feature idea or a bug.
 * If you feel uncomfortable or uncertain about an issue or your changes, feel free to [email me][sebastienbarre:email] and I will happily give you a hand.
 * Fork the [repository][ragamints:repo] on GitHub to start making your changes to the *master* branch (or branch off of it).
 * Write a test which shows that the bug was fixed or that the feature works as expected.
@@ -321,6 +321,7 @@ N/A
 [pandoc]: http://pandoc.org/
 [ragamints:issue]: https://github.com/sebastienbarre/ragamints/issues
 [ragamints:repo]: https://github.com/sebastienbarre/ragamints
+[ragamints:up-for-grabs]: https://github.com/sebastienbarre/ragamints/labels/up-for-grabs
 [Retrieve the access token for your Instagram account]: http://jenwachter.com/2013/04/22/retrive-the-access-token-for-your-instagram-account/
 [sebastienbarre:email]: mailto:sebastien.barre@gmail.com
 [sebastienbarre:Instagram]: https://instagram.com/sebastienbarre/
