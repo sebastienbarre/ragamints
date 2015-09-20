@@ -282,10 +282,10 @@ describe('fetchMedia', function() {
     }
   };
   var lstat_file_exists = function(filename, callback) {
-      callback(null, stats_is_file);
+    callback(null, stats_is_file);
   };
   var lstat_file_does_not_exist = function(filename, callback) {
-      callback(true, stats_is_file);
+    callback(true, stats_is_file);
   };
   var Download = function() {
     var _basename;
@@ -430,7 +430,7 @@ describe('saveMediaObject', function() {
     spyOn(fs, 'writeFile').and.callFake(writeFile_success);
     var dest = 'foo';
     var media_filename = path.join(dest, media_object_basename);
-    var keys = 'id,caption.created_time'
+    var keys = 'id,caption.created_time';
     saveMediaObject(media, {dest: dest, json: keys}).then(function(filename) {
       let filtered_media = {};
       objectPath.set(filtered_media, 'id', objectPath.get(media, 'id'));
