@@ -15,15 +15,16 @@
     "test:jasmine-runner": "node --harmony spec/support/jasmine-runner.js",
     "test": "npm run test:jasmine-runner",
     "coverage": "node --harmony node_modules/istanbul/lib/cli.js cover node_modules/jasmine-es6/bin/jasmine.js",
+    "coverage:check": "node --harmony node_modules/istanbul/lib/cli.js check-coverage --statements 100 --branches 85 --functions 100 --lines 100",
     "coverage:coveralls:push": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "publish:pre": "npm prune && npm test && npm run doc",
+    "publish:pre": "npm prune && npm run doc",
     "prepublish": "in-publish && npm run publish:pre || true",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "config": {
     "ghooks": {
-      "pre-commit": "npm run check",
-      "pre-push": "npm test",
+      "pre-commit": "npm run check && npm run test",
+      "pre-push": "npm run coverage && npm run coverage:check",
       "_post-merge": "npm install",
       "_post-rewrite": "npm install"
     }
