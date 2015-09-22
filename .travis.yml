@@ -24,4 +24,5 @@ after_success:
   - python travis_after_all.py
   - export $(cat .to_export_back)
   - npm run semantic-release
-  - npm run coverage:coveralls:push
+  - npm run coverage:push:codecov
+  - npm run coverage:push:coveralls
