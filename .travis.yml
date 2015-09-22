@@ -25,4 +25,3 @@ after_success:
   - export $(cat .to_export_back)
   - npm run semantic-release
   - npm run coverage:push:codecov
-  - npm run coverage:push:coveralls
