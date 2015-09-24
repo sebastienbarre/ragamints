@@ -222,6 +222,7 @@ The following metadata fields are set on each JPEG file, if the corresponding In
 * If you feel uncomfortable or uncertain about an issue or your changes, feel free to [email me][sebastienbarre:email] and I will happily give you a hand.
 * Fork the [repository][ragamints:repo] on GitHub to start making your changes to the *master* branch (or branch off of it).
 * Write a test which shows that the bug was fixed or that the feature works as expected.
+* Do *not* use `git commit` to commit your code; use `npm run commit` instead; this will ensure a [Commitizen]-friendly commit message will be generated, a convention that will in turn be leveraged by [semantic-release].
 * Send a pull request and notify me :) Thanks.
 
 ## Credits
@@ -292,6 +293,7 @@ N/A
 [Adobe Lightroom]: https://lightroom.adobe.com/
 [archibald:promises]: http://www.html5rocks.com/en/tutorials/es6/promises/
 [BSD License]: http://opensource.org/licenses/BSD-3-Clause
+[Commitizen]: https://github.com/commitizen/cz-cli
 [darkskyapp]: https://github.com/darkskyapp
 [EDT]: http://www.timeanddate.com/time/zones/edt
 [EXIF]: http://en.wikipedia.org/wiki/Exchangeable_image_file_format
@@ -327,6 +329,7 @@ N/A
 [sebastienbarre:Instagram]: https://instagram.com/sebastienbarre/
 [sebastienbarre:Twitter]: https://twitter.com/sebastienbarre/
 [Semantic Versioning]: http://semver.org/
+[semantic-release]: https://github.com/semantic-release/semantic-release
 [sugarjs]: http://sugarjs.com/features#date
 [totemstech]: https://github.com/totemstech
 [tz-lookup]: https://github.com/darkskyapp/tz-lookup
