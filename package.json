@@ -1,6 +1,6 @@
 {
   "name": "ragamints",
-  "version": "0.0.0-semantically-released",
+  "version": "0.1.8",
   "description": "Download Instagram photos while preserving caption, photographer name, geolocation, tags, and creation time (w/ timezone) as EXIF, IPTC, and XMP fields.",
   "scripts": {
     "commit": "git-cz",
