@@ -124,23 +124,6 @@ function fill_array(size) {
   return Array.apply(null, new Array(size)).map(function() { return {}; });
 }
 
-describe('padRight', function() {
-  var padRight = ragamints.__get__('padRight');
-
-  it('pads a string to the right', function() {
-    expect(padRight('foo',
-    ' ', 5)).toEqual('foo  ');
-  });
-});
-
-describe('padLeftZero', function() {
-  var padLeftZero = ragamints.__get__('padLeftZero');
-
-  it('pads a number to the left with zeros', function() {
-    expect(padLeftZero(15, 4)).toEqual('0015');
-  });
-});
-
 describe('logForMedia', function() {
   var logForMedia = ragamints.__get__('logForMedia');
 
