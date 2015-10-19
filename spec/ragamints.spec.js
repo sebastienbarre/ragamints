@@ -1,123 +1,19 @@
 'use strict';
 
-var extend     = require('util')._extend;
-var moment     = require('moment-timezone');
-var objectPath = require('object-path');
-var path       = require('path');
-var Promise    = require('es6-promise').Promise;
-var rewire     = require('rewire');
-var strip_ansi = require('strip-ansi');
+var extend       = require('util')._extend;
+var objectPath   = require('object-path');
+var path         = require('path');
+var Promise      = require('es6-promise').Promise;
+var rewire       = require('rewire');
+var strip_ansi   = require('strip-ansi');
 
-var constants  = require('../lib/constants');
+var constants    = require('../lib/constants');
+var exiftoolData = require('./data/exiftool');
+var mediaData    = require('./data/media');
 
 var ragamints = rewire('../lib/ragamints.js');
 
-const SOFTWARE = constants.SOFTWARE;
 const ERROR_PREFIX = constants.ERROR_PREFIX;
-const ACCESS_TOKEN_ENV_VAR = constants.ACCESS_TOKEN_ENV_VAR;
-
-var cdn = 'https://scontent.cdninstagram.com/hphotos-xat1/t51.2885-15/';
-var media = {
-  'id': '977398127825095465_26667401',
-  'user': {
-    'username': 'sebastienbarre',
-    'full_name': 'Sébastien B'
-  },
-  'tags': [
-    '99',
-    'Osaka'
-  ],
-  'type': 'image',
-  'location': {
-    'latitude': 58.298348257,
-    'longitude': -134.403743603,
-    'id': 270494303
-  },
-  'created_time': '1430734958',
-  'link': 'https://instagram.com/p/2Qams1JYsp/',
-  'images': {
-    'low_resolution': {
-      'url': cdn + 's320x320/e15/11193066_896012850450861_10425589_n.jpg',
-      'width': 320,
-      'height': 320
-    },
-    'thumbnail': {
-      'url': cdn + 's150x150/e15/11193066_896012850450861_10425589_n.jpg',
-      'width': 150,
-      'height': 150
-    },
-    'standard_resolution': {
-      'url': cdn + 'e15/11193066_896012850450861_10425589_n.jpg',
-      'width': 640,
-      'height': 640
-    }
-  },
-  'caption': {
-    'created_time': '1430734958',
-    'text': 'Back home. #foo #osaka'
-  }
-};
-var media_file_name = '2015-05-04_1430734958';
-var media_basename = media_file_name + '.jpg';
-var media_object_basename = media_file_name + '.json';
-var media_default_resolution = 'standard_resolution';
-
-var media_no_gps = extend({}, media);
-delete media_no_gps.location;
-
-var video_media = extend({}, media);
-video_media.type = 'video';
-video_media.videos = {
-  'standard_resolution': {
-    'url': cdn + '11193066_896012850450861_10425589_n.mp4'
-  }
-};
-delete video_media.images;
-var video_media_basename = media_file_name + '.mp4';
-
-var exiftool_args_common = [
-  '-q',
-  '-q',
-  '-codedcharacterset=utf8',
-  '-overwrite_original',
-  '-EXIF:Software=' + SOFTWARE,
-  '-XMP:CreatorTool=' + SOFTWARE,
-  '-EXIF:ImageDescription=Back home. #foo #osaka',
-  '-IPTC:Caption-Abstract=Back home. #foo #osaka',
-  '-XMP:Description=Back home. #foo #osaka',
-  '-EXIF:Artist=Sébastien B',
-  '-EXIF:Copyright=Copyright Sébastien B',
-  '-IPTC:CopyrightNotice=Copyright Sébastien B',
-  '-XMP:Creator=Sébastien B',
-  '-XMP:Rights=Copyright Sébastien B',
-  '-sep',
-  ', ',
-  '-IPTC:Keywords=99, Osaka',
-  '-XMP:Subject=99, Osaka'
-];
-
-var exiftool_args = exiftool_args_common.concat([
-  '-EXIF:DateTimeOriginal=2015:05:04 02:22:38-08:00',
-  '-IPTC:DateCreated=2015:05:04',
-  '-IPTC:TimeCreated=02:22:38-08:00',
-  '-XMP:DateCreated=2015:05:04 02:22:38-08:00',
-  '-EXIF:GPSLatitude=58.298348257',
-  '-EXIF:GPSLatitudeRef=N',
-  '-EXIF:GPSLongitude=-134.403743603',
-  '-EXIF:GPSLongitudeRef=W'
-]);
-
-var created = moment.unix(media.created_time);  // local time
-var created_ymd = created.format('YYYY:MM:DD');
-var created_hms = created.format('HH:mm:ssZ');
-var created_ymd_hms = `${created_ymd} ${created_hms}`;
-
-var exiftool_args_no_gps = exiftool_args_common.concat([
-  '-EXIF:DateTimeOriginal=' + created_ymd_hms,
-  '-IPTC:DateCreated=' + created_ymd,
-  '-IPTC:TimeCreated=' + created_hms,
-  '-XMP:DateCreated=' + created_ymd_hms
-]);
 
 var ig_page_size = 33;
 
@@ -137,13 +33,13 @@ describe('ragamints', function() {
     it('logs message w/ respect to a media', function() {
       var prefix = '#0001 [Back home. #foo #o]';
       var msg = 'logging';
-      logForMedia(media, msg);
+      logForMedia(mediaData.image.json, msg);
       expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual(prefix);
       expect(strip_ansi(console.log.calls.argsFor(0)[1])).toEqual(msg);
     });
 
     it('logs message w/ respect to a media w/o caption or msg', function() {
-      var media_wo_caption = extend({}, media);
+      var media_wo_caption = extend({}, mediaData.image.json);
       delete media_wo_caption.caption;
       logForMedia(media_wo_caption);
       var msg = '#0001 [977398127825095465]';
@@ -161,13 +57,17 @@ describe('ragamints', function() {
     });
 
     it('gathers args for exiftool and uses GPS location', function() {
-      expect(getExifToolArgs(media, {verbose: true})).toEqual(exiftool_args);
+      expect(getExifToolArgs(mediaData.image.json, {verbose: true})).toEqual(
+        exiftoolData.args);
       expect(logForMediaSpy.calls.count()).toEqual(2);
     });
 
     it('gathers args for exiftool and assumes local when no GPS', function() {
-      expect(getExifToolArgs(media_no_gps, {verbose: true})).toEqual(
-        exiftool_args_no_gps);
+      expect(
+        getExifToolArgs(mediaData.imageWithoutGPS.json, {verbose: true})
+      ).toEqual(
+        exiftoolData.argsWithoutGPS
+      );
       expect(logForMediaSpy.calls.count()).toEqual(2);
     });
   });
@@ -195,7 +95,7 @@ describe('ragamints', function() {
       var video = {
         type: 'video'
       };
-      updateFileMetadata(video, 'foo.jpg', {}).then(function(res) {
+      updateFileMetadata(mediaData.video, 'foo.jpg', {}).then(function(res) {
         expect(res).toBe(false);
         done();
       });
@@ -204,8 +104,10 @@ describe('ragamints', function() {
     it('spawns a child process to invoke exiftool', function(done) {
       var child_process = ragamints.__get__('child_process');
       spyOn(child_process, 'spawn').and.returnValue(exiftool_process);
-      updateFileMetadata(media, media_basename, {}).then(function(res) {
-        var args = exiftool_args.concat([media_basename]);
+      updateFileMetadata(
+        mediaData.image.json, mediaData.image.basename, {}
+      ).then(function(res) {
+        var args = exiftoolData.args.concat([mediaData.image.basename]);
         expect(child_process.spawn).toHaveBeenCalledWith('exiftool', args);
         expect(res).toBe(true);
         expect(logForMediaSpy).toHaveBeenCalled();
@@ -223,7 +125,7 @@ describe('ragamints', function() {
       var child_process = ragamints.__get__('child_process');
       spyOn(child_process, 'spawn').and.returnValue(process);
       updateFileMetadata(
-        media, media_basename, {quiet: true}
+        mediaData.image.json, mediaData.image.basename, {quiet: true}
       ).catch(function(err) {
         expect(child_process.spawn).toHaveBeenCalled();
         expect(err.message).toBe(
@@ -242,7 +144,7 @@ describe('ragamints', function() {
       var child_process = ragamints.__get__('child_process');
       spyOn(child_process, 'spawn').and.returnValue(process);
       updateFileMetadata(
-        media, media_basename, {quiet: true}
+        mediaData.image.json, mediaData.image.basename, {quiet: true}
       ).catch(function(err) {
         expect(child_process.spawn).toHaveBeenCalled();
         expect(err.message).toBe(`${ERROR_PREFIX} boom`);
@@ -255,7 +157,11 @@ describe('ragamints', function() {
     var createMediaFileName = ragamints.__get__('createMediaFileName');
 
     it('creates a file name for the fetched file to be saved as', function() {
-      expect(createMediaFileName(media)).toBe(media_file_name);
+      expect(
+        createMediaFileName(mediaData.image.json)
+      ).toBe(
+        mediaData.image.fileName
+      );
     });
   });
 
@@ -305,10 +211,12 @@ describe('ragamints', function() {
 
     it('skips if the file is already there', function(done) {
       spyOn(fs, 'lstat').and.callFake(lstat_file_exists);
-      fetchMedia(media, media_default_resolution, {}).then(function(filename) {
+      fetchMedia(
+        mediaData.image.json, mediaData.image.defaultResolution, {}
+      ).then(function(filename) {
         expect(DownloadSpy.calls.any()).toEqual(false);
         expect(logForMediaSpy).toHaveBeenCalled();
-        expect(filename).toBe(media_basename);
+        expect(filename).toBe(mediaData.image.basename);
         done();
       });
     });
@@ -316,9 +224,9 @@ describe('ragamints', function() {
     it('fetches a media', function(done) {
       spyOn(fs, 'lstat').and.callFake(lstat_file_does_not_exist);
       var dest = 'foo';
-      var media_filename = path.join(dest, media_basename);
+      var media_filename = path.join(dest, mediaData.image.basename);
       fetchMedia(
-        media, media_default_resolution, {dest: dest}
+        mediaData.image.json, mediaData.image.defaultResolution, {dest: dest}
       ).then(function(filename) {
         expect(DownloadSpy).toHaveBeenCalled();
         expect(logForMediaSpy).toHaveBeenCalled();
@@ -330,11 +238,15 @@ describe('ragamints', function() {
     it('fetches a media even if it exists when forcing', function(done) {
       spyOn(fs, 'lstat').and.callFake(lstat_file_exists);
       fetchMedia(
-        video_media, media_default_resolution, {alwaysDownload: true}
+        mediaData.video.json,
+        mediaData.image.defaultResolution,
+        {
+          alwaysDownload: true
+        }
       ).then(function(filename) {
         expect(DownloadSpy).toHaveBeenCalled();
         expect(logForMediaSpy).toHaveBeenCalled();
-        expect(filename).toBe(video_media_basename);
+        expect(filename).toBe(mediaData.video.basename);
         done();
       });
     });
@@ -350,7 +262,9 @@ describe('ragamints', function() {
       };
       DownloadSpy = jasmine.createSpy('Download').and.callFake(Download_fail);
       ragamints.__set__('Download', DownloadSpy);
-      fetchMedia(media, media_default_resolution, {}).catch(function(err) {
+      fetchMedia(
+        mediaData.image.json, mediaData.image.defaultResolution, {}
+      ).catch(function(err) {
         expect(DownloadSpy).toHaveBeenCalled();
         expect(err.message).toEqual('boom');
         done();
@@ -361,7 +275,9 @@ describe('ragamints', function() {
       spyOn(fs, 'lstat').and.callFake(lstat_file_does_not_exist);
       DownloadSpy = jasmine.createSpy('Download');
       ragamints.__set__('Download', DownloadSpy);
-      fetchMedia(media, 'foobar', {}).catch(function(err) {
+      fetchMedia(
+        mediaData.image.json, 'foobar', {}
+      ).catch(function(err) {
         expect(fs.lstat.calls.any()).toEqual(false);
         expect(DownloadSpy.calls.any()).toEqual(false);
         expect(err.message).toEqual(
@@ -399,11 +315,11 @@ describe('ragamints', function() {
       ragamints.__set__('mkdirp', mkdirp_spy);
       spyOn(fs, 'writeFile').and.callFake(writeFile_success);
       var dest = 'foo';
-      var media_filename = path.join(dest, media_object_basename);
-      saveMediaObject(media, {
+      var media_filename = path.join(dest, mediaData.image.jsonBasename);
+      saveMediaObject(mediaData.image.json, {
         dest: dest
       }).then(function(filename) {
-        let data = JSON.stringify(media, null, 2);
+        let data = JSON.stringify(mediaData.image.json, null, 2);
         expect(mkdirp_spy.calls.argsFor(0)[0]).toEqual(dest);
         expect(fs.writeFile.calls.argsFor(0)[1]).toEqual(data);
         expect(logForMediaSpy).toHaveBeenCalled();
@@ -417,18 +333,21 @@ describe('ragamints', function() {
       ragamints.__set__('mkdirp', mkdirp_spy);
       spyOn(fs, 'writeFile').and.callFake(writeFile_success);
       var dest = 'foo';
-      var media_filename = path.join(dest, media_object_basename);
+      var media_filename = path.join(dest, mediaData.image.jsonBasename);
       var keys = 'id,caption.created_time';
-      saveMediaObject(media, {
+      saveMediaObject(mediaData.image.json, {
         dest: dest,
         json: keys
       }).then(function(filename) {
         let filtered_media = {};
-        objectPath.set(filtered_media, 'id', objectPath.get(media, 'id'));
+        objectPath.set(
+          filtered_media,
+          'id',
+          objectPath.get(mediaData.image.json, 'id'));
         objectPath.set(
           filtered_media,
           'caption.created_time',
-          objectPath.get(media, 'caption.created_time'));
+          objectPath.get(mediaData.image.json, 'caption.created_time'));
         let data = JSON.stringify(filtered_media, null, 2);
         expect(mkdirp_spy.calls.argsFor(0)[0]).toEqual(dest);
         expect(fs.writeFile.calls.argsFor(0)[1]).toEqual(data);
@@ -443,7 +362,7 @@ describe('ragamints', function() {
       ragamints.__set__('mkdirp', mkdirp_spy);
       spyOn(fs, 'writeFile').and.callFake(writeFile_success);
       var dest = 'foo';
-      saveMediaObject(media, {
+      saveMediaObject(mediaData.image.json, {
         dest: dest
       }).catch(function(err) {
         expect(mkdirp_spy.calls.argsFor(0)[0]).toEqual(dest);
@@ -457,7 +376,7 @@ describe('ragamints', function() {
       mkdirp_spy = jasmine.createSpy('mkdirp').and.callFake(mkdirp_success);
       ragamints.__set__('mkdirp', mkdirp_spy);
       spyOn(fs, 'writeFile').and.callFake(writeFile_fail);
-      saveMediaObject(media, {
+      saveMediaObject(mediaData.image.json, {
       }).catch(function(err) {
         expect(fs.writeFile).toHaveBeenCalled();
         expect(err.message).toEqual('boom');
@@ -525,11 +444,11 @@ describe('ragamints', function() {
     var isMediaId = ragamints.__get__('isMediaId');
 
     it('checks if a media id is valid', function() {
-      expect(isMediaId(media.id)).toBe(true);
+      expect(isMediaId(mediaData.image.json.id)).toBe(true);
     });
 
     it('checks if a media id is invalid', function() {
-      expect(isMediaId(media.link)).not.toBe(true);
+      expect(isMediaId(mediaData.image.json.link)).not.toBe(true);
     });
   });
 
@@ -537,11 +456,11 @@ describe('ragamints', function() {
     var isMediaUrl = ragamints.__get__('isMediaUrl');
 
     it('checks if a media url is valid', function() {
-      expect(isMediaUrl(media.link)).toBe(true);
+      expect(isMediaUrl(mediaData.image.json.link)).toBe(true);
     });
 
     it('checks if a media url is invalid', function() {
-      expect(isMediaUrl(media.id)).not.toBe(true);
+      expect(isMediaUrl(mediaData.image.json.id)).not.toBe(true);
     });
   });
 
@@ -552,9 +471,9 @@ describe('ragamints', function() {
     it('resolves a media id to itself', function(done) {
       fetch_spy = jasmine.createSpy('fetch');
       ragamints.__set__('fetch', fetch_spy);
-      resolveMediaId(media.id).then(function(media_id) {
+      resolveMediaId(mediaData.image.json.id).then(function(media_id) {
         expect(fetch_spy.calls.any()).toEqual(false);
-        expect(media_id).toEqual(media.id);
+        expect(media_id).toEqual(mediaData.image.json.id);
         done();
       });
     });
@@ -564,17 +483,17 @@ describe('ragamints', function() {
         return Promise.resolve({
           ok: true,
           json: function() {
-            return {media_id: media.id};
+            return {media_id: mediaData.image.json.id};
           }
         });
       };
       fetch_spy = jasmine.createSpy('fetch').and.callFake(fetch);
       ragamints.__set__('fetch', fetch_spy);
       spyOn(console, 'log');
-      resolveMediaId(media.link).then(function(media_id) {
+      resolveMediaId(mediaData.image.json.link).then(function(media_id) {
         expect(fetch_spy).toHaveBeenCalled();
         expect(console.log).toHaveBeenCalled();
-        expect(media_id).toEqual(media.id);
+        expect(media_id).toEqual(mediaData.image.json.id);
         done();
       });
     });
@@ -587,10 +506,11 @@ describe('ragamints', function() {
       };
       fetch_spy = jasmine.createSpy('fetch').and.callFake(fetch);
       ragamints.__set__('fetch', fetch_spy);
-      resolveMediaId(media.link).catch(function(err) {
+      let link = mediaData.image.json.link;
+      resolveMediaId(link).catch(function(err) {
         expect(fetch_spy).toHaveBeenCalled();
         expect(err.message).toEqual(
-          `${ERROR_PREFIX} Could not retrieve Media Id for: ${media.link}`);
+          `${ERROR_PREFIX} Could not retrieve Media Id for: ${link}`);
         done();
       });
     });
@@ -611,15 +531,15 @@ describe('ragamints', function() {
       resolveMediaIdSpy = jasmine.createSpy(
         'resolveMediaId'
       ).and.callFake(function() {
-        return Promise.resolve(media.id);
+        return Promise.resolve(mediaData.image.json.id);
       });
       ragamints.__set__('resolveMediaId', resolveMediaIdSpy);
     });
 
     it('resolves options', function(done) {
       var options = {
-        maxId: media.link,
-        minId: media.link,
+        maxId: mediaData.image.json.link,
+        minId: mediaData.image.json.link,
         userId: 'username',
         maxTimestamp: 'Thu, 09 Apr 2015 01:19:46 +0000',
         minTimestamp: 'Thu, 09 Apr 2015 01:19:46 +0000'
@@ -628,17 +548,18 @@ describe('ragamints', function() {
         minTimestamp: 1428542386,
         maxTimestamp: 1428542386,
         userId: '26667401',
-        minId: media.id,
-        maxId: media.id,
+        minId: mediaData.image.json.id,
+        maxId: mediaData.image.json.id,
         accessToken: 'token'
       };
       var env = {};
-      env[ACCESS_TOKEN_ENV_VAR] = 'token';
+      env[constants.ACCESS_TOKEN_ENV_VAR] = 'token';
       ragamints.__set__('process', {env: env});
       resolveOptions(options).then(function(res) {
+        let link = mediaData.image.json.link;
         expect(user.resolveUserId.calls.argsFor(0)).toEqual(['username']);
-        expect(resolveMediaIdSpy.calls.argsFor(0)[0]).toEqual(media.link);
-        expect(resolveMediaIdSpy.calls.argsFor(1)[0]).toEqual(media.link);
+        expect(resolveMediaIdSpy.calls.argsFor(0)[0]).toEqual(link);
+        expect(resolveMediaIdSpy.calls.argsFor(1)[0]).toEqual(link);
         expect(res).toEqual(resolved_options);
         done();
       }, function(err) {
@@ -694,7 +615,7 @@ describe('ragamints', function() {
       });
       ragamints.__set__('getRecentMedias', getRecentMediasSpy);
       fetchMediaSpy = jasmine.createSpy('fetchMedia').and.callFake(function() {
-        return Promise.resolve(media_basename);
+        return Promise.resolve(mediaData.image.basename);
       });
       ragamints.__set__('fetchMedia', fetchMediaSpy);
       updateFileMetadataSpy = jasmine.createSpy(
@@ -719,10 +640,10 @@ describe('ragamints', function() {
         expect(getRecentMediasSpy).toHaveBeenCalled();
         expect(getRecentMediasSpy.calls.argsFor(0)[0]).toEqual(options.userId);
         expect(fetchMediaSpy.calls.argsFor(0)).toEqual(
-          [{}, media_default_resolution, options]);
+          [{}, mediaData.image.defaultResolution, options]);
         expect(fetchMediaSpy.calls.count()).toEqual(processed_count);
         expect(updateFileMetadataSpy.calls.argsFor(0)).toEqual(
-          [{}, media_basename, options]);
+          [{}, mediaData.image.basename, options]);
         expect(updateFileMetadataSpy.calls.count()).toEqual(processed_count);
         expect(saveMediaObjectSpy.calls.argsFor(0)).toEqual([{}, options]);
         expect(saveMediaObjectSpy.calls.count()).toEqual(processed_count);
@@ -757,10 +678,10 @@ describe('ragamints', function() {
         expect(getRecentMediasSpy).toHaveBeenCalled();
         expect(getRecentMediasSpy.calls.argsFor(0)[0]).toEqual(options.userId);
         expect(fetchMediaSpy.calls.argsFor(0)).toEqual(
-          [{}, media_default_resolution, options]);
+          [{}, mediaData.image.defaultResolution, options]);
         expect(fetchMediaSpy.calls.count()).toEqual(processed_count);
         expect(updateFileMetadataSpy.calls.argsFor(0)).toEqual(
-          [{}, media_basename, options]);
+          [{}, mediaData.image.basename, options]);
         expect(updateFileMetadataSpy.calls.count()).toEqual(processed_count);
         expect(saveMediaObjectSpy.calls.argsFor(0)).toEqual([{}, options]);
         expect(saveMediaObjectSpy.calls.count()).toEqual(processed_count);
@@ -862,8 +783,8 @@ describe('ragamints', function() {
         '--count', 3,
         '--min-timestamp', '2015-01-01 23:10:10',
         '--max-timestamp', '2015-12-31 13:10:10',
-        '--min-id', media.link,
-        '--max-id', media.link,
+        '--min-id', mediaData.image.json.link,
+        '--max-id', mediaData.image.json.link,
         '--resolution', 'thumbnail,low_resolution'
       ];
       var options = {
@@ -872,8 +793,8 @@ describe('ragamints', function() {
         count: 3,
         minTimestamp: '2015-01-01 23:10:10',
         maxTimestamp: '2015-12-31 13:10:10',
-        minId: media.link,
-        maxId: media.link,
+        minId: mediaData.image.json.link,
+        maxId: mediaData.image.json.link,
         resolution: ['thumbnail', 'low_resolution']
       };
       main(argv).then(function(res) {
