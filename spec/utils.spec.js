@@ -23,4 +23,16 @@ describe('utils', function() {
     });
   });
 
+  describe('isUnixTimestamp', function() {
+    var isUnixTimestamp = utils.__get__('isUnixTimestamp');
+
+    it('checks if a timestamp is valid', function() {
+      expect(isUnixTimestamp('1430734958')).toBe(true);
+    });
+
+    it('checks if a timestamp is invalid', function() {
+      expect(isUnixTimestamp('foobar')).not.toBe(true);
+    });
+  });
+
 });
