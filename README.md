@@ -1,6 +1,6 @@
 # Ragamints
 
-[![Build Status](https://img.shields.io/travis/sebastienbarre/ragamints.svg)](https://travis-ci.org/sebastienbarre/ragamints) [![Coverage Status](https://img.shields.io/codecov/c/github/sebastienbarre/ragamints.svg)](https://codecov.io/github/sebastienbarre/ragamints) [![Dependencies Status](https://img.shields.io/gemnasium/sebastienbarre/ragamints.svg)](https://gemnasium.com/sebastienbarre/ragamints) [![Node Version](https://img.shields.io/node/v/ragamints.svg)](https://www.npmjs.com/package/ragamints) [![License](https://img.shields.io/npm/l/ragamints.svg)][BSD License] [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release) [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
+[![Build Status](https://img.shields.io/travis/sebastienbarre/ragamints.svg)](https://travis-ci.org/sebastienbarre/ragamints) [![Coverage Status](https://img.shields.io/codecov/c/github/sebastienbarre/ragamints.svg)](https://codecov.io/github/sebastienbarre/ragamints) [![Dependencies Status](https://img.shields.io/gemnasium/sebastienbarre/ragamints.svg)](https://gemnasium.com/sebastienbarre/ragamints) [![Node Version](https://img.shields.io/node/v/ragamints.svg)](https://www.npmjs.com/package/ragamints) [![License](https://img.shields.io/npm/l/ragamints.svg)][BSD License] [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)][semantic-release] [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)][commitizen]
 
 Ragamints is a command-line interface for Node.js. It is intended for downloading Instagram photos while preserving caption, photographer name, geolocation, tags, and creation time as EXIF, IPTC, and XMP fields.
 
@@ -247,53 +247,12 @@ You may see this message when installing `ragamints` on Windows. It is *not* ind
 
 ## Change Log
 
-All notable changes to this project will be documented here. This project adheres to [Semantic Versioning] and [Keep a CHANGELOG].
-
-### Unreleased
-N/A
-
-### 0.1.7 - 2015-08-30
-#### Added
-- `--json`now accepts an optional [keys] parameter to pluck only certain keys
-
-### 0.1.6 - 2015-06-30
-#### Added
-- New `--include-videos` option
-- Video files are no longer fetched by default
-
-### 0.1.5 - 2015-06-18
-#### Added
-- New `--json` option
-- New `--resolution` option
-
-### 0.1.4 - 2015-05-21
-#### Added
-- New `--sequential` mode
-- Fix some error reporting
-- New screencap
-
-### 0.1.3 - 2015-05-19
-#### Added
-- Fix Node.js support (development is done with io.js)
-
-### 0.1.2 - 2015-05-17
-#### Added
-- Tests.
-- Coverage.
-- Travis CI, Coveralls.io, and Gemnasium support.
-
-### 0.1.1 - 2015-05-14
-#### Added
-- Links to Github repo.
-
-### 0.1.0 - 2015-05-13
-#### Added
-- Everything. First release.
+All notable changes to this project are documented automatically on the Github [releases][ragamints:releases] page. This project believes in [Semantic Versioning] and [Keep a CHANGELOG]. It uses [commitizen] and [semantic-release] to help with that endeavor.
 
 [Adobe Lightroom]: https://lightroom.adobe.com/
 [archibald:promises]: http://www.html5rocks.com/en/tutorials/es6/promises/
 [BSD License]: http://opensource.org/licenses/BSD-3-Clause
-[Commitizen]: https://github.com/commitizen/cz-cli
+[commitizen]: https://github.com/commitizen/cz-cli
 [darkskyapp]: https://github.com/darkskyapp
 [EDT]: http://www.timeanddate.com/time/zones/edt
 [EXIF]: http://en.wikipedia.org/wiki/Exchangeable_image_file_format
@@ -322,6 +281,7 @@ N/A
 [npm]: https://www.npmjs.com/
 [pandoc]: http://pandoc.org/
 [ragamints:issue]: https://github.com/sebastienbarre/ragamints/issues
+[ragamints:releases]: https://github.com/sebastienbarre/ragamints/releases
 [ragamints:repo]: https://github.com/sebastienbarre/ragamints
 [ragamints:up-for-grabs]: https://github.com/sebastienbarre/ragamints/labels/up-for-grabs
 [Retrieve the access token for your Instagram account]: http://jenwachter.com/2013/04/22/retrive-the-access-token-for-your-instagram-account/
