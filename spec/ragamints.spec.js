@@ -8,12 +8,12 @@ var rewire       = require('rewire');
 var strip_ansi   = require('strip-ansi');
 
 var constants    = require('../lib/constants');
+var log          = require('../lib/log');
+
 var exiftoolData = require('./data/exiftool');
 var mediaData    = require('./data/media');
 
 var ragamints = rewire('../lib/ragamints.js');
-
-const ERROR_PREFIX = constants.ERROR_PREFIX;
 
 var ig_page_size = 33;
 
@@ -129,7 +129,7 @@ describe('ragamints', function() {
       ).catch(function(err) {
         expect(child_process.spawn).toHaveBeenCalled();
         expect(err.message).toBe(
-          `${ERROR_PREFIX} Could not spawn exiftool (boom)`);
+          log.formatErrorMessage('Could not spawn exiftool (boom)'));
         done();
       });
     });
@@ -147,7 +147,7 @@ describe('ragamints', function() {
         mediaData.image.json, mediaData.image.basename, {quiet: true}
       ).catch(function(err) {
         expect(child_process.spawn).toHaveBeenCalled();
-        expect(err.message).toBe(`${ERROR_PREFIX} boom`);
+        expect(err.message).toBe(log.formatErrorMessage('boom'));
         done();
       });
     });
@@ -281,7 +281,7 @@ describe('ragamints', function() {
         expect(fs.lstat.calls.any()).toEqual(false);
         expect(DownloadSpy.calls.any()).toEqual(false);
         expect(err.message).toEqual(
-          `${ERROR_PREFIX} Could not find resolution in media: foobar`);
+          log.formatErrorMessage('Could not find resolution: foobar'));
         done();
       });
     });
@@ -408,11 +408,11 @@ describe('ragamints', function() {
       // Unfortunately, it does not seem that suspend and generators are
       // supported by jasmine. Let's manually wait for the two promises
       // we are supposed to get.
-      getRecentMedias('26667401', {count: count}).then(function(chunk1) {
+      getRecentMedias('12345678', {count: count}).then(function(chunk1) {
         medias = medias.concat(chunk1.medias);
         chunk1.next.then(function(chunk2) {
           medias = medias.concat(chunk2.medias);
-          expect(ig.user_media_recent.calls.argsFor(0)[0]).toEqual('26667401');
+          expect(ig.user_media_recent.calls.argsFor(0)[0]).toEqual('12345678');
           expect(medias.length).toEqual(count);
           expect(medias[count - 1].fetch_index).toEqual(count - 1);
           expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual(
@@ -432,8 +432,8 @@ describe('ragamints', function() {
       // Unfortunately, it does not seem that suspend and generators are
       // supported by jasmine. Let's manually wait for the two promises
       // we are supposed to get.
-      getRecentMedias('26667401', {count: 3}).catch(function(err) {
-        expect(ig.user_media_recent.calls.argsFor(0)[0]).toEqual('26667401');
+      getRecentMedias('12345678', {count: 3}).catch(function(err) {
+        expect(ig.user_media_recent.calls.argsFor(0)[0]).toEqual('12345678');
         expect(err.message).toEqual('boom');
         done();
       });
@@ -510,7 +510,7 @@ describe('ragamints', function() {
       resolveMediaId(link).catch(function(err) {
         expect(fetch_spy).toHaveBeenCalled();
         expect(err.message).toEqual(
-          `${ERROR_PREFIX} Could not retrieve Media Id for: ${link}`);
+          log.formatErrorMessage(`Could not retrieve Media Id for: ${link}`));
         done();
       });
     });
@@ -526,7 +526,7 @@ describe('ragamints', function() {
       spyOn(console, 'log');
       spyOn(ig, 'use');
       spyOn(user, 'resolveUserId').and.callFake(function() {
-        return Promise.resolve('26667401');
+        return Promise.resolve('12345678');
       });
       resolveMediaIdSpy = jasmine.createSpy(
         'resolveMediaId'
@@ -547,7 +547,7 @@ describe('ragamints', function() {
       var resolved_options = {
         minTimestamp: 1428542386,
         maxTimestamp: 1428542386,
-        userId: '26667401',
+        userId: '12345678',
         minId: mediaData.image.json.id,
         maxId: mediaData.image.json.id,
         accessToken: 'token'
@@ -574,7 +574,8 @@ describe('ragamints', function() {
         fail(new Error('should not have succeeded'));
         done();
       }, function(err) {
-        expect(err.message).toEqual(`${ERROR_PREFIX} Need access token`);
+        expect(err.message).toEqual(
+          log.formatErrorMessage('Need Instagram access token'));
         done();
       });
     });
@@ -584,7 +585,7 @@ describe('ragamints', function() {
         fail(new Error('should not have succeeded'));
         done();
       }, function(err) {
-        expect(err.message).toEqual(`${ERROR_PREFIX} Need user`);
+        expect(err.message).toEqual(log.formatErrorMessage('Need user'));
         done();
       });
     });
@@ -633,7 +634,7 @@ describe('ragamints', function() {
     });
 
     it('queries and process medias in parallel', function(done) {
-      var options = {userId: '26667401', json: true};
+      var options = {userId: '12345678', json: true};
       query(options).then(function(res) {
         let processed_count = ig_page_size - 1;
         expect(resolveOptionsSpy).toHaveBeenCalled();
@@ -657,7 +658,7 @@ describe('ragamints', function() {
     });
 
     it('queries and process videos in parallel', function(done) {
-      var options = {userId: '26667401', json: true, includeVideos: true};
+      var options = {userId: '12345678', json: true, includeVideos: true};
       query(options).then(function(res) {
         let processed_count = ig_page_size;
         expect(fetchMediaSpy.calls.count()).toEqual(processed_count);
@@ -671,7 +672,7 @@ describe('ragamints', function() {
     });
 
     it('queries and process medias sequentially', function(done) {
-      var options = {userId: '26667401', sequential: true, json: true};
+      var options = {userId: '12345678', sequential: true, json: true};
       query(options).then(function(res) {
         let processed_count = ig_page_size - 1;
         expect(resolveOptionsSpy).toHaveBeenCalled();
