@@ -3,13 +3,13 @@
 var rewire     = require('rewire');
 var strip_ansi = require('strip-ansi');
 
-var log = require('../lib/log');
-
 var user = rewire('../lib/user.js');
 
-var mediaData    = require('./data/media');
+var mediaData = require('./data/media');
 
 describe('user', function() {
+  var ig = user.__get__('ig');
+  var log = user.__get__('log');
 
   describe('isUserId', function() {
     var isUserId = user.__get__('isUserId');
@@ -25,7 +25,6 @@ describe('user', function() {
 
   describe('resolveUserId', function() {
     var resolveUserId = user.__get__('resolveUserId');
-    var ig = user.__get__('ig');
 
     it('resolves a user id to itself', function(done) {
       spyOn(ig, 'user_search');
@@ -41,10 +40,10 @@ describe('user', function() {
         callback(false, [{id: '12345678'}]);
       };
       spyOn(ig, 'user_search').and.callFake(user_search);
-      spyOn(console, 'log');
+      spyOn(log, 'output');
       resolveUserId('username').then(function(user_id) {
         expect(ig.user_search.calls.argsFor(0)[0]).toEqual('username');
-        expect(console.log).toHaveBeenCalled();
+        expect(log.output).toHaveBeenCalled();
         expect(user_id).toEqual('12345678');
         done();
       });
@@ -78,10 +77,9 @@ describe('user', function() {
 
   describe('getRecentMedias', function() {
     var getRecentMedias = user.__get__('getRecentMedias');
-    var ig = user.__get__('ig');
 
     beforeEach(function() {
-      spyOn(console, 'log');
+      spyOn(log, 'output');
     });
 
     it('fetches a media', function(done) {
@@ -110,9 +108,9 @@ describe('user', function() {
           expect(ig.user_media_recent.calls.argsFor(0)[0]).toEqual('12345678');
           expect(medias.length).toEqual(count);
           expect(medias[count - 1].fetch_index).toEqual(count - 1);
-          expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual(
+          expect(strip_ansi(log.output.calls.argsFor(0)[0])).toEqual(
             'Found 33 media(s), more to come...');
-          expect(strip_ansi(console.log.calls.argsFor(1)[0])).toEqual(
+          expect(strip_ansi(log.output.calls.argsFor(1)[0])).toEqual(
             'Found another 16 media(s), nothing more.');
           done();
         });

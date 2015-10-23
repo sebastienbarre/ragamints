@@ -8,7 +8,6 @@ var rewire       = require('rewire');
 var strip_ansi   = require('strip-ansi');
 
 var constants    = require('../lib/constants');
-var log          = require('../lib/log');
 
 var exiftoolData = require('./data/exiftool');
 var mediaData    = require('./data/media');
@@ -16,20 +15,23 @@ var mediaData    = require('./data/media');
 var ragamints = rewire('../lib/ragamints.js');
 
 describe('ragamints', function() {
+  var ig = ragamints.__get__('ig');
+  var log = ragamints.__get__('log');
+  var user = ragamints.__get__('user');
 
   describe('logForMedia', function() {
     var logForMedia = ragamints.__get__('logForMedia');
 
     beforeEach(function() {
-      spyOn(console, 'log');
+      spyOn(log, 'output');
     });
 
     it('logs message w/ respect to a media', function() {
       var prefix = '#0001 [Back home. #foo #o]';
       var msg = 'logging';
       logForMedia(mediaData.image.json, msg);
-      expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual(prefix);
-      expect(strip_ansi(console.log.calls.argsFor(0)[1])).toEqual(msg);
+      expect(strip_ansi(log.output.calls.argsFor(0)[0])).toEqual(prefix);
+      expect(strip_ansi(log.output.calls.argsFor(0)[1])).toEqual(msg);
     });
 
     it('logs message w/ respect to a media w/o caption or msg', function() {
@@ -37,7 +39,7 @@ describe('ragamints', function() {
       delete media_wo_caption.caption;
       logForMedia(media_wo_caption);
       var msg = '#0001 [977398127825095465]';
-      expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual(msg);
+      expect(strip_ansi(log.output.calls.argsFor(0)[0])).toEqual(msg);
     });
   });
 
@@ -428,10 +430,10 @@ describe('ragamints', function() {
       };
       fetch_spy = jasmine.createSpy('fetch').and.callFake(fetch);
       ragamints.__set__('fetch', fetch_spy);
-      spyOn(console, 'log');
+      spyOn(log, 'output');
       resolveMediaId(mediaData.image.json.link).then(function(media_id) {
         expect(fetch_spy).toHaveBeenCalled();
-        expect(console.log).toHaveBeenCalled();
+        expect(log.output).toHaveBeenCalled();
         expect(media_id).toEqual(mediaData.image.json.id);
         done();
       });
@@ -457,12 +459,10 @@ describe('ragamints', function() {
 
   describe('resolveOptions', function() {
     var resolveOptions = ragamints.__get__('resolveOptions');
-    var ig = ragamints.__get__('ig');
-    var user = ragamints.__get__('user');
     var resolveMediaIdSpy;
 
     beforeEach(function() {
-      spyOn(console, 'log');
+      spyOn(log, 'output');
       spyOn(ig, 'use');
       spyOn(user, 'resolveUserId').and.callFake(function() {
         return Promise.resolve('12345678');
@@ -532,7 +532,6 @@ describe('ragamints', function() {
 
   describe('query', function() {
     var query = ragamints.__get__('query');
-    var user = ragamints.__get__('user');
     var resolveOptionsSpy;
     var fetchMediaSpy;
     var updateFileMetadataSpy;
@@ -544,7 +543,7 @@ describe('ragamints', function() {
     };
 
     beforeEach(function() {
-      spyOn(console, 'log');
+      spyOn(log, 'output');
       spyOn(user, 'getRecentMedias').and.callFake(getRecentMediasSuccess);
       resolveOptionsSpy = jasmine.createSpy(
         'resolveOptions'
@@ -587,9 +586,9 @@ describe('ragamints', function() {
         expect(saveMediaObjectSpy.calls.argsFor(0)).toEqual([{}, options]);
         expect(saveMediaObjectSpy.calls.count()).toEqual(processed_count);
         expect(res.length).toEqual(processed_count);
-        expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual(
+        expect(strip_ansi(log.output.calls.argsFor(0)[0])).toEqual(
           'Done processing');
-        expect(strip_ansi(console.log.calls.argsFor(0)[1])).toEqual(
+        expect(strip_ansi(log.output.calls.argsFor(0)[1])).toEqual(
           processed_count.toString());
         done();
       });
@@ -603,7 +602,7 @@ describe('ragamints', function() {
         expect(updateFileMetadataSpy.calls.count()).toEqual(processed_count);
         expect(saveMediaObjectSpy.calls.count()).toEqual(processed_count);
         expect(res.length).toEqual(processed_count);
-        expect(strip_ansi(console.log.calls.argsFor(0)[1])).toEqual(
+        expect(strip_ansi(log.output.calls.argsFor(0)[1])).toEqual(
           processed_count.toString());
         done();
       });
@@ -626,9 +625,9 @@ describe('ragamints', function() {
         expect(saveMediaObjectSpy.calls.argsFor(0)).toEqual([{}, options]);
         expect(saveMediaObjectSpy.calls.count()).toEqual(processed_count);
         expect(res.length).toEqual(processed_count);
-        expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual(
+        expect(strip_ansi(log.output.calls.argsFor(0)[0])).toEqual(
           'Done processing');
-        expect(strip_ansi(console.log.calls.argsFor(0)[1])).toEqual(
+        expect(strip_ansi(log.output.calls.argsFor(0)[1])).toEqual(
           processed_count.toString());
         done();
       });
@@ -641,7 +640,7 @@ describe('ragamints', function() {
       ragamints.__set__('fetchMedia', fetchMediaSpy);
       query({}).catch(function(err) {
         expect(err.message).toEqual('boom');
-        expect(console.log.calls.any()).toEqual(false);
+        expect(log.output.calls.any()).toEqual(false);
         done();
       });
     });
@@ -655,7 +654,7 @@ describe('ragamints', function() {
       ragamints.__set__('saveMediaObject', saveMediaObjectSpy);
       query({json: true}).catch(function(err) {
         expect(err.message).toEqual('boom');
-        expect(console.log.calls.any()).toEqual(false);
+        expect(log.output.calls.any()).toEqual(false);
         done();
       });
     });
@@ -667,7 +666,7 @@ describe('ragamints', function() {
       ragamints.__set__('fetchMedia', fetchMediaSpy);
       query({sequential: true}).catch(function(err) {
         expect(err.message).toEqual('boom');
-        expect(console.log.calls.any()).toEqual(false);
+        expect(log.output.calls.any()).toEqual(false);
         done();
       });
     });
@@ -681,7 +680,7 @@ describe('ragamints', function() {
       ragamints.__set__('saveMediaObject', saveMediaObjectSpy);
       query({sequential: true, json: true}).catch(function(err) {
         expect(err.message).toEqual('boom');
-        expect(console.log.calls.any()).toEqual(false);
+        expect(log.output.calls.any()).toEqual(false);
         done();
       });
     });
@@ -692,7 +691,7 @@ describe('ragamints', function() {
       });
       query({}).catch(function(err) {
         expect(err.message).toEqual('boom');
-        expect(console.log.calls.any()).toEqual(false);
+        expect(log.output.calls.any()).toEqual(false);
         done();
       });
     });
@@ -704,7 +703,7 @@ describe('ragamints', function() {
     var querySpy;
 
     beforeEach(function() {
-      spyOn(console, 'log');
+      spyOn(log, 'output');
       querySpy = jasmine.createSpy('query').and.callFake(function() {
         return Promise.resolve([{}]);
       });
@@ -770,7 +769,7 @@ describe('ragamints', function() {
         '--help'
       ];
       main(argv);
-      expect(console.log).toHaveBeenCalledWith(
+      expect(log.output).toHaveBeenCalledWith(
         '  Check the man page or README file for more.');
     });
   });
