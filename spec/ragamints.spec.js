@@ -15,12 +15,6 @@ var mediaData    = require('./data/media');
 
 var ragamints = rewire('../lib/ragamints.js');
 
-var ig_page_size = 33;
-
-function fill_array(size) {
-  return Array.apply(null, new Array(size)).map(function() { return {}; });
-}
-
 describe('ragamints', function() {
 
   describe('logForMedia', function() {
@@ -385,61 +379,6 @@ describe('ragamints', function() {
     });
   });
 
-  describe('getRecentMedias', function() {
-    var getRecentMedias = ragamints.__get__('getRecentMedias');
-    var ig = ragamints.__get__('ig');
-
-    beforeEach(function() {
-      spyOn(console, 'log');
-    });
-
-    it('fetches a media', function(done) {
-      var next = function(callback) {
-        setTimeout(function() {
-          callback(null, fill_array(ig_page_size), {next: next});
-        }, 0);
-      };
-      var user_media_recent = function(user_id, options, callback) {
-        next(callback);
-      };
-      var count = Math.floor(ig_page_size * 1.5);
-      var medias = [];
-      spyOn(ig, 'user_media_recent').and.callFake(user_media_recent);
-      // Unfortunately, it does not seem that suspend and generators are
-      // supported by jasmine. Let's manually wait for the two promises
-      // we are supposed to get.
-      getRecentMedias('12345678', {count: count}).then(function(chunk1) {
-        medias = medias.concat(chunk1.medias);
-        chunk1.next.then(function(chunk2) {
-          medias = medias.concat(chunk2.medias);
-          expect(ig.user_media_recent.calls.argsFor(0)[0]).toEqual('12345678');
-          expect(medias.length).toEqual(count);
-          expect(medias[count - 1].fetch_index).toEqual(count - 1);
-          expect(strip_ansi(console.log.calls.argsFor(0)[0])).toEqual(
-            'Found 33 media(s), more to come...');
-          expect(strip_ansi(console.log.calls.argsFor(1)[0])).toEqual(
-            'Found another 16 media(s), nothing more.');
-          done();
-        });
-      });
-    });
-
-    it('rejects on errors', function(done) {
-      var user_media_recent = function(user_id, options, callback) {
-        callback(Error('boom'));
-      };
-      spyOn(ig, 'user_media_recent').and.callFake(user_media_recent);
-      // Unfortunately, it does not seem that suspend and generators are
-      // supported by jasmine. Let's manually wait for the two promises
-      // we are supposed to get.
-      getRecentMedias('12345678', {count: 3}).catch(function(err) {
-        expect(ig.user_media_recent.calls.argsFor(0)[0]).toEqual('12345678');
-        expect(err.message).toEqual('boom');
-        done();
-      });
-    });
-  });
-
   describe('isMediaId', function() {
     var isMediaId = ragamints.__get__('isMediaId');
 
@@ -593,28 +532,26 @@ describe('ragamints', function() {
 
   describe('query', function() {
     var query = ragamints.__get__('query');
+    var user = ragamints.__get__('user');
     var resolveOptionsSpy;
-    var getRecentMediasSpy;
     var fetchMediaSpy;
     var updateFileMetadataSpy;
     var saveMediaObjectSpy;
+    var getRecentMediasSuccess = function() {
+      let medias = mediaData.fillArray(mediaData.defaultQueryPageSize);
+      medias[mediaData.defaultQueryPageSize - 1].type = 'video'; // last is vid
+      return Promise.resolve({medias: medias, next: false});
+    };
 
     beforeEach(function() {
       spyOn(console, 'log');
+      spyOn(user, 'getRecentMedias').and.callFake(getRecentMediasSuccess);
       resolveOptionsSpy = jasmine.createSpy(
         'resolveOptions'
       ).and.callFake(function(options) {
         return Promise.resolve(options);
       });
       ragamints.__set__('resolveOptions', resolveOptionsSpy);
-      getRecentMediasSpy = jasmine.createSpy(
-        'getRecentMedias'
-      ).and.callFake(function() {
-        let medias = fill_array(ig_page_size);
-        medias[ig_page_size - 1].type = 'video'; // last one is a video
-        return Promise.resolve({medias: medias, next: false});
-      });
-      ragamints.__set__('getRecentMedias', getRecentMediasSpy);
       fetchMediaSpy = jasmine.createSpy('fetchMedia').and.callFake(function() {
         return Promise.resolve(mediaData.image.basename);
       });
@@ -636,10 +573,11 @@ describe('ragamints', function() {
     it('queries and process medias in parallel', function(done) {
       var options = {userId: '12345678', json: true};
       query(options).then(function(res) {
-        let processed_count = ig_page_size - 1;
+        let processed_count = mediaData.defaultQueryPageSize - 1;
         expect(resolveOptionsSpy).toHaveBeenCalled();
-        expect(getRecentMediasSpy).toHaveBeenCalled();
-        expect(getRecentMediasSpy.calls.argsFor(0)[0]).toEqual(options.userId);
+        expect(user.getRecentMedias).toHaveBeenCalled();
+        expect(user.getRecentMedias.calls.argsFor(0)[0]).toEqual(
+          options.userId);
         expect(fetchMediaSpy.calls.argsFor(0)).toEqual(
           [{}, mediaData.image.defaultResolution, options]);
         expect(fetchMediaSpy.calls.count()).toEqual(processed_count);
@@ -660,7 +598,7 @@ describe('ragamints', function() {
     it('queries and process videos in parallel', function(done) {
       var options = {userId: '12345678', json: true, includeVideos: true};
       query(options).then(function(res) {
-        let processed_count = ig_page_size;
+        let processed_count = mediaData.defaultQueryPageSize;
         expect(fetchMediaSpy.calls.count()).toEqual(processed_count);
         expect(updateFileMetadataSpy.calls.count()).toEqual(processed_count);
         expect(saveMediaObjectSpy.calls.count()).toEqual(processed_count);
@@ -674,10 +612,11 @@ describe('ragamints', function() {
     it('queries and process medias sequentially', function(done) {
       var options = {userId: '12345678', sequential: true, json: true};
       query(options).then(function(res) {
-        let processed_count = ig_page_size - 1;
+        let processed_count = mediaData.defaultQueryPageSize - 1;
         expect(resolveOptionsSpy).toHaveBeenCalled();
-        expect(getRecentMediasSpy).toHaveBeenCalled();
-        expect(getRecentMediasSpy.calls.argsFor(0)[0]).toEqual(options.userId);
+        expect(user.getRecentMedias).toHaveBeenCalled();
+        expect(user.getRecentMedias.calls.argsFor(0)[0]).toEqual(
+          options.userId);
         expect(fetchMediaSpy.calls.argsFor(0)).toEqual(
           [{}, mediaData.image.defaultResolution, options]);
         expect(fetchMediaSpy.calls.count()).toEqual(processed_count);
@@ -748,12 +687,9 @@ describe('ragamints', function() {
     });
 
     it('rejects on getting recent medias error', function(done) {
-      getRecentMediasSpy = jasmine.createSpy(
-        'getRecentMedias'
-      ).and.callFake(function() {
+      user.getRecentMedias.and.callFake(function() {
         return Promise.reject(Error('boom'));
       });
-      ragamints.__set__('getRecentMedias', getRecentMediasSpy);
       query({}).catch(function(err) {
         expect(err.message).toEqual('boom');
         expect(console.log.calls.any()).toEqual(false);

@@ -62,6 +62,12 @@ video_json.videos = {
 delete video_json.images;
 var video_basename = image_file_name + '.mp4';
 
+function fillArray(size) {
+  return Array.apply(null, new Array(size)).map(function() {
+    return {};
+  });
+}
+
 module.exports = {
   image: {
     json: image_json,
@@ -76,5 +82,7 @@ module.exports = {
   video: {
     json: video_json,
     basename: video_basename
-  }
+  },
+  defaultQueryPageSize: 33,
+  fillArray: fillArray
 };
