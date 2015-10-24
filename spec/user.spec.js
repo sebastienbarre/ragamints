@@ -95,7 +95,9 @@ describe('user', function() {
       var user_media_recent = function(user_id, options, callback) {
         next(callback);
       };
-      var count = Math.floor(mediaData.defaultQueryPageSize * 1.5);
+      var page_size = mediaData.defaultQueryPageSize;
+      var half_page_size = Math.floor(mediaData.defaultQueryPageSize / 2);
+      var count = page_size + half_page_size;
       var medias = [];
       spyOn(ig, 'user_media_recent').and.callFake(user_media_recent);
       // Unfortunately, it does not seem that suspend and generators are
@@ -109,9 +111,9 @@ describe('user', function() {
           expect(medias.length).toEqual(count);
           expect(medias[count - 1].fetch_index).toEqual(count - 1);
           expect(strip_ansi(log.output.calls.argsFor(0)[0])).toEqual(
-            'Found 33 media(s), more to come...');
+            `Found ${page_size} media(s), more to come...`);
           expect(strip_ansi(log.output.calls.argsFor(1)[0])).toEqual(
-            'Found another 16 media(s), nothing more.');
+            `Found another ${half_page_size} media(s), nothing more.`);
           done();
         });
       });
