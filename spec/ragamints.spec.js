@@ -11,13 +11,15 @@ var constants    = require('../lib/constants');
 
 var exiftoolData = require('./data/exiftool');
 var mediaData    = require('./data/media');
+var helpers      = require('./support/helpers');
 
-var ragamints = rewire('../lib/ragamints.js');
+var ragamints    = rewire('../lib/ragamints.js');
+var user         = rewire('../lib/user.js');
 
 describe('ragamints', function() {
   var ig = ragamints.__get__('ig');
   var log = ragamints.__get__('log');
-  var user = ragamints.__get__('user');
+  ragamints.__set__('user', user);
 
   describe('logForMedia', function() {
     var logForMedia = ragamints.__get__('logForMedia');
@@ -464,14 +466,10 @@ describe('ragamints', function() {
     beforeEach(function() {
       spyOn(log, 'output');
       spyOn(ig, 'use');
-      spyOn(user, 'resolveUserId').and.callFake(function() {
-        return Promise.resolve('12345678');
-      });
-      resolveMediaIdSpy = jasmine.createSpy(
-        'resolveMediaId'
-      ).and.callFake(function() {
-        return Promise.resolve(mediaData.image.json.id);
-      });
+      spyOn(user, 'resolveUserId').and.callFake(
+        helpers.promiseValue.bind(null, '12345678'));
+      resolveMediaIdSpy = jasmine.createSpy('resolveMediaId').and.callFake(
+        helpers.promiseValue.bind(null, mediaData.image.json.id));
       ragamints.__set__('resolveMediaId', resolveMediaIdSpy);
     });
 
@@ -532,51 +530,64 @@ describe('ragamints', function() {
 
   describe('query', function() {
     var query = ragamints.__get__('query');
+    var pageTotal = 3;
+    var medias = helpers.fillArray(pageTotal);
+    medias[pageTotal - 1].type = 'video'; // last one is a video
+
+    // This fake getRecentMedias will first return a page with 2 empty
+    // medias, then a page with the rest (pageTotal).
+    var getRecentMedias = function() {
+      return Promise.resolve({
+        medias: medias.slice(0, 2),
+        next: Promise.resolve({
+          medias: medias.slice(2),
+          next: false
+        })
+      });
+    };
+
     var resolveOptionsSpy;
+    var getRecentMediasSpy;
+    var forEachRecentMediasSpy;
     var fetchMediaSpy;
     var updateFileMetadataSpy;
     var saveMediaObjectSpy;
-    var getRecentMediasSuccess = function() {
-      let medias = mediaData.fillArray(mediaData.defaultQueryPageSize);
-      medias[mediaData.defaultQueryPageSize - 1].type = 'video'; // last is vid
-      return Promise.resolve({medias: medias, next: false});
-    };
 
     beforeEach(function() {
       spyOn(log, 'output');
-      spyOn(user, 'getRecentMedias').and.callFake(getRecentMediasSuccess);
-      resolveOptionsSpy = jasmine.createSpy(
-        'resolveOptions'
-      ).and.callFake(function(options) {
-        return Promise.resolve(options);
-      });
+      resolveOptionsSpy = jasmine.createSpy('resolveOptions');
       ragamints.__set__('resolveOptions', resolveOptionsSpy);
-      fetchMediaSpy = jasmine.createSpy('fetchMedia').and.callFake(function() {
-        return Promise.resolve(mediaData.image.basename);
-      });
+      forEachRecentMediasSpy = spyOn(user, 'forEachRecentMedias');
+      getRecentMediasSpy = jasmine.createSpy('getRecentMedias');
+      user.__set__('getRecentMedias', getRecentMediasSpy);
+      fetchMediaSpy = jasmine.createSpy('fetchMedia');
       ragamints.__set__('fetchMedia', fetchMediaSpy);
-      updateFileMetadataSpy = jasmine.createSpy(
-        'updateFileMetadata'
-      ).and.callFake(function() {
-        return Promise.resolve();
-      });
+      updateFileMetadataSpy = jasmine.createSpy('updateFileMetadata');
       ragamints.__set__('updateFileMetadata', updateFileMetadataSpy);
-      saveMediaObjectSpy = jasmine.createSpy(
-        'saveMediaObject'
-      ).and.callFake(function() {
-        return Promise.resolve();
-      });
+      saveMediaObjectSpy = jasmine.createSpy('saveMediaObject');
       ragamints.__set__('saveMediaObject', saveMediaObjectSpy);
+
+      // The default, working mock workflow
+      resolveOptionsSpy.and.callFake(helpers.promiseValue);
+      forEachRecentMediasSpy.and.callThrough();
+      getRecentMediasSpy.and.callFake(getRecentMedias);
+      fetchMediaSpy.and.callFake(
+        helpers.promiseValue.bind(null, mediaData.image.basename));
+      updateFileMetadataSpy.and.callFake(helpers.promiseValue);
+      saveMediaObjectSpy.and.callFake(helpers.promiseValue);
     });
 
-    it('queries and process medias in parallel', function(done) {
-      var options = {userId: '12345678', json: true};
+    it('resolves options & processes medias (wo/ videos)', function(done) {
+      var options = {
+        userId: '12345678',
+        json: true
+      };
       query(options).then(function(res) {
-        let processed_count = mediaData.defaultQueryPageSize - 1;
-        expect(resolveOptionsSpy).toHaveBeenCalled();
-        expect(user.getRecentMedias).toHaveBeenCalled();
-        expect(user.getRecentMedias.calls.argsFor(0)[0]).toEqual(
+        let processed_count = pageTotal - 1; // except the video
+        expect(resolveOptionsSpy).toHaveBeenCalledWith(options);
+        expect(forEachRecentMediasSpy.calls.argsFor(0)[0]).toEqual(
           options.userId);
+        expect(forEachRecentMediasSpy.calls.argsFor(0)[1]).toEqual(options);
         expect(fetchMediaSpy.calls.argsFor(0)).toEqual(
           [{}, mediaData.image.defaultResolution, options]);
         expect(fetchMediaSpy.calls.count()).toEqual(processed_count);
@@ -585,116 +596,90 @@ describe('ragamints', function() {
         expect(updateFileMetadataSpy.calls.count()).toEqual(processed_count);
         expect(saveMediaObjectSpy.calls.argsFor(0)).toEqual([{}, options]);
         expect(saveMediaObjectSpy.calls.count()).toEqual(processed_count);
-        expect(res.length).toEqual(processed_count);
-        expect(strip_ansi(log.output.calls.argsFor(0)[0])).toEqual(
-          'Done processing');
-        expect(strip_ansi(log.output.calls.argsFor(0)[1])).toEqual(
-          processed_count.toString());
+        expect(res).toEqual(medias.slice(0, processed_count));
+        done();
+      }, function(err) {
+        fail(err);
         done();
       });
     });
 
-    it('queries and process videos in parallel', function(done) {
-      var options = {userId: '12345678', json: true, includeVideos: true};
+    it('resolves options & processes medias (w/ videos)', function(done) {
+      var options = {
+        userId: '12345678',
+        json: true,
+        includeVideos: true
+      };
       query(options).then(function(res) {
-        let processed_count = mediaData.defaultQueryPageSize;
-        expect(fetchMediaSpy.calls.count()).toEqual(processed_count);
-        expect(updateFileMetadataSpy.calls.count()).toEqual(processed_count);
-        expect(saveMediaObjectSpy.calls.count()).toEqual(processed_count);
-        expect(res.length).toEqual(processed_count);
-        expect(strip_ansi(log.output.calls.argsFor(0)[1])).toEqual(
-          processed_count.toString());
+        expect(fetchMediaSpy.calls.count()).toEqual(pageTotal);
+        expect(updateFileMetadataSpy.calls.count()).toEqual(pageTotal);
+        expect(saveMediaObjectSpy.calls.count()).toEqual(pageTotal);
+        expect(res).toEqual(medias);
+        done();
+      }, function(err) {
+        fail(err);
         done();
       });
     });
 
-    it('queries and process medias sequentially', function(done) {
-      var options = {userId: '12345678', sequential: true, json: true};
-      query(options).then(function(res) {
-        let processed_count = mediaData.defaultQueryPageSize - 1;
-        expect(resolveOptionsSpy).toHaveBeenCalled();
-        expect(user.getRecentMedias).toHaveBeenCalled();
-        expect(user.getRecentMedias.calls.argsFor(0)[0]).toEqual(
-          options.userId);
-        expect(fetchMediaSpy.calls.argsFor(0)).toEqual(
-          [{}, mediaData.image.defaultResolution, options]);
-        expect(fetchMediaSpy.calls.count()).toEqual(processed_count);
-        expect(updateFileMetadataSpy.calls.argsFor(0)).toEqual(
-          [{}, mediaData.image.basename, options]);
-        expect(updateFileMetadataSpy.calls.count()).toEqual(processed_count);
-        expect(saveMediaObjectSpy.calls.argsFor(0)).toEqual([{}, options]);
-        expect(saveMediaObjectSpy.calls.count()).toEqual(processed_count);
-        expect(res.length).toEqual(processed_count);
-        expect(strip_ansi(log.output.calls.argsFor(0)[0])).toEqual(
-          'Done processing');
-        expect(strip_ansi(log.output.calls.argsFor(0)[1])).toEqual(
-          processed_count.toString());
+    it('rejects on error while resolving options', function(done) {
+      resolveOptionsSpy.and.callFake(helpers.promiseRejectError);
+      query({}).then(function() {
+        fail(new Error('should not have succeeded'));
         done();
-      });
-    });
-
-    it('rejects on fetch error in parallel', function(done) {
-      fetchMediaSpy = jasmine.createSpy('fetchMedia').and.callFake(function() {
-        return Promise.reject(Error('boom'));
-      });
-      ragamints.__set__('fetchMedia', fetchMediaSpy);
-      query({}).catch(function(err) {
+      }, function(err) {
         expect(err.message).toEqual('boom');
-        expect(log.output.calls.any()).toEqual(false);
         done();
       });
     });
 
-    it('rejects on save media object error in parallel', function(done) {
-      saveMediaObjectSpy = jasmine.createSpy(
-        'saveMediaObject'
-      ).and.callFake(function() {
-        return Promise.reject(Error('boom'));
-      });
-      ragamints.__set__('saveMediaObject', saveMediaObjectSpy);
-      query({json: true}).catch(function(err) {
+    it('rejects on error while iterating over medias', function(done) {
+      forEachRecentMediasSpy.and.callFake(helpers.promiseRejectError);
+      query({}).then(function() {
+        fail(new Error('should not have succeeded'));
+        done();
+      }, function(err) {
         expect(err.message).toEqual('boom');
-        expect(log.output.calls.any()).toEqual(false);
         done();
       });
     });
 
-    it('rejects on fetch error sequentially', function(done) {
-      fetchMediaSpy = jasmine.createSpy('fetchMedia').and.callFake(function() {
-        return Promise.reject(Error('boom'));
-      });
-      ragamints.__set__('fetchMedia', fetchMediaSpy);
-      query({sequential: true}).catch(function(err) {
+    it('rejects on error while fetching media', function(done) {
+      fetchMediaSpy.and.callFake(helpers.promiseRejectError);
+      query({}).then(function() {
+        fail(new Error('should not have succeeded'));
+        done();
+      }, function(err) {
         expect(err.message).toEqual('boom');
-        expect(log.output.calls.any()).toEqual(false);
         done();
       });
     });
 
-    it('rejects on save media object error sequentially', function(done) {
-      saveMediaObjectSpy = jasmine.createSpy(
-        'saveMediaObject'
-      ).and.callFake(function() {
-        return Promise.reject(Error('boom'));
-      });
-      ragamints.__set__('saveMediaObject', saveMediaObjectSpy);
-      query({sequential: true, json: true}).catch(function(err) {
+    it('rejects on error while updating metadata', function(done) {
+      updateFileMetadataSpy.and.callFake(helpers.promiseRejectError);
+      query({}).then(function() {
+        fail(new Error('should not have succeeded'));
+        done();
+      }, function(err) {
         expect(err.message).toEqual('boom');
-        expect(log.output.calls.any()).toEqual(false);
         done();
       });
     });
 
-    it('rejects on getting recent medias error', function(done) {
-      user.getRecentMedias.and.callFake(function() {
-        return Promise.reject(Error('boom'));
-      });
-      query({}).catch(function(err) {
+    it('rejects on error while saving JSON object', function(done) {
+      saveMediaObjectSpy.and.callFake(helpers.promiseRejectError);
+      var options = {
+        json: true,
+      };
+      query(options).then(function() {
+        fail(new Error('should not have succeeded'));
+        done();
+      }, function(err) {
         expect(err.message).toEqual('boom');
-        expect(log.output.calls.any()).toEqual(false);
         done();
       });
     });
+
   });
 
   describe('main', function() {
