@@ -79,24 +79,25 @@ describe('user', function() {
   describe('getRecentMedias', function() {
     var getRecentMedias = user.__get__('getRecentMedias');
 
+    // Our ig.user_media_recent returns a page of empty media objects async.
+    var next = function(callback) {
+      setTimeout(function() {
+        callback(
+          null,
+          helpers.fillArray(mediaData.defaultQueryPageSize),
+          {next: next}
+        );
+      }, 0);
+    };
+    var user_media_recent = function(user_id, options, callback) {
+      next(callback);
+    };
+
     beforeEach(function() {
       spyOn(log, 'output');
     });
 
-    it('fetches a media', function(done) {
-      // Our ig.user_media_recent returns a page of empty media objects async.
-      var next = function(callback) {
-        setTimeout(function() {
-          callback(
-            null,
-            helpers.fillArray(mediaData.defaultQueryPageSize),
-            {next: next}
-          );
-        }, 0);
-      };
-      var user_media_recent = function(user_id, options, callback) {
-        next(callback);
-      };
+    it('fetches recent medias, page by page', function(done) {
       spyOn(ig, 'user_media_recent').and.callFake(user_media_recent);
       // Let's query more than one page, but less than two pages
       var page_size = mediaData.defaultQueryPageSize;
@@ -119,6 +120,16 @@ describe('user', function() {
             `Found another ${half_page_size} media(s), nothing more.`);
           done();
         });
+      });
+    });
+
+    it('fetches recent medias even without count', function(done) {
+      spyOn(ig, 'user_media_recent').and.callFake(user_media_recent);
+      getRecentMedias('12345678', {}).then(function(chunk) {
+        expect(ig.user_media_recent.calls.argsFor(0)[0]).toEqual('12345678');
+        expect(chunk.medias.length).toBeGreaterThan(0);
+        expect(chunk.medias.length).toBeLessThan(100); // not to many
+        done();
       });
     });
 
