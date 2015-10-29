@@ -14,13 +14,13 @@ if (!iojs) {
 }
 
 var ragamints = require('../lib/ragamints');
-var log = require('../lib/log');
+var logger    = require('../lib/logger');
 
 ragamints.main(process.argv).then(function() {
   process.exit(0);
 }).catch(function(err) {
   if (err) {
-    log.output(log.error(err.error_message || err.message || err.body));
+    logger.log(logger.error(err.error_message || err.message || err.body));
   }
   process.exit(1);
 });

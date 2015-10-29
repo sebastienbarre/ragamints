@@ -10,7 +10,7 @@ var user = rewire('../lib/user.js');
 
 describe('user', function() {
   var ig = user.__get__('ig');
-  var log = user.__get__('log');
+  var logger = user.__get__('logger');
 
   describe('isUserId', function() {
     var isUserId = user.__get__('isUserId');
@@ -41,10 +41,10 @@ describe('user', function() {
         callback(false, [{id: '12345678'}]);
       };
       spyOn(ig, 'user_search').and.callFake(user_search);
-      spyOn(log, 'output');
+      spyOn(logger, 'log');
       resolveUserId('username').then(function(user_id) {
         expect(ig.user_search.calls.argsFor(0)[0]).toEqual('username');
-        expect(log.output).toHaveBeenCalled();
+        expect(logger.log).toHaveBeenCalled();
         expect(user_id).toEqual('12345678');
         done();
       });
@@ -70,7 +70,7 @@ describe('user', function() {
       resolveUserId('username').catch(function(err) {
         expect(ig.user_search.calls.argsFor(0)[0]).toEqual('username');
         expect(err.message).toEqual(
-          log.formatErrorMessage('Could not find user ID for: username'));
+          logger.formatErrorMessage('Could not find user ID for: username'));
         done();
       });
     });
@@ -94,7 +94,7 @@ describe('user', function() {
     };
 
     beforeEach(function() {
-      spyOn(log, 'output');
+      spyOn(logger, 'log');
     });
 
     it('fetches recent medias, page by page', function(done) {
@@ -114,9 +114,9 @@ describe('user', function() {
           expect(ig.user_media_recent.calls.argsFor(0)[0]).toEqual('12345678');
           expect(medias.length).toEqual(count);
           expect(medias[count - 1].fetch_index).toEqual(count - 1);
-          expect(strip_ansi(log.output.calls.argsFor(0)[0])).toEqual(
+          expect(strip_ansi(logger.log.calls.argsFor(0)[0])).toEqual(
             `Found ${page_size} media(s), more to come...`);
-          expect(strip_ansi(log.output.calls.argsFor(1)[0])).toEqual(
+          expect(strip_ansi(logger.log.calls.argsFor(1)[0])).toEqual(
             `Found another ${half_page_size} media(s), nothing more.`);
           done();
         });
@@ -195,7 +195,7 @@ describe('user', function() {
     var callbackSpy;
 
     beforeEach(function() {
-      spyOn(log, 'output');
+      spyOn(logger, 'log');
       getRecentMediasSpy = jasmine.createSpy('getRecentMedias');
       user.__set__('getRecentMedias', getRecentMediasSpy);
       callbackSpy = jasmine.createSpy('callbackSpy');
@@ -219,9 +219,9 @@ describe('user', function() {
           [{index: 0}, options]);
         expect(callbackSpy.calls.argsFor(pageTotal - 1)).toEqual(
           [{index: pageTotal - 1}, options]);
-        expect(strip_ansi(log.output.calls.argsFor(0)[0])).toEqual(
+        expect(strip_ansi(logger.log.calls.argsFor(0)[0])).toEqual(
           'Done iterating over');
-        expect(strip_ansi(log.output.calls.argsFor(0)[1])).toEqual(
+        expect(strip_ansi(logger.log.calls.argsFor(0)[1])).toEqual(
           pageTotal.toString());
         // No matter how long each promise took, the resulting array of indices
         // should be in order. The side effect var, however, should be in
@@ -253,9 +253,9 @@ describe('user', function() {
           [{index: 0}, options]);
         expect(callbackSpy.calls.argsFor(pageTotal - 1)).toEqual(
           [{index: pageTotal - 1}, options]);
-        expect(strip_ansi(log.output.calls.argsFor(0)[0])).toEqual(
+        expect(strip_ansi(logger.log.calls.argsFor(0)[0])).toEqual(
           'Done iterating over');
-        expect(strip_ansi(log.output.calls.argsFor(0)[1])).toEqual(
+        expect(strip_ansi(logger.log.calls.argsFor(0)[1])).toEqual(
           pageTotal.toString());
         // No matter how long each promise took, the resulting array of indices
         // should be in order. The side effect var should be in order as well,

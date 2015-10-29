@@ -11,53 +11,30 @@ var constants    = require('../lib/constants');
 
 var exiftoolData = require('./data/exiftool');
 var mediaData    = require('./data/media');
+
 var helpers      = require('./support/helpers');
 
+var media        = rewire('../lib/media.js');
 var ragamints    = rewire('../lib/ragamints.js');
 var user         = rewire('../lib/user.js');
 
 describe('ragamints', function() {
   var ig = ragamints.__get__('ig');
-  var log = ragamints.__get__('log');
+  var logger = ragamints.__get__('logger');
   ragamints.__set__('user', user);
-
-  describe('logForMedia', function() {
-    var logForMedia = ragamints.__get__('logForMedia');
-
-    beforeEach(function() {
-      spyOn(log, 'output');
-    });
-
-    it('logs message w/ respect to a media', function() {
-      var prefix = '#0001 [Back home. #foo #o]';
-      var msg = 'logging';
-      logForMedia(mediaData.image.json, msg);
-      expect(strip_ansi(log.output.calls.argsFor(0)[0])).toEqual(prefix);
-      expect(strip_ansi(log.output.calls.argsFor(0)[1])).toEqual(msg);
-    });
-
-    it('logs message w/ respect to a media w/o caption or msg', function() {
-      var media_wo_caption = extend({}, mediaData.image.json);
-      delete media_wo_caption.caption;
-      logForMedia(media_wo_caption);
-      var msg = '#0001 [977398127825095465]';
-      expect(strip_ansi(log.output.calls.argsFor(0)[0])).toEqual(msg);
-    });
-  });
+  ragamints.__set__('media', media);
 
   describe('getExifToolArgs', function() {
     var getExifToolArgs = ragamints.__get__('getExifToolArgs');
-    var logForMediaSpy;
 
     beforeEach(function() {
-      logForMediaSpy = jasmine.createSpy('logForMedia');
-      ragamints.__set__('logForMedia', logForMediaSpy);
+      spyOn(media, 'log');
     });
 
     it('gathers args for exiftool and uses GPS location', function() {
       expect(getExifToolArgs(mediaData.image.json, {verbose: true})).toEqual(
         exiftoolData.args);
-      expect(logForMediaSpy.calls.count()).toEqual(2);
+      expect(media.log.calls.count()).toEqual(2);
     });
 
     it('gathers args for exiftool and assumes local when no GPS', function() {
@@ -66,7 +43,7 @@ describe('ragamints', function() {
       ).toEqual(
         exiftoolData.argsWithoutGPS
       );
-      expect(logForMediaSpy.calls.count()).toEqual(2);
+      expect(media.log.calls.count()).toEqual(2);
     });
   });
 
@@ -82,11 +59,9 @@ describe('ragamints', function() {
         on: function() {}
       }
     };
-    var logForMediaSpy;
 
     beforeEach(function() {
-      logForMediaSpy = jasmine.createSpy('logForMedia');
-      ragamints.__set__('logForMedia', logForMediaSpy);
+      spyOn(media, 'log');
     });
 
     it('does not update metadata for video media', function(done) {
@@ -108,7 +83,7 @@ describe('ragamints', function() {
         var args = exiftoolData.args.concat([mediaData.image.basename]);
         expect(child_process.spawn).toHaveBeenCalledWith('exiftool', args);
         expect(res).toBe(true);
-        expect(logForMediaSpy).toHaveBeenCalled();
+        expect(media.log).toHaveBeenCalled();
         done();
       });
     });
@@ -127,7 +102,7 @@ describe('ragamints', function() {
       ).catch(function(err) {
         expect(child_process.spawn).toHaveBeenCalled();
         expect(err.message).toBe(
-          log.formatErrorMessage('Could not spawn exiftool (boom)'));
+          logger.formatErrorMessage('Could not spawn exiftool (boom)'));
         done();
       });
     });
@@ -145,21 +120,9 @@ describe('ragamints', function() {
         mediaData.image.json, mediaData.image.basename, {quiet: true}
       ).catch(function(err) {
         expect(child_process.spawn).toHaveBeenCalled();
-        expect(err.message).toBe(log.formatErrorMessage('boom'));
+        expect(err.message).toBe(logger.formatErrorMessage('boom'));
         done();
       });
-    });
-  });
-
-  describe('createMediaFileName', function() {
-    var createMediaFileName = ragamints.__get__('createMediaFileName');
-
-    it('creates a file name for the fetched file to be saved as', function() {
-      expect(
-        createMediaFileName(mediaData.image.json)
-      ).toBe(
-        mediaData.image.fileName
-      );
     });
   });
 
@@ -197,12 +160,10 @@ describe('ragamints', function() {
         }
       };
     };
-    var logForMediaSpy;
     var DownloadSpy;
 
     beforeEach(function() {
-      logForMediaSpy = jasmine.createSpy('logForMedia');
-      ragamints.__set__('logForMedia', logForMediaSpy);
+      spyOn(media, 'log');
       DownloadSpy = jasmine.createSpy('Download').and.callFake(Download);
       ragamints.__set__('Download', DownloadSpy);
     });
@@ -213,7 +174,7 @@ describe('ragamints', function() {
         mediaData.image.json, mediaData.image.defaultResolution, {}
       ).then(function(filename) {
         expect(DownloadSpy.calls.any()).toEqual(false);
-        expect(logForMediaSpy).toHaveBeenCalled();
+        expect(media.log).toHaveBeenCalled();
         expect(filename).toBe(mediaData.image.basename);
         done();
       });
@@ -227,7 +188,7 @@ describe('ragamints', function() {
         mediaData.image.json, mediaData.image.defaultResolution, {dest: dest}
       ).then(function(filename) {
         expect(DownloadSpy).toHaveBeenCalled();
-        expect(logForMediaSpy).toHaveBeenCalled();
+        expect(media.log).toHaveBeenCalled();
         expect(filename).toBe(media_filename);
         done();
       });
@@ -243,7 +204,7 @@ describe('ragamints', function() {
         }
       ).then(function(filename) {
         expect(DownloadSpy).toHaveBeenCalled();
-        expect(logForMediaSpy).toHaveBeenCalled();
+        expect(media.log).toHaveBeenCalled();
         expect(filename).toBe(mediaData.video.basename);
         done();
       });
@@ -279,7 +240,7 @@ describe('ragamints', function() {
         expect(fs.lstat.calls.any()).toEqual(false);
         expect(DownloadSpy.calls.any()).toEqual(false);
         expect(err.message).toEqual(
-          log.formatErrorMessage('Could not find resolution: foobar'));
+          logger.formatErrorMessage('Could not find resolution: foobar'));
         done();
       });
     });
@@ -288,7 +249,6 @@ describe('ragamints', function() {
   describe('saveMediaObject', function() {
     var saveMediaObject = ragamints.__get__('saveMediaObject');
     var fs = ragamints.__get__('fs');
-    var logForMediaSpy;
     var mkdirp_spy;
     var writeFile_success = function(filename, data, callback) {
       callback();
@@ -304,8 +264,7 @@ describe('ragamints', function() {
     };
 
     beforeEach(function() {
-      logForMediaSpy = jasmine.createSpy('logForMedia');
-      ragamints.__set__('logForMedia', logForMediaSpy);
+      spyOn(media, 'log');
     });
 
     it('saves a media object', function(done) {
@@ -320,7 +279,7 @@ describe('ragamints', function() {
         let data = JSON.stringify(mediaData.image.json, null, 2);
         expect(mkdirp_spy.calls.argsFor(0)[0]).toEqual(dest);
         expect(fs.writeFile.calls.argsFor(0)[1]).toEqual(data);
-        expect(logForMediaSpy).toHaveBeenCalled();
+        expect(media.log).toHaveBeenCalled();
         expect(filename).toBe(media_filename);
         done();
       });
@@ -349,7 +308,7 @@ describe('ragamints', function() {
         let data = JSON.stringify(filtered_media, null, 2);
         expect(mkdirp_spy.calls.argsFor(0)[0]).toEqual(dest);
         expect(fs.writeFile.calls.argsFor(0)[1]).toEqual(data);
-        expect(logForMediaSpy).toHaveBeenCalled();
+        expect(media.log).toHaveBeenCalled();
         expect(filename).toBe(media_filename);
         done();
       });
@@ -383,94 +342,16 @@ describe('ragamints', function() {
     });
   });
 
-  describe('isMediaId', function() {
-    var isMediaId = ragamints.__get__('isMediaId');
-
-    it('checks if a media id is valid', function() {
-      expect(isMediaId(mediaData.image.json.id)).toBe(true);
-    });
-
-    it('checks if a media id is invalid', function() {
-      expect(isMediaId(mediaData.image.json.link)).not.toBe(true);
-    });
-  });
-
-  describe('isMediaUrl', function() {
-    var isMediaUrl = ragamints.__get__('isMediaUrl');
-
-    it('checks if a media url is valid', function() {
-      expect(isMediaUrl(mediaData.image.json.link)).toBe(true);
-    });
-
-    it('checks if a media url is invalid', function() {
-      expect(isMediaUrl(mediaData.image.json.id)).not.toBe(true);
-    });
-  });
-
-  describe('resolveMediaId', function() {
-    var resolveMediaId = ragamints.__get__('resolveMediaId');
-    var fetch_spy;
-
-    it('resolves a media id to itself', function(done) {
-      fetch_spy = jasmine.createSpy('fetch');
-      ragamints.__set__('fetch', fetch_spy);
-      resolveMediaId(mediaData.image.json.id).then(function(media_id) {
-        expect(fetch_spy.calls.any()).toEqual(false);
-        expect(media_id).toEqual(mediaData.image.json.id);
-        done();
-      });
-    });
-
-    it('resolves a media url', function(done) {
-      var fetch = function() {
-        return Promise.resolve({
-          ok: true,
-          json: function() {
-            return {media_id: mediaData.image.json.id};
-          }
-        });
-      };
-      fetch_spy = jasmine.createSpy('fetch').and.callFake(fetch);
-      ragamints.__set__('fetch', fetch_spy);
-      spyOn(log, 'output');
-      resolveMediaId(mediaData.image.json.link).then(function(media_id) {
-        expect(fetch_spy).toHaveBeenCalled();
-        expect(log.output).toHaveBeenCalled();
-        expect(media_id).toEqual(mediaData.image.json.id);
-        done();
-      });
-    });
-
-    it('rejects on error', function(done) {
-      var fetch = function() {
-        return Promise.resolve({
-          ok: false
-        });
-      };
-      fetch_spy = jasmine.createSpy('fetch').and.callFake(fetch);
-      ragamints.__set__('fetch', fetch_spy);
-      let link = mediaData.image.json.link;
-      resolveMediaId(link).catch(function(err) {
-        expect(fetch_spy).toHaveBeenCalled();
-        expect(err.message).toEqual(
-          log.formatErrorMessage(`Could not retrieve Media Id for: ${link}`));
-        done();
-      });
-    });
-  });
-
   describe('resolveOptions', function() {
     var resolveOptions = ragamints.__get__('resolveOptions');
-    var resolveMediaIdSpy;
 
     beforeEach(function() {
-      spyOn(log, 'output');
+      spyOn(logger, 'log');
       spyOn(ig, 'use');
       spyOn(user, 'resolveUserId').and.callFake(
         helpers.promiseValue.bind(null, '12345678'));
-      resolveMediaIdSpy = jasmine.createSpy('resolveMediaId').and.callFake(
+      spyOn(media, 'resolveMediaId').and.callFake(
         helpers.promiseValue.bind(null, mediaData.image.json.id));
-      ragamints.__set__('resolveMediaId', resolveMediaIdSpy);
     });
 
     it('resolves options', function(done) {
@@ -495,8 +376,8 @@ describe('ragamints', function() {
       resolveOptions(options).then(function(res) {
         let link = mediaData.image.json.link;
         expect(user.resolveUserId.calls.argsFor(0)).toEqual(['username']);
-        expect(resolveMediaIdSpy.calls.argsFor(0)[0]).toEqual(link);
-        expect(resolveMediaIdSpy.calls.argsFor(1)[0]).toEqual(link);
+        expect(media.resolveMediaId.calls.argsFor(0)[0]).toEqual(link);
+        expect(media.resolveMediaId.calls.argsFor(1)[0]).toEqual(link);
         expect(res).toEqual(resolved_options);
         done();
       }, function(err) {
@@ -512,7 +393,7 @@ describe('ragamints', function() {
         done();
       }, function(err) {
         expect(err.message).toEqual(
-          log.formatErrorMessage('Need Instagram access token'));
+          logger.formatErrorMessage('Need Instagram access token'));
         done();
       });
     });
@@ -522,7 +403,7 @@ describe('ragamints', function() {
         fail(new Error('should not have succeeded'));
         done();
       }, function(err) {
-        expect(err.message).toEqual(log.formatErrorMessage('Need user'));
+        expect(err.message).toEqual(logger.formatErrorMessage('Need user'));
         done();
       });
     });
@@ -554,7 +435,7 @@ describe('ragamints', function() {
     var saveMediaObjectSpy;
 
     beforeEach(function() {
-      spyOn(log, 'output');
+      spyOn(logger, 'log');
       resolveOptionsSpy = jasmine.createSpy('resolveOptions');
       ragamints.__set__('resolveOptions', resolveOptionsSpy);
       forEachRecentMediasSpy = spyOn(user, 'forEachRecentMedias');
@@ -688,7 +569,7 @@ describe('ragamints', function() {
     var querySpy;
 
     beforeEach(function() {
-      spyOn(log, 'output');
+      spyOn(logger, 'log');
       querySpy = jasmine.createSpy('query').and.callFake(function() {
         return Promise.resolve([{}]);
       });
@@ -754,7 +635,7 @@ describe('ragamints', function() {
         '--help'
       ];
       main(argv);
-      expect(log.output).toHaveBeenCalledWith(
+      expect(logger.log).toHaveBeenCalledWith(
         '  Check the man page or README file for more.');
     });
   });
