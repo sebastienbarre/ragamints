@@ -19,7 +19,7 @@
   ],
   "rules": {
     "camelcase": [0],
-    "complexity": [2, 8],
+    "complexity": [2, 10],
     "consistent-this": [0, "self"],
     "max-depth": [1, 3],
     "max-len": [2, 79],

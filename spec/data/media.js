@@ -1,6 +1,6 @@
 'use strict';
 
-var extend = require('util')._extend;
+var _assign = require('lodash/object/assign');
 
 var cdn = 'https://scontent.cdninstagram.com/hphotos-xat1/t51.2885-15/';
 
@@ -49,10 +49,10 @@ var image_basename = image_file_name + '.jpg';
 var image_json_basename = image_file_name + '.json';
 var image_default_resolution = 'standard_resolution';
 
-var image_without_gps_json = extend({}, image_json);
+var image_without_gps_json = _assign({}, image_json);
 delete image_without_gps_json.location;
 
-var video_json = extend({}, image_json);
+var video_json = _assign({}, image_json);
 video_json.type = 'video';
 video_json.videos = {
   'standard_resolution': {

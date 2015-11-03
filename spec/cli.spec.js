@@ -1,6 +1,6 @@
 'use strict';
 
-var extend       = require('util')._extend;
+var _assign      = require('lodash/object/assign');
 var objectPath   = require('object-path');
 var path         = require('path');
 var Promise      = require('es6-promise').Promise;
@@ -14,18 +14,18 @@ var mediaData    = require('./data/media');
 
 var helpers      = require('./support/helpers');
 
+var cli          = rewire('../lib/cli.js');
 var media        = rewire('../lib/media.js');
-var ragamints    = rewire('../lib/ragamints.js');
 var user         = rewire('../lib/user.js');
 
-describe('ragamints', function() {
-  var ig = ragamints.__get__('ig');
-  var logger = ragamints.__get__('logger');
-  ragamints.__set__('user', user);
-  ragamints.__set__('media', media);
+describe('cli', function() {
+  var ig = cli.__get__('ig');
+  var logger = cli.__get__('logger');
+  cli.__set__('user', user);
+  cli.__set__('media', media);
 
   describe('getExifToolArgs', function() {
-    var getExifToolArgs = ragamints.__get__('getExifToolArgs');
+    var getExifToolArgs = cli.__get__('getExifToolArgs');
 
     beforeEach(function() {
       spyOn(media, 'log');
@@ -48,7 +48,7 @@ describe('ragamints', function() {
   });
 
   describe('updateFileMetadata', function() {
-    var updateFileMetadata = ragamints.__get__('updateFileMetadata');
+    var updateFileMetadata = cli.__get__('updateFileMetadata');
     var exiftool_process = {
       on: function(event, callback) {
         if (event === 'close') {
@@ -75,7 +75,7 @@ describe('ragamints', function() {
     });
 
     it('spawns a child process to invoke exiftool', function(done) {
-      var child_process = ragamints.__get__('child_process');
+      var child_process = cli.__get__('child_process');
       spyOn(child_process, 'spawn').and.returnValue(exiftool_process);
       updateFileMetadata(
         mediaData.image.json, mediaData.image.basename, {}
@@ -89,13 +89,13 @@ describe('ragamints', function() {
     });
 
     it('rejects on error', function(done) {
-      var process = extend({}, exiftool_process);
+      var process = _assign({}, exiftool_process);
       process.on = function(event, callback) {
         if (event === 'error') {
           callback(Error('boom'));
         }
       };
-      var child_process = ragamints.__get__('child_process');
+      var child_process = cli.__get__('child_process');
       spyOn(child_process, 'spawn').and.returnValue(process);
       updateFileMetadata(
         mediaData.image.json, mediaData.image.basename, {quiet: true}
@@ -108,13 +108,13 @@ describe('ragamints', function() {
     });
 
     it('rejects on stderr data', function(done) {
-      var process = extend({}, exiftool_process);
+      var process = _assign({}, exiftool_process);
       process.stderr.on = function(event, callback) {
         if (event === 'data') {
           callback('boom');
         }
       };
-      var child_process = ragamints.__get__('child_process');
+      var child_process = cli.__get__('child_process');
       spyOn(child_process, 'spawn').and.returnValue(process);
       updateFileMetadata(
         mediaData.image.json, mediaData.image.basename, {quiet: true}
@@ -127,8 +127,8 @@ describe('ragamints', function() {
   });
 
   describe('fetchMedia', function() {
-    var fetchMedia = ragamints.__get__('fetchMedia');
-    var fs = ragamints.__get__('fs');
+    var fetchMedia = cli.__get__('fetchMedia');
+    var fs = cli.__get__('fs');
     var stats_is_file = {
       isFile: function() {
         return true;
@@ -165,7 +165,7 @@ describe('ragamints', function() {
     beforeEach(function() {
       spyOn(media, 'log');
       DownloadSpy = jasmine.createSpy('Download').and.callFake(Download);
-      ragamints.__set__('Download', DownloadSpy);
+      cli.__set__('Download', DownloadSpy);
     });
 
     it('skips if the file is already there', function(done) {
@@ -220,7 +220,7 @@ describe('ragamints', function() {
         return d;
       };
       DownloadSpy = jasmine.createSpy('Download').and.callFake(Download_fail);
-      ragamints.__set__('Download', DownloadSpy);
+      cli.__set__('Download', DownloadSpy);
       fetchMedia(
         mediaData.image.json, mediaData.image.defaultResolution, {}
       ).catch(function(err) {
@@ -233,7 +233,7 @@ describe('ragamints', function() {
     it('rejects if resolution not found', function(done) {
       spyOn(fs, 'lstat').and.callFake(lstat_file_does_not_exist);
       DownloadSpy = jasmine.createSpy('Download');
-      ragamints.__set__('Download', DownloadSpy);
+      cli.__set__('Download', DownloadSpy);
       fetchMedia(
         mediaData.image.json, 'foobar', {}
       ).catch(function(err) {
@@ -247,8 +247,8 @@ describe('ragamints', function() {
   });
 
   describe('saveMediaObject', function() {
-    var saveMediaObject = ragamints.__get__('saveMediaObject');
-    var fs = ragamints.__get__('fs');
+    var saveMediaObject = cli.__get__('saveMediaObject');
+    var fs = cli.__get__('fs');
     var mkdirp_spy;
     var writeFile_success = function(filename, data, callback) {
       callback();
@@ -269,7 +269,7 @@ describe('ragamints', function() {
 
     it('saves a media object', function(done) {
       mkdirp_spy = jasmine.createSpy('mkdirp').and.callFake(mkdirp_success);
-      ragamints.__set__('mkdirp', mkdirp_spy);
+      cli.__set__('mkdirp', mkdirp_spy);
       spyOn(fs, 'writeFile').and.callFake(writeFile_success);
       var dest = 'foo';
       var media_filename = path.join(dest, mediaData.image.jsonBasename);
@@ -282,16 +282,18 @@ describe('ragamints', function() {
         expect(media.log).toHaveBeenCalled();
         expect(filename).toBe(media_filename);
         done();
+      }, function(err) {
+        done.fail(err);
       });
     });
 
     it('saves a media object filtered by keys', function(done) {
       mkdirp_spy = jasmine.createSpy('mkdirp').and.callFake(mkdirp_success);
-      ragamints.__set__('mkdirp', mkdirp_spy);
+      cli.__set__('mkdirp', mkdirp_spy);
       spyOn(fs, 'writeFile').and.callFake(writeFile_success);
       var dest = 'foo';
       var media_filename = path.join(dest, mediaData.image.jsonBasename);
-      var keys = 'id,caption.created_time';
+      var keys = ['id', 'caption.created_time'];
       saveMediaObject(mediaData.image.json, {
         dest: dest,
         json: keys
@@ -316,7 +318,7 @@ describe('ragamints', function() {
 
     it('rejects if creating destination directory failed', function(done) {
       mkdirp_spy = jasmine.createSpy('mkdirp').and.callFake(mkdirp_fail);
-      ragamints.__set__('mkdirp', mkdirp_spy);
+      cli.__set__('mkdirp', mkdirp_spy);
       spyOn(fs, 'writeFile').and.callFake(writeFile_success);
       var dest = 'foo';
       saveMediaObject(mediaData.image.json, {
@@ -331,7 +333,7 @@ describe('ragamints', function() {
 
     it('rejects if saving failed', function(done) {
       mkdirp_spy = jasmine.createSpy('mkdirp').and.callFake(mkdirp_success);
-      ragamints.__set__('mkdirp', mkdirp_spy);
+      cli.__set__('mkdirp', mkdirp_spy);
       spyOn(fs, 'writeFile').and.callFake(writeFile_fail);
       saveMediaObject(mediaData.image.json, {
       }).catch(function(err) {
@@ -343,7 +345,7 @@ describe('ragamints', function() {
   });
 
   describe('resolveOptions', function() {
-    var resolveOptions = ragamints.__get__('resolveOptions');
+    var resolveOptions = cli.__get__('resolveOptions');
 
     beforeEach(function() {
       spyOn(logger, 'log');
@@ -360,7 +362,10 @@ describe('ragamints', function() {
         minId: mediaData.image.json.link,
         userId: 'username',
         maxTimestamp: 'Thu, 09 Apr 2015 01:19:46 +0000',
-        minTimestamp: 'Thu, 09 Apr 2015 01:19:46 +0000'
+        minTimestamp: 'Thu, 09 Apr 2015 01:19:46 +0000',
+        json: 'foo,bar',
+        resolution: 'thumbnail,low_resolution',
+        verbose: true
       };
       var resolved_options = {
         minTimestamp: 1428542386,
@@ -368,11 +373,14 @@ describe('ragamints', function() {
         userId: '12345678',
         minId: mediaData.image.json.id,
         maxId: mediaData.image.json.id,
+        json: ['foo', 'bar'],
+        resolution: ['thumbnail', 'low_resolution'],
+        verbose: true,
         accessToken: 'token'
       };
       var env = {};
       env[constants.ACCESS_TOKEN_ENV_VAR] = 'token';
-      ragamints.__set__('process', {env: env});
+      cli.__set__('process', {env: env});
       resolveOptions(options).then(function(res) {
         let link = mediaData.image.json.link;
         expect(user.resolveUserId.calls.argsFor(0)).toEqual(['username']);
@@ -381,13 +389,12 @@ describe('ragamints', function() {
         expect(res).toEqual(resolved_options);
         done();
       }, function(err) {
-        fail(err);
-        done();
+        done.fail(err);
       });
     });
 
     it('rejects when no access token is found', function(done) {
-      ragamints.__set__('process', {env: {}});
+      cli.__set__('process', {env: {}});
       resolveOptions({}).then(function() {
         fail(new Error('should not have succeeded'));
         done();
@@ -403,14 +410,15 @@ describe('ragamints', function() {
         fail(new Error('should not have succeeded'));
         done();
       }, function(err) {
-        expect(err.message).toEqual(logger.formatErrorMessage('Need user'));
+        expect(err.message).toEqual(
+          logger.formatErrorMessage('Need user ID or user name'));
         done();
       });
     });
   });
 
   describe('query', function() {
-    var query = ragamints.__get__('query');
+    var query = cli.__get__('query');
     var pageTotal = 3;
     var medias = helpers.fillArray(pageTotal);
     medias[pageTotal - 1].type = 'video'; // last one is a video
@@ -437,16 +445,16 @@ describe('ragamints', function() {
     beforeEach(function() {
       spyOn(logger, 'log');
       resolveOptionsSpy = jasmine.createSpy('resolveOptions');
-      ragamints.__set__('resolveOptions', resolveOptionsSpy);
+      cli.__set__('resolveOptions', resolveOptionsSpy);
       forEachRecentMediasSpy = spyOn(user, 'forEachRecentMedias');
       getRecentMediasSpy = jasmine.createSpy('getRecentMedias');
       user.__set__('getRecentMedias', getRecentMediasSpy);
       fetchMediaSpy = jasmine.createSpy('fetchMedia');
-      ragamints.__set__('fetchMedia', fetchMediaSpy);
+      cli.__set__('fetchMedia', fetchMediaSpy);
       updateFileMetadataSpy = jasmine.createSpy('updateFileMetadata');
-      ragamints.__set__('updateFileMetadata', updateFileMetadataSpy);
+      cli.__set__('updateFileMetadata', updateFileMetadataSpy);
       saveMediaObjectSpy = jasmine.createSpy('saveMediaObject');
-      ragamints.__set__('saveMediaObject', saveMediaObjectSpy);
+      cli.__set__('saveMediaObject', saveMediaObjectSpy);
 
       // The default, working mock workflow
       resolveOptionsSpy.and.callFake(helpers.promiseValue);
@@ -480,8 +488,7 @@ describe('ragamints', function() {
         expect(res).toEqual(medias.slice(0, processed_count));
         done();
       }, function(err) {
-        fail(err);
-        done();
+        done.fail(err);
       });
     });
 
@@ -498,16 +505,14 @@ describe('ragamints', function() {
         expect(res).toEqual(medias);
         done();
       }, function(err) {
-        fail(err);
-        done();
+        done.fail(err);
       });
     });
 
     it('rejects on error while resolving options', function(done) {
       resolveOptionsSpy.and.callFake(helpers.promiseRejectError);
       query({}).then(function() {
-        fail(new Error('should not have succeeded'));
-        done();
+        done.fail(new Error('should not have succeeded'));
       }, function(err) {
         expect(err.message).toEqual('boom');
         done();
@@ -517,8 +522,7 @@ describe('ragamints', function() {
     it('rejects on error while iterating over medias', function(done) {
       forEachRecentMediasSpy.and.callFake(helpers.promiseRejectError);
       query({}).then(function() {
-        fail(new Error('should not have succeeded'));
-        done();
+        done.fail(new Error('should not have succeeded'));
       }, function(err) {
         expect(err.message).toEqual('boom');
         done();
@@ -528,8 +532,7 @@ describe('ragamints', function() {
     it('rejects on error while fetching media', function(done) {
       fetchMediaSpy.and.callFake(helpers.promiseRejectError);
       query({}).then(function() {
-        fail(new Error('should not have succeeded'));
-        done();
+        done.fail(new Error('should not have succeeded'));
       }, function(err) {
         expect(err.message).toEqual('boom');
         done();
@@ -539,8 +542,7 @@ describe('ragamints', function() {
     it('rejects on error while updating metadata', function(done) {
       updateFileMetadataSpy.and.callFake(helpers.promiseRejectError);
       query({}).then(function() {
-        fail(new Error('should not have succeeded'));
-        done();
+        done.fail(new Error('should not have succeeded'));
       }, function(err) {
         expect(err.message).toEqual('boom');
         done();
@@ -553,8 +555,7 @@ describe('ragamints', function() {
         json: true,
       };
       query(options).then(function() {
-        fail(new Error('should not have succeeded'));
-        done();
+        done.fail(new Error('should not have succeeded'));
       }, function(err) {
         expect(err.message).toEqual('boom');
         done();
@@ -564,25 +565,40 @@ describe('ragamints', function() {
   });
 
   describe('main', function() {
-    var main = ragamints.__get__('main');
-    var program = ragamints.__get__('program');
+    var main = cli.__get__('main');
     var querySpy;
 
     beforeEach(function() {
       spyOn(logger, 'log');
-      querySpy = jasmine.createSpy('query').and.callFake(function() {
-        return Promise.resolve([{}]);
-      });
-      ragamints.__set__('query', querySpy);
+      querySpy = jasmine.createSpy('query');
+      cli.__set__('query', querySpy);
     });
 
-    it('handles process.args and forwards to query', function(done) {
+    it('rejects when no command is provided', function(done) {
+      var argv = [];
+      main(argv).catch(function() {
+        expect(logger.log.calls.argsFor(0)[0].indexOf('--help')).not.toBe(-1);
+        done();
+      });
+    });
+
+    it('outputs help on --help', function() {
       var argv = [
-        'foo',
-        'bar',
+        '--help'
+      ];
+      main(argv).catch(function() {
+        expect(logger.log.calls.argsFor(0)[0].indexOf('--help')).not.toBe(-1);
+        done();
+      });
+    });
+
+    it('parses argv and forwards to query', function(done) {
+      querySpy.and.callFake(helpers.promiseValue.bind(null, [{}]));
+      var argv = [
+        'download',
         '--access-token', 'token',
         '--user-id', 'username',
-        '--count', 3,
+        '--count', '3',
         '--min-timestamp', '2015-01-01 23:10:10',
         '--max-timestamp', '2015-12-31 13:10:10',
         '--min-id', mediaData.image.json.link,
@@ -597,7 +613,7 @@ describe('ragamints', function() {
         maxTimestamp: '2015-12-31 13:10:10',
         minId: mediaData.image.json.link,
         maxId: mediaData.image.json.link,
-        resolution: ['thumbnail', 'low_resolution']
+        resolution: 'thumbnail,low_resolution'
       };
       main(argv).then(function(res) {
         var query_calls = querySpy.calls.argsFor(0)[0];
@@ -606,38 +622,22 @@ describe('ragamints', function() {
         }
         expect(res).toEqual([{}]);
         done();
+      }, function(err) {
+        done.fail(err);
       });
     });
 
-    it('rejects and displays help when no args are provided', function(done) {
-      var argv = [
-        'foo',
-        'bar'
-      ];
-      spyOn(program, 'outputHelp');
-      main(argv).catch(function() {
-        expect(program.outputHelp).toHaveBeenCalled();
+    it('rejects when a command fails', function(done) {
+      querySpy.and.callFake(helpers.promiseRejectError);
+      var argv = ['download'];
+      main(argv).then(function() {
+        done.fail(err);
+      }, function() {
+        expect(logger.log.calls.argsFor(0)[0].indexOf('--help')).not.toBe(-1);
         done();
       });
     });
 
-    it('outputs help on --help', function() {
-      spyOn(program, 'on').and.callFake(function(option, callback) {
-        if (option === '--help') {
-          callback();
-        }
-        return this;
-      });
-      spyOn(program, 'parse');
-      var argv = [
-        'foo',
-        'bar',
-        '--help'
-      ];
-      main(argv);
-      expect(logger.log).toHaveBeenCalledWith(
-        '  Check the man page or README file for more.');
-    });
   });
 
 });

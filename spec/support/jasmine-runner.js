@@ -14,6 +14,7 @@ if (!iojs) {
 var noop = function() {};
 var jrunner = new Jasmine();
 jrunner.configureDefaultReporter({print: noop}); // remove default reporters
-jasmine.getEnv().addReporter(new SpecReporter());
+// https://github.com/bcaudan/jasmine-spec-reporter
+jasmine.getEnv().addReporter(new SpecReporter({displayStacktrace: 'summary'}));
 jrunner.loadConfigFile();
 jrunner.execute();

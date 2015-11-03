@@ -13,10 +13,10 @@ if (!iojs) {
   });
 }
 
-var ragamints = require('../lib/ragamints');
-var logger    = require('../lib/logger');
+var cli    = require('../lib/cli');
+var logger = require('../lib/logger');
 
-ragamints.main(process.argv).then(function() {
+cli.main(process.argv.slice(2)).then(function() {
   process.exit(0);
 }).catch(function(err) {
   if (err) {

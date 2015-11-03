@@ -1,6 +1,6 @@
 'use strict';
 
-var extend       = require('util')._extend;
+var _assign      = require('lodash/object/assign');
 var Promise      = require('es6-promise').Promise;
 var rewire       = require('rewire');
 var strip_ansi   = require('strip-ansi');
@@ -117,7 +117,7 @@ describe('media', function() {
     });
 
     it('logs message w/ respect to a media w/o caption or msg', function() {
-      var media_wo_caption = extend({}, mediaData.image.json);
+      var media_wo_caption = _assign({}, mediaData.image.json);
       delete media_wo_caption.caption;
       log(media_wo_caption);
       var msg = '#0001 [977398127825095465]';

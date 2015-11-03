@@ -52,31 +52,45 @@ $ exiftool -ver
 
 ## Usage
 
+Show available commands:
 ```
 $ ragamints
+~/.npm-packages/bin/ragamints command
 
-  Usage: ragamints [options]
+Commands:
+  download  download medias from Instagram
 
-  Options:
+Options:
+  -h, --help  Show help  [boolean]
 
-    -h, --help                              output usage information
-    -t, --access-token <token>              Instagram Access Token
-    -u, --user-id <id|name>                 Instagram User ID, or User Name
-    -c, --count <count>                     Maximum count of media to download
-    -m, --min-id <id|url>                   Fetch media later than this min_id (included)
-    -n, --max-id <id|url>                   Fetch media earlier than this max_id (excluded)
-    -o, --min-timestamp <timestamp|string>  Fetch media after this UNIX timestamp
-    -p, --max-timestamp <timestamp|string>  Fetch media before this UNIX timestamp
-    -d, --dest [dir]                        Destination dir, current dir otherwise
-    -a, --always-download                   Always download, even if media is saved already
-    -j, --json [keys]                       Save the json object describing the media (optionally plucking keys)
-    -r, --resolution <resolutions>          Resolution(s) to fetch (thumbnail,low_resolution,standard_resolution)
-    -s, --sequential                        Process everything sequentially (slower)
-    -i, --include-videos                    Fetch videos as well (skipped by default)
-    -v, --verbose                           Output more info (timezone, creation time)
-    -q, --quiet                             Output less info
+Check the man page or README file for more
+```
 
-  Check the man page or README file for more.
+Show available options for the `download` command:
+```
+
+$ ragamints download --help
+~/.npm-packages/bin/ragamints download
+
+Options:
+  -u, --user-id          Instagram user ID (or user name)  [string]
+  -c, --count            Maximum count of medias to download
+  -m, --min-id           Only medias later than this media id/url (included)  [string]
+  -n, --max-id           Only medias earlier than this media ir/url (excluded)  [string]
+  -o, --min-timestamp    Only medias after this UNIX timestamp/datetime  [string]
+  -p, --max-timestamp    Only medias before this UNIX timestamp/datetime  [string]
+  -d, --dest             Destination directory  [string] [default: "./"]
+  -a, --always-download  Always download, even if media is saved already  [boolean] [default: false]
+  -j, --json             Save media json object (accepts keys to pluck)  [default: false]
+  -r, --resolution       Resolution(s) to download, e.g. thumbnail,low_resolution,standard_resolution  [string]
+  -s, --sequential       Process sequentially (slower)  [boolean] [default: false]
+  -i, --include-videos   Include videos (skipped by default)  [boolean] [default: false]
+  -t, --access-token     Instagram Access Token  [string]
+  -v, --verbose          Output more info  [boolean] [default: false]
+  -q, --quiet            Output less info  [boolean] [default: false]
+  -h, --help             Show help  [boolean]
+
+Check the man page or README file for more
 ```
 
 ## Examples
@@ -91,7 +105,7 @@ $ export RAGAMINTS_ACCESS_TOKEN=[ACCESS_TOKEN]
 Let's fetch the last 3 medias from my [Instagram feed][sebastienbarre:Instagram]. `ragamints` will output how it interpreted some of its arguments, and what is being done for each media. Each step references a media by an index (`#0001`, `#0002`, ...) followed by a short excerpt from its caption (`[Back home. Done sp]`). In this example two steps can be identified for each media -- fetching the file and updating its metadata.
 
 ```
-$ ragamints --access-token [ACCESS_TOKEN] --user-id sebastienbarre --count 3
+$ ragamints download --access-token [ACCESS_TOKEN] --user-id sebastienbarre --count 3
 Found user ID: 26667401 for username: sebastienbarre
 Found 3 media(s), nothing more.
 #0001 [Back home. Done sp] Fetched 2015-05-04_1430734958.jpg
@@ -117,7 +131,7 @@ The *standard* (largest) image resolution is fetched but `--resolution` can be u
 Let's fetch the medias I had posted *later in time than (but including)* https://instagram.com/p/2QY1JYJYqN/ (`--min-id`), and *earlier in time than (but excluding)* https://instagram.com/p/2QZcrCpYrM/ (`--max-id`). I'm using my user ID here (`26667401`) instead of my username (`sebastienbarre`) to save a round-trip. The Instagram API expects both `--min-id` and `--max-id` to reference media IDs, but these can be difficult to gather -- use photo URLs instead and `ragamints` will look-up these IDs for you.
 
 ```
-$ ragamints --access-token [ACCESS_TOKEN] --user-id 26667401 --min-id https://instagram.com/p/2QY1JYJYqN/ --max-id https://instagram.com/p/2QZcrCpYrM/
+$ ragamints download --access-token [ACCESS_TOKEN] --user-id 26667401 --min-id https://instagram.com/p/2QY1JYJYqN/ --max-id https://instagram.com/p/2QZcrCpYrM/
 Found media ID: 977393040662825676_26667401 for media url: https://instagram.com/p/2QZcrCpYrM/
 Found media ID: 977390324456721037_26667401 for media url: https://instagram.com/p/2QY1JYJYqN/
 Found 2 media(s), nothing more.
@@ -135,7 +149,7 @@ Note that `#0001` was *not* fetched, as it had been saved already in our previou
 Let's fetch the medias I had posted *later in time than* 5 weeks ago (`--min-timestamp`), but *earlier in time than* 10 days ago (`--max-timestamp`). The Instagram API expects both `--min-timestamp` and `--max-timestamp` to reference a [Unix Timestamp] but `ragamints` will accept [a variety of date formats][sugarjs], for convenience. The `--dest` parameter can be used to save to a specific folder (here, `archive`).
 
 ```
-$ ragamints --access-token [ACCESS_TOKEN] --user-id 26667401 --dest archive --max-timestamp '10 days ago' --min-timestamp '5 weeks ago' --quiet
+$ ragamints download --access-token [ACCESS_TOKEN] --user-id 26667401 --dest archive --max-timestamp '10 days ago' --min-timestamp '5 weeks ago' --quiet
 Min Timestamp: 5 weeks ago is 2015-04-08T21:19:46-04:00 (1428542386)
 Max Timestamp: 10 days ago is 2015-05-03T21:19:46-04:00 (1430702386)
 Found 33 media(s), more to come...
@@ -162,7 +176,7 @@ What `ragamints` *can* do, though, is look at the GPS location, infer the timezo
 Use `--verbose` to display which timezone was picked. In the example below, the first picture was taken in Tokyo and the second one in New York.
 
 ```
-$ ragamints --access-token [ACCESS_TOKEN] --user-id 26667401 --max-timestamp '23 days ago' --min-timestamp '30 days ago' --verbose
+$ ragamints download --access-token [ACCESS_TOKEN] --user-id 26667401 --max-timestamp '23 days ago' --min-timestamp '30 days ago' --verbose
 Min Timestamp: 30 days ago is 2015-04-14T13:21:45-04:00 (1429030905)
 Max Timestamp: 23 days ago is 2015-04-21T13:21:45-04:00 (1429635705)
 Found 2 media(s), nothing more.
