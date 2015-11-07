@@ -21,6 +21,7 @@ cli.main(process.argv.slice(2)).then(function() {
 }).catch(function(err) {
   if (err) {
     logger.log(logger.error(err.error_message || err.message || err.body));
+    // logger.log(err.stack);
   }
   process.exit(1);
 });
