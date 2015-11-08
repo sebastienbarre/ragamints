@@ -76,6 +76,5 @@ module.exports = {
   video: {
     json: video_json,
     basename: video_basename
-  },
-  defaultQueryPageSize: 33
+  }
 };

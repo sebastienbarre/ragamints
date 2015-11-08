@@ -5,7 +5,6 @@ var objectPath   = require('object-path');
 var path         = require('path');
 var Promise      = require('es6-promise').Promise;
 var rewire       = require('rewire');
-var strip_ansi   = require('strip-ansi');
 
 var constants    = require('../../lib/constants');
 
@@ -19,7 +18,6 @@ var media        = rewire('../../lib/media.js');
 var user         = rewire('../../lib/user.js');
 
 describe('command:download', function() {
-  var ig = download_cmd.__get__('ig');
   var logger = download_cmd.__get__('logger');
   download_cmd.__set__('user', user);
   download_cmd.__set__('media', media);
@@ -65,9 +63,6 @@ describe('command:download', function() {
     });
 
     it('does not update metadata for video media', function(done) {
-      var video = {
-        type: 'video'
-      };
       updateFileMetadata(mediaData.video, 'foo.jpg', {}).then(function(res) {
         expect(res).toBe(false);
         done();
@@ -345,11 +340,12 @@ describe('command:download', function() {
   });
 
   describe('resolveOptions', function() {
+    var instagram = download_cmd.__get__('instagram');
     var resolveOptions = download_cmd.__get__('resolveOptions');
 
     beforeEach(function() {
       spyOn(logger, 'log');
-      spyOn(ig, 'use');
+      spyOn(instagram, 'use');
       spyOn(user, 'resolveUserId').and.callFake(
         helpers.promiseValue.bind(null, '12345678'));
       spyOn(media, 'resolveMediaId').and.callFake(
@@ -396,8 +392,7 @@ describe('command:download', function() {
     it('rejects when no access token is found', function(done) {
       download_cmd.__set__('process', {env: {}});
       resolveOptions({}).then(function() {
-        fail(new Error('should not have succeeded'));
-        done();
+        done.fail(new Error('should not have succeeded'));
       }, function(err) {
         expect(err.message).toEqual(
           logger.formatErrorMessage('Need Instagram access token'));
@@ -407,8 +402,7 @@ describe('command:download', function() {
 
     it('rejects when no user id is found', function(done) {
       resolveOptions({accessToken: 'token'}).then(function() {
-        fail(new Error('should not have succeeded'));
-        done();
+        done.fail(new Error('should not have succeeded'));
       }, function(err) {
         expect(err.message).toEqual(
           logger.formatErrorMessage('Need user ID or user name'));
@@ -486,23 +480,6 @@ describe('command:download', function() {
         expect(saveMediaObjectSpy.calls.argsFor(0)).toEqual([{}, options]);
         expect(saveMediaObjectSpy.calls.count()).toEqual(processed_count);
         expect(res).toEqual(medias.slice(0, processed_count));
-        done();
-      }, function(err) {
-        done.fail(err);
-      });
-    });
-
-    it('resolves options & processes medias (w/ videos)', function(done) {
-      var options = {
-        userId: '12345678',
-        json: true,
-        includeVideos: true
-      };
-      run(options).then(function(res) {
-        expect(fetchMediaSpy.calls.count()).toEqual(pageTotal);
-        expect(updateFileMetadataSpy.calls.count()).toEqual(pageTotal);
-        expect(saveMediaObjectSpy.calls.count()).toEqual(pageTotal);
-        expect(res).toEqual(medias);
         done();
       }, function(err) {
         done.fail(err);

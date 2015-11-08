@@ -41,6 +41,7 @@
     "no-process-exit": 0,
     "no-underscore-dangle": [0],
     "no-unneeded-ternary": 1,
+    "no-unused-vars": [2, {"vars": "all", "args": "after-used"}],
     "no-warning-comments": 0,
     "quotes": [2, "single"],
     "radix": 1,
