@@ -28,6 +28,9 @@
       "pre-push": "npm run coverage && npm run coverage:check",
       "_post-merge": "npm install",
       "_post-rewrite": "npm install"
+    },
+    "commitizen": {
+      "path": "node_modules/cz-conventional-changelog"
     }
   },
   "keywords": [
@@ -104,8 +107,5 @@
     "semantic-release": "^4.3.5",
     "strip-ansi": "^3.0.0",
     "temp": "^0.8.3"
-  },
-  "czConfig": {
-    "path": "node_modules/cz-conventional-changelog"
   }
 }

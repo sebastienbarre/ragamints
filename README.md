@@ -76,7 +76,7 @@ Options:
   -u, --user-id          Instagram user ID (or user name)  [string]
   -c, --count            Maximum count of medias to download
   -m, --min-id           Only medias later than this media id/url (included)  [string]
-  -n, --max-id           Only medias earlier than this media ir/url (excluded)  [string]
+  -n, --max-id           Only medias earlier than this media id/url (excluded)  [string]
   -o, --min-timestamp    Only medias after this UNIX timestamp/datetime  [string]
   -p, --max-timestamp    Only medias before this UNIX timestamp/datetime  [string]
   -d, --dest             Destination directory  [string] [default: "./"]
