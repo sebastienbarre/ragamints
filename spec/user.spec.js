@@ -35,7 +35,7 @@ describe('user', function() {
     it('resolves a user id to itself', function(done) {
       spyOn(instagram, 'user_search');
       resolveUserId(mock_user.id).then(function(user_id) {
-        expect(instagram.user_search.calls.any()).toEqual(false);
+        expect(instagram.user_search).not.toHaveBeenCalled();
         expect(user_id).toEqual(mock_user.id);
         done();
       });

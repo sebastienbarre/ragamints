@@ -168,7 +168,7 @@ describe('command:download', function() {
       fetchMedia(
         mediaData.image.json, mediaData.image.defaultResolution, {}
       ).then(function(filename) {
-        expect(DownloadSpy.calls.any()).toEqual(false);
+        expect(DownloadSpy).not.toHaveBeenCalled();
         expect(media.log).toHaveBeenCalled();
         expect(filename).toBe(mediaData.image.basename);
         done();
@@ -232,8 +232,8 @@ describe('command:download', function() {
       fetchMedia(
         mediaData.image.json, 'foobar', {}
       ).catch(function(err) {
-        expect(fs.lstat.calls.any()).toEqual(false);
-        expect(DownloadSpy.calls.any()).toEqual(false);
+        expect(fs.lstat).not.toHaveBeenCalled();
+        expect(DownloadSpy).not.toHaveBeenCalled();
         expect(err.message).toEqual(
           logger.formatErrorMessage('Could not find resolution: foobar'));
         done();
@@ -320,7 +320,7 @@ describe('command:download', function() {
         dest: dest
       }).catch(function(err) {
         expect(mkdirp_spy.calls.argsFor(0)[0]).toEqual(dest);
-        expect(fs.writeFile.calls.any()).toEqual(false);
+        expect(fs.writeFile).not.toHaveBeenCalled();
         expect(err.message).toEqual('boom2');
         done();
       });

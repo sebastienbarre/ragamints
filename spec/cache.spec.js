@@ -146,6 +146,34 @@ describe('cache', function() {
     });
   });
 
+  it('clears all cache entries', function(done) {
+    var int_value = 3;
+    var key2 = key + '2';
+    cache.set(key, int_value).then(function() {
+      cache.set(key2, int_value).then(function() {
+        cache.clear().then(function() {
+          cache.get(key).then(function() {
+            done.fail(key + ' key was not removed');
+          }, function(err) {
+            expect(err).toBeUndefined();
+            cache.get(key2).then(function() {
+              done.fail(key2 + ' key was not removed');
+            }, function(err) {
+              expect(err).toBeUndefined();
+              done();
+            });
+          });
+        }, function(err) {
+          done.fail(err);
+        });
+      }, function(err) {
+        done.fail(err);
+      });
+    }, function(err) {
+      done.fail(err);
+    });
+  });
+
   it('does not compress small cache entries', function(done) {
     var int_value = 3;
     var decompress_spy = jasmine.createSpy('decompress');
@@ -186,7 +214,7 @@ describe('cache', function() {
     });
   });
 
-  it('fails to set when cache is disabled', function(done) {
+  it('fails to set when the cache is disabled', function(done) {
     var int_value = 3;
     cache.disable();
     cache.set(key, int_value).then(function() {
@@ -197,7 +225,7 @@ describe('cache', function() {
     });
   });
 
-  it('fails to get when cache is disabled', function(done) {
+  it('fails to get when the cache is disabled', function(done) {
     var int_value = 3;
     cache.set(key, int_value).then(function() {
       cache.get(key).then(function(value) {
@@ -218,7 +246,7 @@ describe('cache', function() {
     });
   });
 
-  it('fails to remove when cache is disabled', function(done) {
+  it('fails to remove when the cache is disabled', function(done) {
     var int_value = 3;
     cache.set(key, int_value).then(function() {
       cache.get(key).then(function(value) {
@@ -230,6 +258,27 @@ describe('cache', function() {
           expect(err).toBeUndefined();
           cache.enable();
           cache.remove(key).then(done);
+        });
+      }, function(err) {
+        done.fail(err);
+      });
+    }, function(err) {
+      done.fail(err);
+    });
+  });
+
+  it('fails to clear when the cache is disabled', function(done) {
+    var int_value = 3;
+    cache.set(key, int_value).then(function() {
+      cache.get(key).then(function(value) {
+        expect(value).toBe(int_value);
+        cache.disable();
+        cache.clear().then(function() {
+          done.fail('cache is disabled, clear should not succeed');
+        }, function(err) {
+          expect(err).toBeUndefined();
+          cache.enable();
+          cache.clear(key).then(done);
         });
       }, function(err) {
         done.fail(err);
@@ -258,7 +307,11 @@ describe('cache', function() {
         cache.remove(key).then(function() {
           done.fail();
         }, function() {
-          done();
+          cache.clear().then(function() {
+            done.fail();
+          }, function() {
+            done();
+          });
         });
       });
     });
