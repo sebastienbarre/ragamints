@@ -4,7 +4,7 @@
   "description": "Download Instagram photos while preserving caption, photographer name, geolocation, tags, and creation time (w/ timezone) as EXIF, IPTC, and XMP fields.",
   "scripts": {
     "commit": "git-cz",
-    "doc:man": "pandoc -M title=\"ragamints(1)\" -f markdown_github -t man -s README.md  > doc/ragamints.1",
+    "doc:man": "pandoc -V title=\"ragamints\" -V section=1 -f markdown_github -t man -s README.md  > doc/ragamints.1",
     "doc": "mkdirp doc && npm run doc:man",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -w -r 0",
     "check:lint": "node --harmony node_modules/eslint/bin/eslint.js lib/ bin/ragamints spec/",
