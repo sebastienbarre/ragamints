@@ -84,7 +84,7 @@ describe('user', function() {
         expect(instagram.user_search.calls.argsFor(0)[0]).toEqual(
           mock_user.username);
         expect(err.message).toEqual(
-          logger.formatErrorMessage('Could not find user ID for: username'));
+          logger.formatErrorMessage('Could not find user ID for username'));
         done();
       });
     });

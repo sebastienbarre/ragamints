@@ -27,66 +27,57 @@ describe('media', function() {
   describe('isMediaUrl', function() {
     var isMediaUrl = media.__get__('isMediaUrl');
 
-    it('checks if a media url is valid', function() {
-      expect(isMediaUrl(mediaData.image.json.link)).toBe(true);
+    it('returns the canonical form of a valid media url', function() {
+      expect(isMediaUrl(mediaData.image.json.link)).toBe(
+        mediaData.image.json.link);
     });
 
-    it('checks if a media url is invalid', function() {
+    it('returns false if a media url is invalid', function() {
       expect(isMediaUrl(mediaData.image.json.id)).not.toBe(true);
     });
   });
 
   describe('resolveMediaId', function() {
+    var instagram = media.__get__('instagram');
     var resolveMediaId = media.__get__('resolveMediaId');
-    var fetch_spy;
 
     it('resolves a media id to itself', function(done) {
-      fetch_spy = jasmine.createSpy('fetch');
-      media.__set__('fetch', fetch_spy);
+      spyOn(instagram, 'oembed');
       resolveMediaId(mediaData.image.json.id).then(function(media_id) {
-        expect(fetch_spy.calls.any()).toEqual(false);
+        expect(instagram.oembed).not.toHaveBeenCalled();
         expect(media_id).toEqual(mediaData.image.json.id);
         done();
       });
     });
 
-    it('resolves a media url', function(done) {
-      var fetch = function() {
-        return Promise.resolve({
-          ok: true,
-          json: function() {
-            return {media_id: mediaData.image.json.id};
-          }
-        });
+    it('rejects when the media url is invalid', function(done) {
+      spyOn(instagram, 'oembed');
+      resolveMediaId('foo').catch(function(err) {
+        expect(instagram.oembed).not.toHaveBeenCalled();
+        expect(err.message).toEqual(
+          logger.formatErrorMessage('foo is not a valid media url'));
+        done();
+      });
+    });
+
+    it('resolves a media url to a media id', function(done) {
+      var mock_oembed = {
+        media_id: mediaData.image.json.id
       };
-      fetch_spy = jasmine.createSpy('fetch').and.callFake(fetch);
-      media.__set__('fetch', fetch_spy);
+      spyOn(instagram, 'oembed').and.callFake(function() {
+        return Promise.resolve(mock_oembed);
+      });
       spyOn(logger, 'log');
       resolveMediaId(mediaData.image.json.link).then(function(media_id) {
-        expect(fetch_spy).toHaveBeenCalled();
+        expect(instagram.oembed).toHaveBeenCalled();
         expect(logger.log).toHaveBeenCalled();
         expect(media_id).toEqual(mediaData.image.json.id);
         done();
+      }, function(err) {
+        done.fail(err);
       });
     });
 
-    it('rejects on error', function(done) {
-      var fetch = function() {
-        return Promise.resolve({
-          ok: false
-        });
-      };
-      fetch_spy = jasmine.createSpy('fetch').and.callFake(fetch);
-      media.__set__('fetch', fetch_spy);
-      let link = mediaData.image.json.link;
-      resolveMediaId(link).catch(function(err) {
-        expect(fetch_spy).toHaveBeenCalled();
-        expect(err.message).toEqual(
-          logger.formatErrorMessage(
-            `Could not retrieve Media Id for: ${link}`));
-        done();
-      });
-    });
   });
 
   describe('createMediaFileName', function() {

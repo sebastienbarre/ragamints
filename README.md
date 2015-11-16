@@ -106,7 +106,7 @@ Let's fetch the last 3 medias from my [Instagram feed][sebastienbarre:Instagram]
 
 ```
 $ ragamints download --access-token [ACCESS_TOKEN] --user-id sebastienbarre --count 3
-Found user ID: 26667401 for username: sebastienbarre
+Found user ID 26667401 for username sebastienbarre
 Found 3 media(s), nothing more.
 #0001 [Back home. Done sp] Fetched 2015-05-04_1430734958.jpg
 #0001 [Back home. Done sp] Updated metadata in 2015-05-04_1430734958.jpg
@@ -132,8 +132,8 @@ Let's fetch the medias I had posted *later in time than (but including)* https:/
 
 ```
 $ ragamints download --access-token [ACCESS_TOKEN] --user-id 26667401 --min-id https://instagram.com/p/2QY1JYJYqN/ --max-id https://instagram.com/p/2QZcrCpYrM/
-Found media ID: 977393040662825676_26667401 for media url: https://instagram.com/p/2QZcrCpYrM/
-Found media ID: 977390324456721037_26667401 for media url: https://instagram.com/p/2QY1JYJYqN/
+Found media ID 977393040662825676_26667401 for media url https://instagram.com/p/2QZcrCpYrM/
+Found media ID 977390324456721037_26667401 for media url https://instagram.com/p/2QY1JYJYqN/
 Found 2 media(s), nothing more.
 #0001 [Neither Times Squa] Saved already as 2015-05-04_1430734239.jpg
 #0001 [Neither Times Squa] Updated metadata in 2015-05-04_1430734239.jpg
