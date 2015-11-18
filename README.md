@@ -124,7 +124,7 @@ $ ls -lh *.jpg | awk '{print $9, $5}'
 
 Note that I reordered the indexes numerically for clarity. All network requests being performed in parallel for performance, it is unlikely such ordering will occur. Whichever file finishes downloading first (likely the smallest) will appear first.
 
-The *standard* (largest) image resolution is fetched but `--resolution` can be used to download specific resolutions -- Instagram stores three on its servers. Video files are not fetched by default, unless `--include-videos` is specified.
+The *standard* (largest) image resolution is fetched but `--resolution` can be used to download specific resolutions -- Instagram stores three on its servers. Conversely, use `--no-resolution` to skip all of them, say, if you wanted to use `--json` alone. Video files are not fetched by default, unless `--include-videos` is specified.
 
 ### Fetch all medias found between two specific medias
 
