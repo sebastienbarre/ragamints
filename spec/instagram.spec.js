@@ -35,9 +35,30 @@ describe('instagram', function() {
           done.fail(err);
         };
         expect(cache.get).toHaveBeenCalled(); // this rejected
-        expect(cache.set).toHaveBeenCalled();
         expect(ig_node.user_search).toHaveBeenCalled();
+        expect(cache.set).toHaveBeenCalled();
         expect(users[0]).toEqual(mock_user);
+        done();
+      });
+    });
+
+    it('does not cache when ig_node.user_search is empty ', function(done) {
+      spyOn(cache, 'get').and.callFake(function() {
+        return Promise.reject(); // Prevent the cache from finding anything
+      });
+      spyOn(cache, 'set');
+      var ig_node_user_search = function(user_id, options, callback) {
+        callback(null, []);
+      };
+      spyOn(ig_node, 'user_search').and.callFake(ig_node_user_search);
+      user_search(mock_user.username, {}, function(err, users) {
+        if (err) {
+          done.fail(err);
+        };
+        expect(cache.get).toHaveBeenCalled(); // this rejected
+        expect(ig_node.user_search).toHaveBeenCalled();
+        expect(cache.set).not.toHaveBeenCalled(); // since it returned []
+        expect(users).toEqual([]);
         done();
       });
     });
@@ -69,7 +90,7 @@ describe('instagram', function() {
     var page_size = instagram.__get__('pageSize').user_media_recent;
     var half_page_size = Math.floor(page_size / 2);
 
-    // Our mock returns a full page of empty medias, indefinitely
+    // This mock returns a full page of empty medias, indefinitely
     var next = function(callback) {
       setTimeout(function() {
         callback(null, helpers.fillArray(page_size), {next: next});
@@ -79,7 +100,22 @@ describe('instagram', function() {
       next(callback);
     };
 
-    it('caches calls to ig_node.user_media_recent', function(done) {
+    // This mock returns a full page of empty medias, once
+    var next_once = function(callback) {
+      setTimeout(function() {
+        callback(null, helpers.fillArray(page_size), {});
+      }, 0);
+    };
+    var ig_node_user_media_recent_once = function(user_id, options, callback) {
+      next_once(callback);
+    };
+
+    // This mock fails
+    var ig_node_user_media_recent_fail = function(user_id, options, callback) {
+      callback(Error('Boom'));
+    };
+
+    it('caches calls to ig_node.user_media_recent (2 pages)', function(done) {
       spyOn(cache, 'get').and.callFake(function() {
         return Promise.reject(); // Prevent the cache from finding anything
       });
@@ -140,12 +176,65 @@ describe('instagram', function() {
       });
     });
 
+    it('caches calls to ig_node.user_media_recent (1 page)', function(done) {
+      spyOn(cache, 'get').and.callFake(function() {
+        return Promise.reject(); // Prevent the cache from finding anything
+      });
+      spyOn(cache, 'set');
+      spyOn(ig_node, 'user_media_recent').and.callFake(
+        ig_node_user_media_recent_once);
+      var options = {
+        minId: '012345678',
+        maxId: '123456789'
+      };
+      user_media_recent(
+        mock_user.id,
+        options,
+        function(err, medias, pagination) {
+        if (err) {
+          done.fail(err);
+        };
+        expect(cache.get).toHaveBeenCalled(); // this rejected
+        expect(ig_node.user_media_recent).toHaveBeenCalled();
+        expect(medias.length).toBe(page_size);
+        expect(pagination).toEqual({});
+        expect(cache.set).toHaveBeenCalled();
+        done();
+      });
+    });
+
+    it('bails on ig_node.user_media_recent error', function(done) {
+      spyOn(cache, 'get').and.callFake(function() {
+        return Promise.reject(); // Prevent the cache from finding anything
+      });
+      spyOn(cache, 'set');
+      spyOn(ig_node, 'user_media_recent').and.callFake(
+        ig_node_user_media_recent_fail);
+      var options = {};
+      user_media_recent(
+        mock_user.id,
+        options,
+        function(err, medias, pagination) {
+        if (err) {
+          expect(err.message).toEqual('Boom');
+          expect(cache.get).toHaveBeenCalled(); // this rejected
+          expect(ig_node.user_media_recent).toHaveBeenCalled();
+          expect(medias).toBe(undefined);
+          expect(pagination).toBe(undefined);
+          expect(cache.set).not.toHaveBeenCalled();
+          done();
+        } else {
+          done.fail(err);
+        }
+      });
+    });
+
   });
 
   describe('oembed', function() {
     var oembed = instagram.__get__('oembed');
     var mock_oembed = {
-      media_id: mediaData.image.json.id
+      media_id: mediaData.image.standard.id
     };
     var fetch_spy;
     var fetch_success = function() {
@@ -169,7 +258,7 @@ describe('instagram', function() {
         return Promise.reject(); // Prevent the cache from finding anything
       });
       spyOn(cache, 'set');
-      oembed(mediaData.image.json.link).then(function(oembed) {
+      oembed(mediaData.image.standard.link).then(function(oembed) {
         expect(cache.get).toHaveBeenCalled(); // this rejected
         expect(cache.set).toHaveBeenCalled();
         expect(fetch_spy).toHaveBeenCalled();
@@ -186,7 +275,7 @@ describe('instagram', function() {
       });
       spyOn(cache, 'set');
       // spyOn(logger, 'log');
-      oembed(mediaData.image.json.link).then(function(oembed) {
+      oembed(mediaData.image.standard.link).then(function(oembed) {
         expect(cache.get).toHaveBeenCalled();
         expect(fetch_spy).not.toHaveBeenCalled();
         expect(cache.set).not.toHaveBeenCalled();
@@ -202,13 +291,13 @@ describe('instagram', function() {
       });
       fetch_spy = jasmine.createSpy('fetch').and.callFake(fetch_fail);
       instagram.__set__('fetch', fetch_spy);
-      oembed(mediaData.image.json.link).then(function() {
+      oembed(mediaData.image.standard.link).then(function() {
         done.fail();
       }, function(err) {
         expect(fetch_spy).toHaveBeenCalled();
         expect(err.message).toEqual(
           logger.formatErrorMessage(
-            'Could not fetch oembed for ' + mediaData.image.json.link));
+            'Could not fetch oembed for ' + mediaData.image.standard.link));
         done();
       });
     });

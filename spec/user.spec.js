@@ -242,8 +242,12 @@ describe('user', function() {
         expect(callbackSpy.calls.argsFor(actual_total - 1)).toEqual(
           [{index: actual_total - 1}, options]);
         expect(strip_ansi(logger.log.calls.argsFor(0)[0])).toEqual(
-          'Done iterating over');
+          'Skipped');
         expect(strip_ansi(logger.log.calls.argsFor(0)[1])).toEqual(
+          (requested_count - actual_total).toString());
+        expect(strip_ansi(logger.log.calls.argsFor(1)[0])).toEqual(
+          'Done iterating over');
+        expect(strip_ansi(logger.log.calls.argsFor(1)[1])).toEqual(
           actual_total.toString());
         // No matter how long each promise took, the resulting array of indices
         // should be in order. The side effect var, however, should be in
@@ -278,8 +282,12 @@ describe('user', function() {
         expect(callbackSpy.calls.argsFor(actual_total - 1)).toEqual(
           [{index: actual_total - 1}, options]);
         expect(strip_ansi(logger.log.calls.argsFor(0)[0])).toEqual(
-          'Done iterating over');
+          'Skipped');
         expect(strip_ansi(logger.log.calls.argsFor(0)[1])).toEqual(
+          (requested_count - actual_total).toString());
+        expect(strip_ansi(logger.log.calls.argsFor(1)[0])).toEqual(
+          'Done iterating over');
+        expect(strip_ansi(logger.log.calls.argsFor(1)[1])).toEqual(
           actual_total.toString());
         // No matter how long each promise took, the resulting array of indices
         // should be in order. The side effect var should be in order as well,

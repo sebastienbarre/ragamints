@@ -16,11 +16,11 @@ describe('media', function() {
     var isMediaId = media.__get__('isMediaId');
 
     it('checks if a media id is valid', function() {
-      expect(isMediaId(mediaData.image.json.id)).toBe(true);
+      expect(isMediaId(mediaData.image.standard.id)).toBe(true);
     });
 
     it('checks if a media id is invalid', function() {
-      expect(isMediaId(mediaData.image.json.link)).not.toBe(true);
+      expect(isMediaId(mediaData.image.standard.link)).not.toBe(true);
     });
   });
 
@@ -28,12 +28,12 @@ describe('media', function() {
     var isMediaUrl = media.__get__('isMediaUrl');
 
     it('returns the canonical form of a valid media url', function() {
-      expect(isMediaUrl(mediaData.image.json.link)).toBe(
-        mediaData.image.json.link);
+      expect(isMediaUrl(mediaData.image.standard.link)).toBe(
+        mediaData.image.standard.link);
     });
 
     it('returns false if a media url is invalid', function() {
-      expect(isMediaUrl(mediaData.image.json.id)).not.toBe(true);
+      expect(isMediaUrl(mediaData.image.standard.id)).not.toBe(true);
     });
   });
 
@@ -43,9 +43,9 @@ describe('media', function() {
 
     it('resolves a media id to itself', function(done) {
       spyOn(instagram, 'oembed');
-      resolveMediaId(mediaData.image.json.id).then(function(media_id) {
+      resolveMediaId(mediaData.image.standard.id).then(function(media_id) {
         expect(instagram.oembed).not.toHaveBeenCalled();
-        expect(media_id).toEqual(mediaData.image.json.id);
+        expect(media_id).toEqual(mediaData.image.standard.id);
         done();
       });
     });
@@ -62,16 +62,16 @@ describe('media', function() {
 
     it('resolves a media url to a media id', function(done) {
       var mock_oembed = {
-        media_id: mediaData.image.json.id
+        media_id: mediaData.image.standard.id
       };
       spyOn(instagram, 'oembed').and.callFake(function() {
         return Promise.resolve(mock_oembed);
       });
       spyOn(logger, 'log');
-      resolveMediaId(mediaData.image.json.link).then(function(media_id) {
+      resolveMediaId(mediaData.image.standard.link).then(function(media_id) {
         expect(instagram.oembed).toHaveBeenCalled();
         expect(logger.log).toHaveBeenCalled();
-        expect(media_id).toEqual(mediaData.image.json.id);
+        expect(media_id).toEqual(mediaData.image.standard.id);
         done();
       }, function(err) {
         done.fail(err);
@@ -85,10 +85,8 @@ describe('media', function() {
 
     it('creates a file name for the fetched file to be saved as', function() {
       expect(
-        createMediaFileName(mediaData.image.json)
-      ).toBe(
-        mediaData.image.fileName
-      );
+        createMediaFileName(mediaData.image.standard)
+      ).toBe('2015-05-30_1433025688');
     });
   });
 
@@ -100,18 +98,18 @@ describe('media', function() {
     });
 
     it('logs message w/ respect to a media', function() {
-      var prefix = '#0001 [Back home. #foo #o]';
+      var prefix = '#0001 [Flower girl is pic]';
       var msg = 'logging';
-      log(mediaData.image.json, msg);
+      log(mediaData.image.standard, msg);
       expect(strip_ansi(logger.log.calls.argsFor(0)[0])).toEqual(prefix);
       expect(strip_ansi(logger.log.calls.argsFor(0)[1])).toEqual(msg);
     });
 
     it('logs message w/ respect to a media w/o caption or msg', function() {
-      var media_wo_caption = _assign({}, mediaData.image.json);
+      var media_wo_caption = _assign({}, mediaData.image.standard);
       delete media_wo_caption.caption;
       log(media_wo_caption);
-      var msg = '#0001 [977398127825095465]';
+      var msg = '#0001 [996614167159212902]';
       expect(strip_ansi(logger.log.calls.argsFor(0)[0])).toEqual(msg);
     });
   });

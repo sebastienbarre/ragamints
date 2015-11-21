@@ -7,6 +7,7 @@ var Promise      = require('es6-promise').Promise;
 var rewire       = require('rewire');
 
 var constants    = require('../../lib/constants');
+var instagram    = require('../../lib/instagram');
 
 var exiftoolData = require('../data/exiftool');
 var mediaData    = require('../data/media');
@@ -30,17 +31,19 @@ describe('command:download', function() {
     });
 
     it('gathers args for exiftool and uses GPS location', function() {
-      expect(getExifToolArgs(mediaData.image.json, {verbose: true})).toEqual(
-        exiftoolData.args);
+      expect(getExifToolArgs(
+        mediaData.image.standard, {verbose: true})
+      ).toEqual(exiftoolData.image.standard);
+      expect(getExifToolArgs(
+        mediaData.image.high)
+      ).toEqual(exiftoolData.image.high);
       expect(media.log.calls.count()).toEqual(2);
     });
 
     it('gathers args for exiftool and assumes local when no GPS', function() {
       expect(
-        getExifToolArgs(mediaData.imageWithoutGPS.json, {verbose: true})
-      ).toEqual(
-        exiftoolData.argsWithoutGPS
-      );
+        getExifToolArgs(mediaData.image.no_gps, {verbose: true})
+      ).toEqual(exiftoolData.image.no_gps);
       expect(media.log.calls.count()).toEqual(2);
     });
   });
@@ -73,9 +76,9 @@ describe('command:download', function() {
       var child_process = download_cmd.__get__('child_process');
       spyOn(child_process, 'spawn').and.returnValue(exiftool_process);
       updateFileMetadata(
-        mediaData.image.json, mediaData.image.basename, {}
+        mediaData.image.standard, 'foo', {}
       ).then(function(res) {
-        var args = exiftoolData.args.concat([mediaData.image.basename]);
+        var args = exiftoolData.image.standard.concat(['foo']);
         expect(child_process.spawn).toHaveBeenCalledWith('exiftool', args);
         expect(res).toBe(true);
         expect(media.log).toHaveBeenCalled();
@@ -93,8 +96,10 @@ describe('command:download', function() {
       var child_process = download_cmd.__get__('child_process');
       spyOn(child_process, 'spawn').and.returnValue(process);
       updateFileMetadata(
-        mediaData.image.json, mediaData.image.basename, {quiet: true}
-      ).catch(function(err) {
+        mediaData.image.standard, 'foo', {quiet: true}
+      ).then(function() {
+        done.fail();
+      }).catch(function(err) {
         expect(child_process.spawn).toHaveBeenCalled();
         expect(err.message).toBe(
           logger.formatErrorMessage('Could not spawn exiftool (boom)'));
@@ -112,7 +117,7 @@ describe('command:download', function() {
       var child_process = download_cmd.__get__('child_process');
       spyOn(child_process, 'spawn').and.returnValue(process);
       updateFileMetadata(
-        mediaData.image.json, mediaData.image.basename, {quiet: true}
+        mediaData.image.standard, 'foo', {quiet: true}
       ).catch(function(err) {
         expect(child_process.spawn).toHaveBeenCalled();
         expect(err.message).toBe(logger.formatErrorMessage('boom'));
@@ -123,6 +128,8 @@ describe('command:download', function() {
 
   describe('fetchMedia', function() {
     var fetchMedia = download_cmd.__get__('fetchMedia');
+    var getMediaBasenameForResolution =
+      download_cmd.__get__('getMediaBasenameForResolution');
     var fs = download_cmd.__get__('fs');
     var stats_is_file = {
       isFile: function() {
@@ -165,25 +172,28 @@ describe('command:download', function() {
 
     it('skips if the file is already there', function(done) {
       spyOn(fs, 'lstat').and.callFake(lstat_file_exists);
-      fetchMedia(
-        mediaData.image.json, mediaData.image.defaultResolution, {}
-      ).then(function(filename) {
+      fetchMedia(mediaData.image.standard).then(function(filename) {
         expect(DownloadSpy).not.toHaveBeenCalled();
         expect(media.log).toHaveBeenCalled();
-        expect(filename).toBe(mediaData.image.basename);
+        var basename = getMediaBasenameForResolution(mediaData.image.standard);
+        expect(filename).toBe(basename);
         done();
+      }, function(err) {
+        done.fail(err);
       });
     });
 
     it('fetches a media', function(done) {
       spyOn(fs, 'lstat').and.callFake(lstat_file_does_not_exist);
       var dest = 'foo';
-      var media_filename = path.join(dest, mediaData.image.basename);
       fetchMedia(
-        mediaData.image.json, mediaData.image.defaultResolution, {dest: dest}
+        mediaData.image.standard, instagram.RESOLUTIONS.STANDARD, {dest: dest}
       ).then(function(filename) {
         expect(DownloadSpy).toHaveBeenCalled();
         expect(media.log).toHaveBeenCalled();
+        var basename = getMediaBasenameForResolution(
+          mediaData.image.standard, instagram.RESOLUTIONS.STANDARD);
+        var media_filename = path.join(dest, basename);
         expect(filename).toBe(media_filename);
         done();
       });
@@ -192,16 +202,15 @@ describe('command:download', function() {
     it('fetches a media even if it exists when forcing', function(done) {
       spyOn(fs, 'lstat').and.callFake(lstat_file_exists);
       fetchMedia(
-        mediaData.video.json,
-        mediaData.image.defaultResolution,
-        {
-          alwaysDownload: true
-        }
+        mediaData.video.standard, undefined, {alwaysDownload: true}
       ).then(function(filename) {
         expect(DownloadSpy).toHaveBeenCalled();
         expect(media.log).toHaveBeenCalled();
-        expect(filename).toBe(mediaData.video.basename);
+        var basename = getMediaBasenameForResolution(mediaData.video.standard);
+        expect(filename).toBe(basename);
         done();
+      }, function(err) {
+        done.fail(err);
       });
     });
 
@@ -216,21 +225,19 @@ describe('command:download', function() {
       };
       DownloadSpy = jasmine.createSpy('Download').and.callFake(Download_fail);
       download_cmd.__set__('Download', DownloadSpy);
-      fetchMedia(
-        mediaData.image.json, mediaData.image.defaultResolution, {}
-      ).catch(function(err) {
+      fetchMedia(mediaData.image.standard).catch(function(err) {
         expect(DownloadSpy).toHaveBeenCalled();
         expect(err.message).toEqual('boom');
         done();
       });
     });
 
-    it('rejects if resolution not found', function(done) {
+    it('rejects if resolution is not found in media object', function(done) {
       spyOn(fs, 'lstat').and.callFake(lstat_file_does_not_exist);
       DownloadSpy = jasmine.createSpy('Download');
       download_cmd.__set__('Download', DownloadSpy);
       fetchMedia(
-        mediaData.image.json, 'foobar', {}
+        mediaData.video.standard, 'foobar', {}
       ).catch(function(err) {
         expect(fs.lstat).not.toHaveBeenCalled();
         expect(DownloadSpy).not.toHaveBeenCalled();
@@ -243,6 +250,8 @@ describe('command:download', function() {
 
   describe('saveMediaObject', function() {
     var saveMediaObject = download_cmd.__get__('saveMediaObject');
+    var getMediaObjectBasename =
+      download_cmd.__get__('getMediaObjectBasename');
     var fs = download_cmd.__get__('fs');
     var mkdirp_spy;
     var writeFile_success = function(filename, data, callback) {
@@ -267,11 +276,12 @@ describe('command:download', function() {
       download_cmd.__set__('mkdirp', mkdirp_spy);
       spyOn(fs, 'writeFile').and.callFake(writeFile_success);
       var dest = 'foo';
-      var media_filename = path.join(dest, mediaData.image.jsonBasename);
-      saveMediaObject(mediaData.image.json, {
+      var basename = getMediaObjectBasename(mediaData.image.standard);
+      var media_filename = path.join(dest, basename);
+      saveMediaObject(mediaData.image.standard, {
         dest: dest
       }).then(function(filename) {
-        let data = JSON.stringify(mediaData.image.json, null, 2);
+        let data = JSON.stringify(mediaData.image.standard, null, 2);
         expect(mkdirp_spy.calls.argsFor(0)[0]).toEqual(dest);
         expect(fs.writeFile.calls.argsFor(0)[1]).toEqual(data);
         expect(media.log).toHaveBeenCalled();
@@ -287,9 +297,10 @@ describe('command:download', function() {
       download_cmd.__set__('mkdirp', mkdirp_spy);
       spyOn(fs, 'writeFile').and.callFake(writeFile_success);
       var dest = 'foo';
-      var media_filename = path.join(dest, mediaData.image.jsonBasename);
-      var keys = ['id', 'caption.created_time'];
-      saveMediaObject(mediaData.image.json, {
+      var basename = getMediaObjectBasename(mediaData.image.standard);
+      var media_filename = path.join(dest, basename);
+      var keys = ['id', 'caption.created_time', '__foobar__'];
+      saveMediaObject(mediaData.image.standard, {
         dest: dest,
         json: keys
       }).then(function(filename) {
@@ -297,11 +308,11 @@ describe('command:download', function() {
         objectPath.set(
           filtered_media,
           'id',
-          objectPath.get(mediaData.image.json, 'id'));
+          objectPath.get(mediaData.image.standard, 'id'));
         objectPath.set(
           filtered_media,
           'caption.created_time',
-          objectPath.get(mediaData.image.json, 'caption.created_time'));
+          objectPath.get(mediaData.image.standard, 'caption.created_time'));
         let data = JSON.stringify(filtered_media, null, 2);
         expect(mkdirp_spy.calls.argsFor(0)[0]).toEqual(dest);
         expect(fs.writeFile.calls.argsFor(0)[1]).toEqual(data);
@@ -316,7 +327,7 @@ describe('command:download', function() {
       download_cmd.__set__('mkdirp', mkdirp_spy);
       spyOn(fs, 'writeFile').and.callFake(writeFile_success);
       var dest = 'foo';
-      saveMediaObject(mediaData.image.json, {
+      saveMediaObject(mediaData.image.standard, {
         dest: dest
       }).catch(function(err) {
         expect(mkdirp_spy.calls.argsFor(0)[0]).toEqual(dest);
@@ -330,7 +341,7 @@ describe('command:download', function() {
       mkdirp_spy = jasmine.createSpy('mkdirp').and.callFake(mkdirp_success);
       download_cmd.__set__('mkdirp', mkdirp_spy);
       spyOn(fs, 'writeFile').and.callFake(writeFile_fail);
-      saveMediaObject(mediaData.image.json, {
+      saveMediaObject(mediaData.image.standard, {
       }).catch(function(err) {
         expect(fs.writeFile).toHaveBeenCalled();
         expect(err.message).toEqual('boom');
@@ -349,13 +360,13 @@ describe('command:download', function() {
       spyOn(user, 'resolveUserId').and.callFake(
         helpers.promiseValue.bind(null, '12345678'));
       spyOn(media, 'resolveMediaId').and.callFake(
-        helpers.promiseValue.bind(null, mediaData.image.json.id));
+        helpers.promiseValue.bind(null, mediaData.image.standard.id));
     });
 
     it('resolves options', function(done) {
       var options = {
-        maxId: mediaData.image.json.link,
-        minId: mediaData.image.json.link,
+        maxId: mediaData.image.standard.link,
+        minId: mediaData.image.standard.link,
         userId: 'username',
         maxTimestamp: 'Thu, 09 Apr 2015 01:19:46 +0000',
         minTimestamp: 'Thu, 09 Apr 2015 01:19:46 +0000',
@@ -367,10 +378,13 @@ describe('command:download', function() {
         minTimestamp: 1428542386,
         maxTimestamp: 1428542386,
         userId: '12345678',
-        minId: mediaData.image.json.id,
-        maxId: mediaData.image.json.id,
+        minId: mediaData.image.standard.id,
+        maxId: mediaData.image.standard.id,
         json: ['foo', 'bar'],
-        resolution: ['thumbnail', 'low_resolution'],
+        resolution: [
+          instagram.RESOLUTIONS.THUMBNAIL,
+          instagram.RESOLUTIONS.LOW,
+        ],
         verbose: true,
         accessToken: 'token'
       };
@@ -378,7 +392,7 @@ describe('command:download', function() {
       env[constants.ACCESS_TOKEN_ENV_VAR] = 'token';
       download_cmd.__set__('process', {env: env});
       resolveOptions(options).then(function(res) {
-        let link = mediaData.image.json.link;
+        let link = mediaData.image.standard.link;
         expect(user.resolveUserId.calls.argsFor(0)).toEqual(['username']);
         expect(media.resolveMediaId.calls.argsFor(0)[0]).toEqual(link);
         expect(media.resolveMediaId.calls.argsFor(1)[0]).toEqual(link);
@@ -414,8 +428,8 @@ describe('command:download', function() {
   describe('run', function() {
     var run = download_cmd.__get__('run');
     var pageTotal = 3;
-    var medias = helpers.fillArray(pageTotal);
-    medias[pageTotal - 1].type = 'video'; // last one is a video
+    var medias = helpers.fillArray(pageTotal, false, mediaData.image.standard);
+    medias[pageTotal - 1] = mediaData.video.standard; // last one is a video
 
     // This fake getRecentMedias will first return a page with 2 empty
     // medias, then a page with the rest (pageTotal).
@@ -454,8 +468,7 @@ describe('command:download', function() {
       resolveOptionsSpy.and.callFake(helpers.promiseValue);
       forEachRecentMediasSpy.and.callThrough();
       getRecentMediasSpy.and.callFake(getRecentMedias);
-      fetchMediaSpy.and.callFake(
-        helpers.promiseValue.bind(null, mediaData.image.basename));
+      fetchMediaSpy.and.callFake(helpers.promiseValue.bind(null, 'foo'));
       updateFileMetadataSpy.and.callFake(helpers.promiseValue);
       saveMediaObjectSpy.and.callFake(helpers.promiseValue);
     });
@@ -472,13 +485,43 @@ describe('command:download', function() {
           options.userId);
         expect(forEachRecentMediasSpy.calls.argsFor(0)[1]).toEqual(options);
         expect(fetchMediaSpy.calls.argsFor(0)).toEqual(
-          [{}, mediaData.image.defaultResolution, options]);
+          [mediaData.image.standard, undefined, options]);
         expect(fetchMediaSpy.calls.count()).toEqual(processed_count);
         expect(updateFileMetadataSpy.calls.argsFor(0)).toEqual(
-          [{}, mediaData.image.basename, options]);
+          [mediaData.image.standard, 'foo', options]);
         expect(updateFileMetadataSpy.calls.count()).toEqual(processed_count);
-        expect(saveMediaObjectSpy.calls.argsFor(0)).toEqual([{}, options]);
+        expect(saveMediaObjectSpy.calls.argsFor(0)).toEqual(
+          [mediaData.image.standard, options]);
         expect(saveMediaObjectSpy.calls.count()).toEqual(processed_count);
+        expect(res).toEqual(medias.slice(0, processed_count));
+        done();
+      }, function(err) {
+        done.fail(err);
+      });
+    });
+
+    it('de-duplicates resolutions before processing medias', function(done) {
+      var options = {
+        userId: '12345678',
+        // the high_resolution here points to the standard, because
+        // the media was created before Insta introduced the 1080 res
+        resolution: [
+          instagram.RESOLUTIONS.HIGH,
+          instagram.RESOLUTIONS.STANDARD
+        ]
+      };
+      run(options).then(function(res) {
+        let processed_count = pageTotal - 1; // except the video & de-dup
+        expect(resolveOptionsSpy).toHaveBeenCalledWith(options);
+        expect(forEachRecentMediasSpy.calls.argsFor(0)[0]).toEqual(
+          options.userId);
+        expect(forEachRecentMediasSpy.calls.argsFor(0)[1]).toEqual(options);
+        expect(fetchMediaSpy.calls.argsFor(0)).toEqual(
+          [mediaData.image.standard, instagram.RESOLUTIONS.STANDARD, options]);
+        expect(fetchMediaSpy.calls.count()).toEqual(processed_count);
+        expect(updateFileMetadataSpy.calls.argsFor(0)).toEqual(
+          [mediaData.image.standard, 'foo', options]);
+        expect(updateFileMetadataSpy.calls.count()).toEqual(processed_count);
         expect(res).toEqual(medias.slice(0, processed_count));
         done();
       }, function(err) {

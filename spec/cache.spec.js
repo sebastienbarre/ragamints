@@ -195,7 +195,7 @@ describe('cache', function() {
   });
 
   it('compresses large cache entries', function(done) {
-    var object_value = mediaData.image.json;
+    var object_value = mediaData.image.standard;
     var decompress_spy = jasmine.createSpy('decompress');
     decompress_spy.and.callFake(cache.__get__('decompress'));
     cache.__set__('decompress', decompress_spy);

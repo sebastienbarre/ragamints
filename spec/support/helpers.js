@@ -6,12 +6,12 @@ var promiseValue = function(value) {
   return Promise.resolve(value);
 };
 
-function fillArray(size, with_index) {
+function fillArray(size, with_index, value) {
   return Array.apply(null, new Array(size)).map(function(currentValue, index) {
     if (with_index === true) {
       return index;
     }
-    var data = {};
+    var data = value || {};
     if (with_index) {
       data[with_index] = index;
     }

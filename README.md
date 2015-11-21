@@ -55,7 +55,6 @@ $ exiftool -ver
 Show available commands:
 ```
 $ ragamints
-~/.npm-packages/bin/ragamints command
 
 Commands:
   download  download medias from Instagram
@@ -70,22 +69,22 @@ Show available options for the `download` command:
 ```
 
 $ ragamints download --help
-~/.npm-packages/bin/ragamints download
 
 Options:
   -u, --user-id          Instagram user ID (or user name)  [string]
   -c, --count            Maximum count of medias to download
-  -m, --min-id           Only medias later than this media id/url (included)  [string]
-  -n, --max-id           Only medias earlier than this media id/url (excluded)  [string]
+  -m, --min-id           Only medias posted later than this media id/url (included)  [string]
+  -n, --max-id           Only medias posted earlier than this media id/url (excluded)  [string]
   -o, --min-timestamp    Only medias after this UNIX timestamp/datetime  [string]
   -p, --max-timestamp    Only medias before this UNIX timestamp/datetime  [string]
+  -s, --sequential       Process sequentially (slower)  [boolean] [default: false]
+  -i, --include-videos   Include videos (skipped by default)  [boolean] [default: false]
   -d, --dest             Destination directory  [string] [default: "./"]
   -a, --always-download  Always download, even if media is saved already  [boolean] [default: false]
   -j, --json             Save media json object (accepts keys to pluck)  [default: false]
-  -r, --resolution       Resolution(s) to download, e.g. thumbnail,low_resolution,standard_resolution  [string]
-  -s, --sequential       Process sequentially (slower)  [boolean] [default: false]
-  -i, --include-videos   Include videos (skipped by default)  [boolean] [default: false]
+  -r, --resolution       Resolution(s) to download, e.g. high_resolution,standard_resolution,low_resolution,thumbnail  [string]
   -t, --access-token     Instagram Access Token  [string]
+  -l, --clear-cache      Clear the cache  [boolean] [default: false]
   -v, --verbose          Output more info  [boolean] [default: false]
   -q, --quiet            Output less info  [boolean] [default: false]
   -h, --help             Show help  [boolean]
@@ -124,7 +123,7 @@ $ ls -lh *.jpg | awk '{print $9, $5}'
 
 Note that I reordered the indexes numerically for clarity. All network requests being performed in parallel for performance, it is unlikely such ordering will occur. Whichever file finishes downloading first (likely the smallest) will appear first.
 
-The *standard* (largest) image resolution is fetched but `--resolution` can be used to download specific resolutions -- Instagram stores three on its servers. Conversely, use `--no-resolution` to skip all of them, say, if you wanted to use `--json` alone. Video files are not fetched by default, unless `--include-videos` is specified.
+The highest known image resolution is fetched by default but `--resolution` can be used to download specific resolutions as well -- Instagram stores multiple on its servers. Conversely, use `--no-resolution` to skip all of them, say, if you wanted to use `--json` on its own. Video files are not fetched by default, unless `--include-videos` is specified.
 
 ### Fetch all medias found between two specific medias
 
