@@ -8,6 +8,26 @@ Ragamints may come handy when importing Instagram photos back to applications th
 
 <img src="doc/ragamints.gif" width="564px" height="170px" />
 
+## Table of Contents
+
+<!-- MarkdownTOC autolink=true bracket=round -->
+
+- [Installation](#installation)
+- [Requirements](#requirements)
+- [Usage](#usage)
+- [Examples](#examples)
+- [Timezones](#timezones)
+- [Supported Metadata](#supported-metadata)
+- [Performance](#performance)
+- [Authors](#authors)
+- [Contribute](#contribute)
+- [Credits](#credits)
+- [License](#license)
+- [Troubleshooting](#troubleshooting)
+- [Change Log](#change-log)
+
+<!-- /MarkdownTOC -->
+
 ## Installation
 
 [![NPM](https://nodei.co/npm/ragamints.png?downloads=true)](https://nodei.co/npm/ragamints/)
