@@ -1,7 +1,8 @@
 'use strict';
 
 var _assign      = require('lodash/object/assign');
-var objectPath   = require('object-path');
+var _get         = require('lodash/object/get');
+var _set         = require('lodash/object/set');
 var path         = require('path');
 var Promise      = require('es6-promise').Promise;
 var rewire       = require('rewire');
@@ -305,14 +306,14 @@ describe('command:download', function() {
         json: keys
       }).then(function(filename) {
         let filtered_media = {};
-        objectPath.set(
+        _set(
           filtered_media,
           'id',
-          objectPath.get(mediaData.image.standard, 'id'));
-        objectPath.set(
+          _get(mediaData.image.standard, 'id'));
+        _set(
           filtered_media,
           'caption.created_time',
-          objectPath.get(mediaData.image.standard, 'caption.created_time'));
+          _get(mediaData.image.standard, 'caption.created_time'));
         let data = JSON.stringify(filtered_media, null, 2);
         expect(mkdirp_spy.calls.argsFor(0)[0]).toEqual(dest);
         expect(fs.writeFile.calls.argsFor(0)[1]).toEqual(data);
