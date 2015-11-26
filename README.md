@@ -107,6 +107,7 @@ Options:
   -l, --clear-cache      Clear the cache  [boolean] [default: false]
   -v, --verbose          Output more info  [boolean] [default: false]
   -q, --quiet            Output less info  [boolean] [default: false]
+  --config               Load config file  [default: "~/.ragamints.json"]
   -h, --help             Show help  [boolean]
 
 Check the man page or README file for more
@@ -114,9 +115,16 @@ Check the man page or README file for more
 
 ## Examples
 
-In the examples presented below, `[ACCESS TOKEN]` is to be replaced with your **Instagram Access Token** (see the [Requirements](#requirements) section). Alternatively, you may omit `--access-token` by setting the `RAGAMINTS_ACCESS_TOKEN` environment variable beforehand.
+In the examples presented below, `[ACCESS TOKEN]` is to be replaced with your **Instagram Access Token** (see the [Requirements](#requirements) section). Alternatively, you may omit `--access-token` by:
+1. setting the `RAGAMINTS_ACCESS_TOKEN` environment variable beforehand.
 ```bash
 $ export RAGAMINTS_ACCESS_TOKEN=[ACCESS_TOKEN]
+```
+2. setting the corresponding option in a default `.ragamints.json` configuration file in your `HOME` directory, or any other configuration file of your choosing using the `--config` option.
+```json
+{
+  "access-token": [ACCESS_TOKEN]
+}
 ```
 
 ### Fetch your last *n* medias
