@@ -1,6 +1,6 @@
 # Ragamints
 
-[![Build Status](https://img.shields.io/travis/sebastienbarre/ragamints.svg)](https://travis-ci.org/sebastienbarre/ragamints) [![Coverage Status](https://img.shields.io/codecov/c/github/sebastienbarre/ragamints.svg)](https://codecov.io/github/sebastienbarre/ragamints) [![Dependencies Status](https://img.shields.io/gemnasium/sebastienbarre/ragamints.svg)](https://gemnasium.com/sebastienbarre/ragamints) [![Node Version](https://img.shields.io/node/v/ragamints.svg)](https://www.npmjs.com/package/ragamints) [![License](https://img.shields.io/npm/l/ragamints.svg)][BSD License] [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)][semantic-release] [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)][commitizen]
+[![Build Status][_self_:build-status:shield]][_self_:build-status] [![Coverage Status][_self_:coverage:shield]][_self_:coverage] [![Dependencies Status][_self_:dependencies-status:shield]][_self_:dependencies-status] [![Node Version][_self_:node-version:shield]][_self_:node-version] [![License][_self_:license:shield]][BSD License] [![semantic-release][semantic-release:shield]][semantic-release] [![Commitizen friendly][commitizen:shield]][commitizen]
 
 Ragamints is a command-line interface for Node.js. It is intended for downloading Instagram photos while preserving caption, photographer name, geolocation, tags, and creation time as EXIF, IPTC, and XMP fields.
 
@@ -19,18 +19,18 @@ Ragamints may come handy when importing Instagram photos back to applications th
 - [Timezones](#timezones)
 - [Supported Metadata](#supported-metadata)
 - [Performance](#performance)
+- [Thanks](#thanks)
+- [Troubleshooting](#troubleshooting)
 - [Authors](#authors)
 - [Contribute](#contribute)
-- [Credits](#credits)
 - [License](#license)
-- [Troubleshooting](#troubleshooting)
 - [Change Log](#change-log)
 
 <!-- /MarkdownTOC -->
 
 ## Installation
 
-[![NPM](https://nodei.co/npm/ragamints.png?downloads=true)](https://nodei.co/npm/ragamints/)
+[![NPM][_self_:npm:badge]][_self_:npm]
 
 Using [npm] >= 0.11:
 
@@ -249,24 +249,7 @@ The following metadata fields are set on each JPEG file, if the corresponding In
 * `ragamints` makes heavy use of [ES6 Promises & Generators][archibald:promises] and therefore requires an extra-step at run-time to transpile to ES5 for [Node.js]. Use [io.js] to avoid that overhead.
 * The `--user-id`, `--min-id`, and `--max-id` options require a round-trip to the Instagram API to resolve usernames and photo URLs back to user ids and photo ids, respectively. Use ids whenever possible.
 
-## Authors
-
-**Sebastien Barre**
-
-* Email: sebastien.barre@gmail.com
-* Twitter: [sebastienbarre][sebastienbarre:Twitter] or #ragamints
-* Instagram: [sebastienbarre][sebastienbarre:Instagram]
-
-## Contribute
-
-* Check for [open issues][ragamints:issue], especially the ones [up-for-grabs][ragamints:up-for-grabs], or open a fresh issue to start a discussion around a feature idea or a bug.
-* If you feel uncomfortable or uncertain about an issue or your changes, feel free to [email me][sebastienbarre:email] and I will happily give you a hand.
-* Fork the [repository][ragamints:repo] on GitHub to start making your changes to the *master* branch (or branch off of it).
-* Write a test which shows that the bug was fixed or that the feature works as expected.
-* Do *not* use `git commit` to commit your code; use `npm run commit` instead; this will ensure a [Commitizen]-friendly commit message will be generated, a convention that will in turn be leveraged by [semantic-release].
-* Send a pull request and notify me :) Thanks.
-
-## Credits
+## Thanks
 
 * [Max Schmitt][maximilianschmitt] for his gist on [Making io.js CLI apps compatible with node.js][iojs-nodejs-compatibility],
 * [TOTEMS::Tech][totemstech] for providing a no-nonsense [instagram-node] driver,
@@ -276,29 +259,66 @@ The following metadata fields are set on each JPEG file, if the corresponding In
 * [Jake Archibald] for his 2013 post on [Promises and Generators][archibald:promises],
 * [John MacFarlane] for [pandoc], a universal document converter.
 
-## License
-
-Ragamints is released under the [BSD License].
-
 ## Troubleshooting
 
 #### `npm WARN optional dep failed, continuing fsevents@n.n.n`
 
-You may see this message when installing `ragamints` on Windows. It is *not* indicative of a problem and originates from the [`chokidar`](https://github.com/paulmillr/chokidar) npm module, a dependency of the [`babel`](https://github.com/babel/babel) module, the ES6 transpiler. [FSEvents](http://en.wikipedia.org/wiki/FSEvents) is an API only available on OS X. The [`fsevents`](https://github.com/strongloop/fsevents) npm module, which provides a node interface to that OS API, cannot be built on systems other than OS X and thus is marked as "optional dependency" by modules such as `chokidar`, and reported as such.
+You may see this message when installing `ragamints` on Windows. It is *not* indicative of a problem and originates from the [chokidar] npm module, a dependency of the [babel] module, the ES6 transpiler. [FSEvents][fsevents:wiki] is an API only available on OS X. The [fsevents][fsevents:github] npm module, which provides a node interface to that OS API, cannot be built on systems other than OS X and thus is marked as "optional dependency" by modules such as [chokidar], and reported as such.
+
+## Authors
+
+**Sebastien Barre**
+
+* Email: sebastien.barre@gmail.com
+* Twitter: [sebastienbarre][sebastienbarre:Twitter]
+* Instagram: [sebastienbarre][sebastienbarre:Instagram]
+
+## Contribute
+
+* Check for [open issues][_self_:issues], especially the ones [up-for-grabs][_self_:issues:up-for-grabs], or open a fresh issue to start a discussion around a feature idea or a bug.
+* If you feel uncomfortable or uncertain about an issue or your changes, feel free to [email me][sebastienbarre:email] and I will happily give you a hand.
+* Fork the [repository][_self_:repo] on GitHub to start making your changes to the *master* branch (or branch off of it).
+* Write a test which shows that the bug was fixed or that the feature works as expected.
+* Do *not* use `git commit` to commit your code; use `npm run commit` instead; this will ensure a [Commitizen]-friendly commit message will be generated, a convention that will in turn be leveraged by [semantic-release].
+* Send a pull request and notify me :) Thanks.
+
+## License
+
+This software is released under the [BSD License].
 
 ## Change Log
 
-All notable changes to this project are documented automatically on the Github [releases][ragamints:releases] page. This project believes in [Semantic Versioning] and [Keep a CHANGELOG]. It uses [commitizen] and [semantic-release] to help with that endeavor.
+All notable changes to this project are documented automatically on the Github [releases][_self_:releases] page. This project believes in [Semantic Versioning] and [Keep a CHANGELOG]. It uses [commitizen] and [semantic-release] to help with that endeavor.
 
+[_self_:build-status:shield]: https://img.shields.io/travis/sebastienbarre/ragamints.svg
+[_self_:build-status]: https://travis-ci.org/sebastienbarre/ragamints
+[_self_:coverage:shield]: https://img.shields.io/codecov/c/github/sebastienbarre/ragamints.svg
+[_self_:coverage]: https://codecov.io/github/sebastienbarre/ragamints
+[_self_:dependencies-status:shield]: https://img.shields.io/gemnasium/sebastienbarre/ragamints.svg
+[_self_:dependencies-status]: https://gemnasium.com/sebastienbarre/ragamints
+[_self_:issues:up-for-grabs]: https://github.com/sebastienbarre/ragamints/labels/up-for-grabs
+[_self_:issues]: https://github.com/sebastienbarre/ragamints/issues
+[_self_:license:shield]: https://img.shields.io/npm/l/ragamints.svg
+[_self_:node-version:shield]: https://img.shields.io/node/v/ragamints.svg
+[_self_:node-version]: https://www.npmjs.com/package/ragamints
+[_self_:npm:badge]: https://nodei.co/npm/ragamints.png?downloads=true
+[_self_:npm]: https://nodei.co/npm/ragamints/
+[_self_:releases]: https://github.com/sebastienbarre/ragamints/releases
+[_self_:repo]: https://github.com/sebastienbarre/ragamints
 [Adobe Lightroom]: https://lightroom.adobe.com/
 [archibald:promises]: http://www.html5rocks.com/en/tutorials/es6/promises/
+[babel]: https://github.com/babel/babel
 [BSD License]: http://opensource.org/licenses/BSD-3-Clause
+[chokidar]: https://github.com/paulmillr/chokidar
+[commitizen:shield]: https://img.shields.io/badge/commitizen-friendly-brightgreen.svg
 [commitizen]: https://github.com/commitizen/cz-cli
 [darkskyapp]: https://github.com/darkskyapp
 [EDT]: http://www.timeanddate.com/time/zones/edt
 [EXIF]: http://en.wikipedia.org/wiki/Exchangeable_image_file_format
 [ExifTool FAQ]: http://www.sno.phy.queensu.ca/~phil/exiftool/faq.html#Q5
 [ExifTool]:  http://www.sno.phy.queensu.ca/~phil/exiftool/
+[fsevents:github]: https://github.com/strongloop/fsevents
+[FSEvents:wiki]: http://en.wikipedia.org/wiki/FSEvents
 [Google+]: https://plus.google.com/
 [Homebrew]: http://brew.sh/
 [How to generate an Instagram Access Token]: http://jelled.com/instagram/access-token
@@ -321,15 +341,12 @@ All notable changes to this project are documented automatically on the Github [
 [Node.js]: https://nodejs.org/
 [npm]: https://www.npmjs.com/
 [pandoc]: http://pandoc.org/
-[ragamints:issue]: https://github.com/sebastienbarre/ragamints/issues
-[ragamints:releases]: https://github.com/sebastienbarre/ragamints/releases
-[ragamints:repo]: https://github.com/sebastienbarre/ragamints
-[ragamints:up-for-grabs]: https://github.com/sebastienbarre/ragamints/labels/up-for-grabs
 [Retrieve the access token for your Instagram account]: http://jenwachter.com/2013/04/22/retrive-the-access-token-for-your-instagram-account/
 [sebastienbarre:email]: mailto:sebastien.barre@gmail.com
 [sebastienbarre:Instagram]: https://instagram.com/sebastienbarre/
 [sebastienbarre:Twitter]: https://twitter.com/sebastienbarre/
 [Semantic Versioning]: http://semver.org/
+[semantic-release:shield]: https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg
 [semantic-release]: https://github.com/semantic-release/semantic-release
 [sugarjs]: http://sugarjs.com/features#date
 [totemstech]: https://github.com/totemstech

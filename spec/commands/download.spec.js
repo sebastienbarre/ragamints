@@ -7,7 +7,6 @@ var path         = require('path');
 var Promise      = require('es6-promise').Promise;
 var rewire       = require('rewire');
 
-var constants    = require('../../lib/constants');
 var instagram    = require('../../lib/instagram');
 
 var exiftoolData = require('../data/exiftool');
@@ -357,7 +356,6 @@ describe('command:download', function() {
 
     beforeEach(function() {
       spyOn(logger, 'log');
-      spyOn(instagram, 'use');
       spyOn(user, 'resolveUserId').and.callFake(
         helpers.promiseValue.bind(null, '12345678'));
       spyOn(media, 'resolveMediaId').and.callFake(
@@ -386,12 +384,8 @@ describe('command:download', function() {
           instagram.RESOLUTIONS.THUMBNAIL,
           instagram.RESOLUTIONS.LOW,
         ],
-        verbose: true,
-        accessToken: 'token'
+        verbose: true
       };
-      var env = {};
-      env[constants.ACCESS_TOKEN_ENV_VAR] = 'token';
-      download_cmd.__set__('process', {env: env});
       resolveOptions(options).then(function(res) {
         let link = mediaData.image.standard.link;
         expect(user.resolveUserId.calls.argsFor(0)).toEqual(['username']);
@@ -404,23 +398,12 @@ describe('command:download', function() {
       });
     });
 
-    it('rejects when no access token is found', function(done) {
-      download_cmd.__set__('process', {env: {}});
+    it('rejects when no user id is found', function(done) {
       resolveOptions({}).then(function() {
         done.fail(new Error('should not have succeeded'));
       }, function(err) {
         expect(err.message).toEqual(
-          logger.formatErrorMessage('Need Instagram access token'));
-        done();
-      });
-    });
-
-    it('rejects when no user id is found', function(done) {
-      resolveOptions({accessToken: 'token'}).then(function() {
-        done.fail(new Error('should not have succeeded'));
-      }, function(err) {
-        expect(err.message).toEqual(
-          logger.formatErrorMessage('Need user ID or user name'));
+          logger.formatErrorMessage('Need Instagram user ID or name'));
         done();
       });
     });

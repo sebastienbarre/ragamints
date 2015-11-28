@@ -55,7 +55,7 @@ describe('media', function() {
       resolveMediaId('foo').catch(function(err) {
         expect(instagram.oembed).not.toHaveBeenCalled();
         expect(err.message).toEqual(
-          logger.formatErrorMessage('foo is not a valid media url'));
+          logger.formatErrorMessage('foo is not a valid Instagram media url'));
         done();
       });
     });

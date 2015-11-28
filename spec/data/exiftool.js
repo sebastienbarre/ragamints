@@ -23,7 +23,7 @@ var standard_args_common = [
   ', ',
   '-IPTC:Keywords=farmwedding, shy',
   '-XMP:Subject=farmwedding, shy'
-  ];
+];
 
 var standard_args_with_gps = standard_args_common.concat([
   '-EXIF:DateTimeOriginal=2015:05:30 18:41:28-04:00',
