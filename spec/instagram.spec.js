@@ -33,7 +33,7 @@ describe('instagram', function() {
       user_search(mock_user.username, {}, function(err, users) {
         if (err) {
           done.fail(err);
-        };
+        }
         expect(cache.get).toHaveBeenCalled(); // this rejected
         expect(ig_node.user_search).toHaveBeenCalled();
         expect(cache.set).toHaveBeenCalled();
@@ -54,7 +54,7 @@ describe('instagram', function() {
       user_search(mock_user.username, {}, function(err, users) {
         if (err) {
           done.fail(err);
-        };
+        }
         expect(cache.get).toHaveBeenCalled(); // this rejected
         expect(ig_node.user_search).toHaveBeenCalled();
         expect(cache.set).not.toHaveBeenCalled(); // since it returned []
@@ -73,7 +73,7 @@ describe('instagram', function() {
       user_search(mock_user.username, {}, function(err, users) {
         if (err) {
           done.fail(err);
-        };
+        }
         expect(cache.get).toHaveBeenCalled();
         expect(cache.set).not.toHaveBeenCalled();
         expect(ig_node.user_search).not.toHaveBeenCalled();
@@ -130,25 +130,26 @@ describe('instagram', function() {
         mock_user.id,
         options,
         function(err, medias, pagination) {
-        if (err) {
-          done.fail(err);
-        };
-        expect(cache.get).toHaveBeenCalled(); // this rejected
-        expect(ig_node.user_media_recent).toHaveBeenCalled();
-        current_count += medias.length;
-        expect(options.count).toBeGreaterThan(current_count);
-        // Since we requested more than page_size, pagination needs to occur
-        pagination.next(function(err, medias) {
           if (err) {
             done.fail(err);
-          };
+          }
+          expect(cache.get).toHaveBeenCalled(); // this rejected
+          expect(ig_node.user_media_recent).toHaveBeenCalled();
           current_count += medias.length;
-          expect(options.count).not.toBeGreaterThan(current_count);
-          // We should have received enough medias for cache.set to be called
-          expect(cache.set).toHaveBeenCalled();
-          done();
-        });
-      });
+          expect(options.count).toBeGreaterThan(current_count);
+          // Since we requested more than page_size, pagination needs to occur
+          pagination.next(function(err, medias) {
+            if (err) {
+              done.fail(err);
+            }
+            current_count += medias.length;
+            expect(options.count).not.toBeGreaterThan(current_count);
+            // We should have received enough medias for cache.set to be called
+            expect(cache.set).toHaveBeenCalled();
+            done();
+          });
+        }
+      );
     });
 
     it('uses the cache instead of ig_node.user_media_recent', function(done) {
@@ -166,7 +167,7 @@ describe('instagram', function() {
       user_media_recent(mock_user.id, options, function(err, medias) {
         if (err) {
           done.fail(err);
-        };
+        }
         expect(cache.get).toHaveBeenCalled();
         expect(cache.set).not.toHaveBeenCalled();
         expect(ig_node.user_media_recent).not.toHaveBeenCalled();
@@ -191,16 +192,17 @@ describe('instagram', function() {
         mock_user.id,
         options,
         function(err, medias, pagination) {
-        if (err) {
-          done.fail(err);
-        };
-        expect(cache.get).toHaveBeenCalled(); // this rejected
-        expect(ig_node.user_media_recent).toHaveBeenCalled();
-        expect(medias.length).toBe(page_size);
-        expect(pagination).toEqual({});
-        expect(cache.set).toHaveBeenCalled();
-        done();
-      });
+          if (err) {
+            done.fail(err);
+          }
+          expect(cache.get).toHaveBeenCalled(); // this rejected
+          expect(ig_node.user_media_recent).toHaveBeenCalled();
+          expect(medias.length).toBe(page_size);
+          expect(pagination).toEqual({});
+          expect(cache.set).toHaveBeenCalled();
+          done();
+        }
+      );
     });
 
     it('bails on ig_node.user_media_recent error', function(done) {
@@ -215,18 +217,19 @@ describe('instagram', function() {
         mock_user.id,
         options,
         function(err, medias, pagination) {
-        if (err) {
-          expect(err.message).toEqual('Boom');
-          expect(cache.get).toHaveBeenCalled(); // this rejected
-          expect(ig_node.user_media_recent).toHaveBeenCalled();
-          expect(medias).toBe(undefined);
-          expect(pagination).toBe(undefined);
-          expect(cache.set).not.toHaveBeenCalled();
-          done();
-        } else {
-          done.fail(err);
+          if (err) {
+            expect(err.message).toEqual('Boom');
+            expect(cache.get).toHaveBeenCalled(); // this rejected
+            expect(ig_node.user_media_recent).toHaveBeenCalled();
+            expect(medias).toBe(undefined);
+            expect(pagination).toBe(undefined);
+            expect(cache.set).not.toHaveBeenCalled();
+            done();
+          } else {
+            done.fail(err);
+          }
         }
-      });
+      );
     });
 
   });

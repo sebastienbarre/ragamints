@@ -17,7 +17,7 @@ function fillArray(size, with_index, value) {
     }
     return data;
   });
-};
+}
 
 module.exports = {
   promiseRejectError: promiseRejectError,
