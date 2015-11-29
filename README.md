@@ -10,12 +10,14 @@ Ragamints may come handy when importing Instagram photos back to applications th
 
 ## Table of Contents
 
-<!-- MarkdownTOC autolink=true bracket=round -->
+<!-- MarkdownTOC autolink=true bracket=round depth=2 -->
 
 - [Installation](#installation)
 - [Requirements](#requirements)
 - [Usage](#usage)
-- [Examples](#examples)
+- [Configuration File](#configuration-file)
+- [Command: `download`](#command-download)
+- [Command: `sync`](#command-sync)
 - [Timezones](#timezones)
 - [Supported Metadata](#supported-metadata)
 - [Performance](#performance)
@@ -48,7 +50,7 @@ Since `ragamints` talks to the Instagram API, it does require an API Client Key,
 
 1. Head to the [Instagram Developers Page],
 2. Click on [Register Your Application][instagram-register-app] to register a new client,
-3. Set **Application Name** to any identifier, say, `ineedatoken`,
+3. Set **Application Name** to any identifier, say, `ragamints`,
 6. Set **Redirect URI(s)** to `http://localhost`,
 4. Set **Description** and **Website URL** to anything,
 7. In the **Security** tab, uncheck **[ ] Disable implicit OAuth**,
@@ -56,9 +58,25 @@ Since `ragamints` talks to the Instagram API, it does require an API Client Key,
 9. Write down your new **CLIENT ID**, a 32-characters long string,
 10. Navigate to the following URL in your web browser, replacing `[CLIENT_ID]` with your actual **CLIENT ID**: `https://instagram.com/oauth/authorize/?client_id=[CLIENT_ID]&redirect_uri=http://localhost&response_type=token`
 11. Click on **Authorize** when Instagram asks you to grant access to your account.
-12. Once redirected to your localhost, your newly generated **ACCESS TOKEN** will be appended to the url after `http://localhost/#access_token=`. It should be about 50-characters long. Congratulations. Write it down, do not share it.
+12. Once redirected to your localhost, your newly generated **INSTAGRAM ACCESS TOKEN** will be appended to the url after `http://localhost/#access_token=`. It should be about 50-characters long. Congratulations. Write it down, do not share it.
 
 If the above doesn't work, I'd recommend reading [How to generate an Instagram Access Token], [Retrieve the access token for your Instagram account], or [How to get an Instagram Access Token].
+
+In the examples presented in this document, `[INSTAGRAM ACCESS TOKEN]` is to be replaced with your **INSTAGRAM ACCESS TOKEN**. For example:
+```bash
+$ ragamints download --access-token [INSTAGRAM ACCESS TOKEN] --user-id sebastienbarre --count 3
+```
+Alternatively, you may omit `--access-token` by:
+1. setting the `RAGAMINTS_ACCESS_TOKEN` environment variable beforehand.
+```bash
+$ export RAGAMINTS_ACCESS_TOKEN=[INSTAGRAM ACCESS TOKEN]
+```
+2. setting the corresponding option in the default `.ragamints.json` configuration file in your `HOME` directory, or any other configuration file of your choosing using the `--config` option.
+```json
+{
+  "access-token": [INSTAGRAM ACCESS TOKEN]
+}
+```
 
 ### ExifTool
 
@@ -72,7 +90,6 @@ $ exiftool -ver
 
 ## Usage
 
-Show available commands:
 ```
 $ ragamints
 
@@ -85,7 +102,11 @@ Options:
 Check the man page or README file for more
 ```
 
-Show available options for the `download` command:
+## Configuration File
+
+
+## Command: `download`
+
 ```
 
 $ ragamints download --help
@@ -107,24 +128,10 @@ Options:
   -l, --clear-cache      Clear the cache  [boolean] [default: false]
   -v, --verbose          Output more info  [boolean] [default: false]
   -q, --quiet            Output less info  [boolean] [default: false]
-  --config               Load config file  [default: "~/.ragamints.json"]
+  --config               Load config file  [default: "/Volumes/Users/barre/.ragamints.json"]
   -h, --help             Show help  [boolean]
 
 Check the man page or README file for more
-```
-
-## Examples
-
-In the examples presented below, `[ACCESS TOKEN]` is to be replaced with your **Instagram Access Token** (see the [Requirements](#requirements) section). Alternatively, you may omit `--access-token` by:
-1. setting the `RAGAMINTS_ACCESS_TOKEN` environment variable beforehand.
-```bash
-$ export RAGAMINTS_ACCESS_TOKEN=[ACCESS_TOKEN]
-```
-2. setting the corresponding option in a default `.ragamints.json` configuration file in your `HOME` directory, or any other configuration file of your choosing using the `--config` option.
-```json
-{
-  "access-token": [ACCESS_TOKEN]
-}
 ```
 
 ### Fetch your last *n* medias
@@ -132,7 +139,7 @@ $ export RAGAMINTS_ACCESS_TOKEN=[ACCESS_TOKEN]
 Let's fetch the last 3 medias from my [Instagram feed][sebastienbarre:Instagram]. `ragamints` will output how it interpreted some of its arguments, and what is being done for each media. Each step references a media by an index (`#0001`, `#0002`, ...) followed by a short excerpt from its caption (`[Back home. Done sp]`). In this example two steps can be identified for each media -- fetching the file and updating its metadata.
 
 ```
-$ ragamints download --access-token [ACCESS_TOKEN] --user-id sebastienbarre --count 3
+$ ragamints download --access-token [INSTAGRAM ACCESS TOKEN] --user-id sebastienbarre --count 3
 Found user ID 26667401 for username sebastienbarre
 Found 3 media(s), nothing more.
 #0001 [Back home. Done sp] Fetched 2015-05-04_1430734958.jpg
@@ -158,7 +165,7 @@ The highest known image resolution is fetched by default but `--resolution` can 
 Let's fetch the medias I had posted *later in time than (but including)* https://instagram.com/p/2QY1JYJYqN/ (`--min-id`), and *earlier in time than (but excluding)* https://instagram.com/p/2QZcrCpYrM/ (`--max-id`). I'm using my user ID here (`26667401`) instead of my username (`sebastienbarre`) to save a round-trip. The Instagram API expects both `--min-id` and `--max-id` to reference media IDs, but these can be difficult to gather -- use photo URLs instead and `ragamints` will look-up these IDs for you.
 
 ```
-$ ragamints download --access-token [ACCESS_TOKEN] --user-id 26667401 --min-id https://instagram.com/p/2QY1JYJYqN/ --max-id https://instagram.com/p/2QZcrCpYrM/
+$ ragamints download --access-token [INSTAGRAM ACCESS TOKEN] --user-id 26667401 --min-id https://instagram.com/p/2QY1JYJYqN/ --max-id https://instagram.com/p/2QZcrCpYrM/
 Found media ID 977393040662825676_26667401 for media url https://instagram.com/p/2QZcrCpYrM/
 Found media ID 977390324456721037_26667401 for media url https://instagram.com/p/2QY1JYJYqN/
 Found 2 media(s), nothing more.
@@ -176,7 +183,7 @@ Note that `#0001` was *not* fetched, as it had been saved already in our previou
 Let's fetch the medias I had posted *later in time than* 5 weeks ago (`--min-timestamp`), but *earlier in time than* 10 days ago (`--max-timestamp`). The Instagram API expects both `--min-timestamp` and `--max-timestamp` to reference a [Unix Timestamp] but `ragamints` will accept [a variety of date formats][sugarjs], for convenience. The `--dest` parameter can be used to save to a specific folder (here, `archive`).
 
 ```
-$ ragamints download --access-token [ACCESS_TOKEN] --user-id 26667401 --dest archive --max-timestamp '10 days ago' --min-timestamp '5 weeks ago' --quiet
+$ ragamints download --access-token [INSTAGRAM ACCESS TOKEN] --user-id 26667401 --dest archive --max-timestamp '10 days ago' --min-timestamp '5 weeks ago' --quiet
 Min Timestamp: 5 weeks ago is 2015-04-08T21:19:46-04:00 (1428542386)
 Max Timestamp: 10 days ago is 2015-05-03T21:19:46-04:00 (1430702386)
 Found 33 media(s), more to come...
@@ -186,6 +193,44 @@ Done processing 96 media(s). Easy peasy.
 ```
 
 Note that the Instagram API paginate its results -- 33 at a time, as of this writing. `ragamints` will fetch 33, start downloading all medias in parallel, then fetch another 33, etc., until it is done. Use `--quiet` to hide intermediate steps.
+
+## Command: `sync`
+
+```
+
+$ ragamints sync --help
+
+Check the man page or README file for more
+```
+
+### Flickr token
+
+1. [Apply for a Flickr API Key][Flickr API:Get Key] (commercial or not),
+2. Set **What's the name of your app?** to any identifier, say, `ragamints`,
+3. Set **What are you building?** to any description, say, `A CLI to sync my Instagram photos to Flickr`,
+4. Check both checkboxes, essentially agreeing to Flickr API Terms of Use,
+5. Submit,
+6. Write down your **FLICKR API KEY** and **FLICKR API SECRET**.
+
+In the examples presented in this document, `[FLICKR API KEY]` is to be replaced with your **FLICKR API KEY**, `[FLICKR API SECRET]` is to be replaced with your **FLICKR API SECRET**. For example:
+```bash
+$ ragamints sync --access-token [INSTAGRAM ACCESS TOKEN] --user-id sebastienbarre --flickr-api-key [FLICKR API KEY] --flickr-api-secret [FLICKR API SECRET] --flickr-user-id altuwa
+```
+Alternatively, you may omit `--flickr-api-key` or `--flickr-api-secret`  by:
+1. setting the `RAGAMINTS_FLICKR_API_KEY` or `RAGAMINTS_FLICKR_API_SECRET` environment variables beforehand.
+```bash
+$ export RAGAMINTS_FLICKR_API_KEY=[FLICKR API KEY]
+$ export RAGAMINTS_FLICKR_API_SECRET=[FLICKR API SECRET]
+```
+2. setting the corresponding options in the default `.ragamints.json` configuration file in your `HOME` directory, or any other configuration file of your choosing using the `--config` option.
+```json
+{
+  "flickr-api-key": [FLICKR API KEY],
+  "flickr-api-secret": [FLICKR API SECRET]
+}
+```
+
+The first time you call the `sync` command, you may experience a pause while `ragamints` is `Fetching the Flickr API method information architecture`. It will fetch all known methods from Flickr, and cache them for future use. This can take a bit, as there are a fair number of methods, but is inconsequential on subsequent runs.
 
 ## Timezones
 
@@ -203,7 +248,7 @@ What `ragamints` *can* do, though, is look at the GPS location, infer the timezo
 Use `--verbose` to display which timezone was picked. In the example below, the first picture was taken in Tokyo and the second one in New York.
 
 ```
-$ ragamints download --access-token [ACCESS_TOKEN] --user-id 26667401 --max-timestamp '23 days ago' --min-timestamp '30 days ago' --verbose
+$ ragamints download --access-token [INSTAGRAM ACCESS TOKEN] --user-id 26667401 --max-timestamp '23 days ago' --min-timestamp '30 days ago' --verbose
 Min Timestamp: 30 days ago is 2015-04-14T13:21:45-04:00 (1429030905)
 Max Timestamp: 23 days ago is 2015-04-21T13:21:45-04:00 (1429635705)
 Found 2 media(s), nothing more.
@@ -317,6 +362,8 @@ All notable changes to this project are documented automatically on the Github [
 [EXIF]: http://en.wikipedia.org/wiki/Exchangeable_image_file_format
 [ExifTool FAQ]: http://www.sno.phy.queensu.ca/~phil/exiftool/faq.html#Q5
 [ExifTool]:  http://www.sno.phy.queensu.ca/~phil/exiftool/
+[Flickr API]: https://www.flickr.com/services/api/
+[Flickr API:Get Key]: https://www.flickr.com/services/apps/create/apply/
 [fsevents:github]: https://github.com/strongloop/fsevents
 [FSEvents:wiki]: http://en.wikipedia.org/wiki/FSEvents
 [Google+]: https://plus.google.com/

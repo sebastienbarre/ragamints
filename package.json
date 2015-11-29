@@ -66,6 +66,7 @@
     "chalk": "^1.1.1",
     "download": "^4.4.3",
     "es6-promise": "^3.0.2",
+    "flickrapi": "^0.3.36",
     "in-publish": "^2.0.0",
     "instagram-node": "^0.5.8",
     "is-iojs": "^1.1.0",

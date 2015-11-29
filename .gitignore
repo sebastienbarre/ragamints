@@ -4,6 +4,7 @@
 *.tgz
 .DS_Store
 coverage
+data
 dist
 doc/*.1
 node_modules
