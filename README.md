@@ -136,18 +136,18 @@ Check the man page or README file for more
 
 ### Fetch your last *n* medias
 
-Let's fetch the last 3 medias from my [Instagram feed][sebastienbarre:Instagram]. `ragamints` will output how it interpreted some of its arguments, and what is being done for each media. Each step references a media by an index (`#0001`, `#0002`, ...) followed by a short excerpt from its caption (`[Back home. Done sp]`). In this example two steps can be identified for each media -- fetching the file and updating its metadata.
+Let's fetch the last 3 medias from my [Instagram feed][sebastienbarre:Instagram]. `ragamints` will output how it interpreted some of its arguments, and what is being done for each media. Each step references a media using a short excerpt from its caption (`[Back home. Done sp]`). In this example two steps can be identified for each media -- fetching the file and updating its metadata.
 
 ```
 $ ragamints download --access-token [INSTAGRAM ACCESS TOKEN] --user-id sebastienbarre --count 3
 Found user ID 26667401 for username sebastienbarre
 Found 3 media(s), nothing more.
-#0001 [Back home. Done sp] Fetched 2015-05-04_1430734958.jpg
-#0001 [Back home. Done sp] Updated metadata in 2015-05-04_1430734958.jpg
-#0002 [The Dtonbori canal] Fetched 2015-05-04_1430734351.jpg
-#0002 [The Dtonbori canal] Updated metadata in 2015-05-04_1430734351.jpg
-#0003 [Neither Times Squa] Fetched 2015-05-04_1430734239.jpg
-#0003 [Neither Times Squa] Updated metadata in 2015-05-04_1430734239.jpg
+[Back home. Done sp] Fetched 2015-05-04_1430734958.jpg
+[Back home. Done sp] Updated metadata in 2015-05-04_1430734958.jpg
+[The Dtonbori canal] Fetched 2015-05-04_1430734351.jpg
+[The Dtonbori canal] Updated metadata in 2015-05-04_1430734351.jpg
+[Neither Times Squa] Fetched 2015-05-04_1430734239.jpg
+[Neither Times Squa] Updated metadata in 2015-05-04_1430734239.jpg
 Done processing 3 media(s). Easy peasy.
 
 $ ls -lh *.jpg | awk '{print $9, $5}'
@@ -169,14 +169,14 @@ $ ragamints download --access-token [INSTAGRAM ACCESS TOKEN] --user-id 26667401 
 Found media ID 977393040662825676_26667401 for media url https://instagram.com/p/2QZcrCpYrM/
 Found media ID 977390324456721037_26667401 for media url https://instagram.com/p/2QY1JYJYqN/
 Found 2 media(s), nothing more.
-#0001 [Neither Times Squa] Saved already as 2015-05-04_1430734239.jpg
-#0001 [Neither Times Squa] Updated metadata in 2015-05-04_1430734239.jpg
-#0002 [Last sunset in Osa] Fetched 2015-05-04_1430734027.jpg
-#0002 [Last sunset in Osa] Updated metadata in 2015-05-04_1430734027.jpg
+[Neither Times Squa] Saved already as 2015-05-04_1430734239.jpg
+[Neither Times Squa] Updated metadata in 2015-05-04_1430734239.jpg
+[Last sunset in Osa] Fetched 2015-05-04_1430734027.jpg
+[Last sunset in Osa] Updated metadata in 2015-05-04_1430734027.jpg
 Done processing 2 media(s). Easy peasy.
 ```
 
-Note that `#0001` was *not* fetched, as it had been saved already in our previous example -- a photo can not be replaced on Instagram, it is assumed its contents has not changed; its metadata *is* updated though, since captions *can* be edited. Use `--always-download` to force `ragamints` to always fetch.
+Note that `[Neither Times Squa]` was *not* fetched, as it had been saved already in our previous example -- a photo can not be replaced on Instagram, it is assumed its contents has not changed; its metadata *is* updated though, since captions *can* be edited. Use `--always-download` to force `ragamints` to always fetch.
 
 ### Fetch all medias found between two timestamps
 
@@ -211,6 +211,9 @@ Check the man page or README file for more
 4. Check both checkboxes, essentially agreeing to Flickr API Terms of Use,
 5. Submit,
 6. Write down your **FLICKR API KEY** and **FLICKR API SECRET**.
+
+
+oauth_callback_confirmed=true&oauth_token=[OAUTH-TOKEN]&oauth_token_secret=[OAUTH-TOKEN SECRET]
 
 In the examples presented in this document, `[FLICKR API KEY]` is to be replaced with your **FLICKR API KEY**, `[FLICKR API SECRET]` is to be replaced with your **FLICKR API SECRET**. For example:
 ```bash
@@ -252,14 +255,14 @@ $ ragamints download --access-token [INSTAGRAM ACCESS TOKEN] --user-id 26667401 
 Min Timestamp: 30 days ago is 2015-04-14T13:21:45-04:00 (1429030905)
 Max Timestamp: 23 days ago is 2015-04-21T13:21:45-04:00 (1429635705)
 Found 2 media(s), nothing more.
-#0001 [After a long journ] Fetched 2015-04-21_1429621553.jpg
-#0001 [After a long journ] Timezone is Asia/Tokyo
-#0001 [After a long journ] Creation time stored as 2015-04-21T22:05:53+09:00
-#0001 [After a long journ] Updated metadata in 2015-04-21_1429621553.jpg
-#0002 [PSA: Spring is her] Fetched 2015-04-19_1429475496.jpg
-#0002 [PSA: Spring is her] Timezone is America/New_York
-#0002 [PSA: Spring is her] Creation time stored as 2015-04-19T16:31:36-04:00
-#0002 [PSA: Spring is her] Updated metadata in 2015-04-19_1429475496.jpg
+[After a long journ] Fetched 2015-04-21_1429621553.jpg
+[After a long journ] Timezone is Asia/Tokyo
+[After a long journ] Creation time stored as 2015-04-21T22:05:53+09:00
+[After a long journ] Updated metadata in 2015-04-21_1429621553.jpg
+[PSA: Spring is her] Fetched 2015-04-19_1429475496.jpg
+[PSA: Spring is her] Timezone is America/New_York
+[PSA: Spring is her] Creation time stored as 2015-04-19T16:31:36-04:00
+[PSA: Spring is her] Updated metadata in 2015-04-19_1429475496.jpg
 Done processing 2 media(s). Easy peasy.
 ```
 

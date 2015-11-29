@@ -98,7 +98,7 @@ describe('media', function() {
     });
 
     it('logs message w/ respect to a media', function() {
-      var prefix = '#0001 [Flower girl is pic]';
+      var prefix = '[Flower girl is pic]';
       var msg = 'logging';
       log(mediaData.image.standard, msg);
       expect(strip_ansi(logger.log.calls.argsFor(0)[0])).toEqual(prefix);
@@ -109,7 +109,7 @@ describe('media', function() {
       var media_wo_caption = _assign({}, mediaData.image.standard);
       delete media_wo_caption.caption;
       log(media_wo_caption);
-      var msg = '#0001 [996614167159212902]';
+      var msg = '[996614167159212902]';
       expect(strip_ansi(logger.log.calls.argsFor(0)[0])).toEqual(msg);
     });
   });

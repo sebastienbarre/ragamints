@@ -124,7 +124,6 @@ describe('user', function() {
           expect(instagram.user_media_recent.calls.argsFor(0)[0]).toBe(
             mock_user.id);
           expect(medias.length).toEqual(count);
-          expect(medias[count - 1].fetch_index).toEqual(count - 1);
           expect(strip_ansi(logger.log.calls.argsFor(0)[0])).toEqual(
             `Found ${page_size} media(s), more to come...`);
           expect(strip_ansi(logger.log.calls.argsFor(1)[0])).toEqual(
