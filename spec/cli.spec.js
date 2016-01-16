@@ -3,25 +3,23 @@
 var rewire    = require('rewire');
 
 var helpers   = require('./support/helpers');
-var constants = require('../lib/constants');
 
 var cli       = rewire('../lib/cli.js');
 
 describe('cli', function() {
   var logger = cli.__get__('logger');
 
-  describe('resolveOptions', function() {
+  describe('cli.resolveOptions', function() {
     var cache = cli.__get__('cache');
     var instagram = cli.__get__('instagram');
-    var resolveOptions = cli.__get__('resolveOptions');
     var reverseSetProcess;
 
     beforeEach(function() {
       spyOn(cache, 'clear').and.callFake(helpers.promiseValue);
       spyOn(logger, 'log');
-      spyOn(instagram, 'use');
+      spyOn(instagram.client, 'use');
       var env = {};
-      env[constants.ACCESS_TOKEN_ENV_VAR] = 'token';
+      env[instagram.constants.ACCESS_TOKEN_ENV_VAR] = 'token';
       reverseSetProcess = cli.__set__('process', {env: env});
     });
 
@@ -35,10 +33,10 @@ describe('cli', function() {
       };
       var resolved_options = {
         verbose: true,
-        accessToken: 'token'
+        instagramAccessToken: 'token'
       };
-      resolveOptions(options).then(function(res) {
-        expect(instagram.use).toHaveBeenCalled();
+      cli.resolveOptions(options).then(function(res) {
+        expect(instagram.client.use).toHaveBeenCalled();
         expect(cache.clear).not.toHaveBeenCalled();
         expect(res).toEqual(resolved_options);
         done();
@@ -51,7 +49,7 @@ describe('cli', function() {
       var options = {
         clearCache: true
       };
-      resolveOptions(options).then(function() {
+      cli.resolveOptions(options).then(function() {
         expect(cache.clear).toHaveBeenCalled();
         done();
       }, function(err) {
@@ -61,7 +59,7 @@ describe('cli', function() {
 
     it('rejects when no access token is found', function(done) {
       cli.__set__('process', {env: {}});
-      resolveOptions({}).then(function() {
+      cli.resolveOptions({}).then(function() {
         done.fail(new Error('should not have succeeded'));
       }, function(err) {
         expect(err.message).toEqual(
@@ -71,8 +69,7 @@ describe('cli', function() {
     });
   });
 
-  describe('main', function() {
-    var main = cli.__get__('main');
+  describe('cli.main', function() {
     var commands = [{
       name: 'dummy',
       description: 'dummy command',
@@ -93,7 +90,7 @@ describe('cli', function() {
 
     it('lists commands (then rejects) when none is provided', function(done) {
       var argv = [];
-      main(argv).then(function() {
+      cli.main(argv).then(function() {
         done.fail();
       }).catch(function() {
         var output = logger.log.calls.argsFor(0)[0];
@@ -107,7 +104,7 @@ describe('cli', function() {
       var argv = [
         '--help'
       ];
-      main(argv).catch(function() {
+      cli.main(argv).catch(function() {
         var output = logger.log.calls.argsFor(0)[0];
         expect(output.indexOf('dummy  dummy command')).not.toBe(-1);
         expect(output.indexOf('-h, --help')).not.toBe(-1);
@@ -120,7 +117,7 @@ describe('cli', function() {
         'dummy',
         '--help'
       ];
-      main(argv).catch(function() {
+      cli.main(argv).catch(function() {
         var output = logger.log.calls.argsFor(0)[0];
         expect(output.indexOf('-d, --dest')).not.toBe(-1);
         expect(output.indexOf('-v, --verbose')).not.toBe(-1);
@@ -134,7 +131,7 @@ describe('cli', function() {
       var argv = [
         'dummy'
       ];
-      main(argv).then(function(output) {
+      cli.main(argv).then(function(output) {
         expect(output).toBe('OK');
         done();
       }, function(err) {
@@ -147,7 +144,7 @@ describe('cli', function() {
       var argv = [
         'dummy'
       ];
-      main(argv).then(function() {
+      cli.main(argv).then(function() {
         done.fail();
       }, function(err) {
         expect(err.message).toBe('boom');

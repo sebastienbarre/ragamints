@@ -64,17 +64,17 @@ If the above doesn't work, I'd recommend reading [How to generate an Instagram A
 
 In the examples presented in this document, `[INSTAGRAM ACCESS TOKEN]` is to be replaced with your **INSTAGRAM ACCESS TOKEN**. For example:
 ```bash
-$ ragamints download --access-token [INSTAGRAM ACCESS TOKEN] --user-id sebastienbarre --count 3
+$ ragamints download --instagram-access-token [INSTAGRAM ACCESS TOKEN] --instagram-user-id sebastienbarre --count 3
 ```
-Alternatively, you may omit `--access-token` by:
-1. setting the `RAGAMINTS_ACCESS_TOKEN` environment variable beforehand.
+Alternatively, you may omit `--instagram-access-token` by:
+1. setting the `RAGAMINTS_INSTAGRAM_ACCESS_TOKEN` environment variable beforehand.
 ```bash
-$ export RAGAMINTS_ACCESS_TOKEN=[INSTAGRAM ACCESS TOKEN]
+$ export RAGAMINTS_INSTAGRAM_ACCESS_TOKEN=[INSTAGRAM ACCESS TOKEN]
 ```
 2. setting the corresponding option in the default `.ragamints.json` configuration file in your `HOME` directory, or any other configuration file of your choosing using the `--config` option.
 ```json
 {
-  "access-token": [INSTAGRAM ACCESS TOKEN]
+  "instagram-access-token": [INSTAGRAM ACCESS TOKEN]
 }
 ```
 
@@ -112,24 +112,24 @@ Check the man page or README file for more
 $ ragamints download --help
 
 Options:
-  -u, --user-id          Instagram user ID (or user name)  [string]
-  -c, --count            Maximum count of medias to download
-  -m, --min-id           Only medias posted later than this media id/url (included)  [string]
-  -n, --max-id           Only medias posted earlier than this media id/url (excluded)  [string]
-  -o, --min-timestamp    Only medias after this UNIX timestamp/datetime  [string]
-  -p, --max-timestamp    Only medias before this UNIX timestamp/datetime  [string]
-  -s, --sequential       Process sequentially (slower)  [boolean] [default: false]
-  -i, --include-videos   Include videos (skipped by default)  [boolean] [default: false]
-  -d, --dest             Destination directory  [string] [default: "./"]
-  -a, --always-download  Always download, even if media is saved already  [boolean] [default: false]
-  -j, --json             Save media json object (accepts keys to pluck)  [default: false]
-  -r, --resolution       Resolution(s) to download, e.g. high_resolution,standard_resolution,low_resolution,thumbnail  [string]
-  -t, --access-token     Instagram Access Token  [string]
-  -l, --clear-cache      Clear the cache  [boolean] [default: false]
-  -v, --verbose          Output more info  [boolean] [default: false]
-  -q, --quiet            Output less info  [boolean] [default: false]
-  --config               Load config file  [default: "/Volumes/Users/barre/.ragamints.json"]
-  -h, --help             Show help  [boolean]
+  -t, --instagram-access-token  Instagram Access Token  [string]
+  -u, --instagram-user-id       Instagram user ID (or user name)  [string]
+  -c, --count                   Maximum count of medias to download
+  -m, --min-id                  Only medias posted later than this media id/url (included)  [string]
+  -n, --max-id                  Only medias posted earlier than this media id/url (excluded)  [string]
+  -o, --min-timestamp           Only medias after this UNIX timestamp/datetime  [string]
+  -p, --max-timestamp           Only medias before this UNIX timestamp/datetime  [string]
+  -s, --sequential              Process sequentially (slower)  [boolean] [default: false]
+  -i, --include-videos          Include videos (skipped by default)  [boolean] [default: false]
+  -d, --dest                    Destination directory  [string] [default: "./"]
+  -a, --always-download         Always download, even if media is saved already  [boolean] [default: false]
+  -j, --json                    Save media json object (accepts keys to pluck)  [default: false]
+  -r, --resolution              Resolution(s) to download, e.g.  [string]
+  -l, --clear-cache             Clear the cache  [boolean] [default: false]
+  -v, --verbose                 Output more info  [boolean] [default: false]
+  -q, --quiet                   Output less info  [boolean] [default: false]
+  --config                      Load config file  [default: "/Volumes/Users/barre/.ragamints.json"]
+  -h, --help                    Show help  [boolean]
 
 Check the man page or README file for more
 ```
@@ -139,7 +139,7 @@ Check the man page or README file for more
 Let's fetch the last 3 medias from my [Instagram feed][sebastienbarre:Instagram]. `ragamints` will output how it interpreted some of its arguments, and what is being done for each media. Each step references a media using a short excerpt from its caption (`[Back home. Done sp]`). In this example two steps can be identified for each media -- fetching the file and updating its metadata.
 
 ```
-$ ragamints download --access-token [INSTAGRAM ACCESS TOKEN] --user-id sebastienbarre --count 3
+$ ragamints download --instagram-access-token [INSTAGRAM ACCESS TOKEN] --instagram-user-id sebastienbarre --count 3
 Found user ID 26667401 for username sebastienbarre
 Found 3 media(s), nothing more.
 [Back home. Done sp] Fetched 2015-05-04_1430734958.jpg
@@ -165,7 +165,7 @@ The highest known image resolution is fetched by default but `--resolution` can 
 Let's fetch the medias I had posted *later in time than (but including)* https://instagram.com/p/2QY1JYJYqN/ (`--min-id`), and *earlier in time than (but excluding)* https://instagram.com/p/2QZcrCpYrM/ (`--max-id`). I'm using my user ID here (`26667401`) instead of my username (`sebastienbarre`) to save a round-trip. The Instagram API expects both `--min-id` and `--max-id` to reference media IDs, but these can be difficult to gather -- use photo URLs instead and `ragamints` will look-up these IDs for you.
 
 ```
-$ ragamints download --access-token [INSTAGRAM ACCESS TOKEN] --user-id 26667401 --min-id https://instagram.com/p/2QY1JYJYqN/ --max-id https://instagram.com/p/2QZcrCpYrM/
+$ ragamints download --instagram-access-token [INSTAGRAM ACCESS TOKEN] --instagram-user-id 26667401 --min-id https://instagram.com/p/2QY1JYJYqN/ --max-id https://instagram.com/p/2QZcrCpYrM/
 Found media ID 977393040662825676_26667401 for media url https://instagram.com/p/2QZcrCpYrM/
 Found media ID 977390324456721037_26667401 for media url https://instagram.com/p/2QY1JYJYqN/
 Found 2 media(s), nothing more.
@@ -183,7 +183,7 @@ Note that `[Neither Times Squa]` was *not* fetched, as it had been saved already
 Let's fetch the medias I had posted *later in time than* 5 weeks ago (`--min-timestamp`), but *earlier in time than* 10 days ago (`--max-timestamp`). The Instagram API expects both `--min-timestamp` and `--max-timestamp` to reference a [Unix Timestamp] but `ragamints` will accept [a variety of date formats][sugarjs], for convenience. The `--dest` parameter can be used to save to a specific folder (here, `archive`).
 
 ```
-$ ragamints download --access-token [INSTAGRAM ACCESS TOKEN] --user-id 26667401 --dest archive --max-timestamp '10 days ago' --min-timestamp '5 weeks ago' --quiet
+$ ragamints download --instagram-access-token [INSTAGRAM ACCESS TOKEN] --instagram-user-id 26667401 --dest archive --max-timestamp '10 days ago' --min-timestamp '5 weeks ago' --quiet
 Min Timestamp: 5 weeks ago is 2015-04-08T21:19:46-04:00 (1428542386)
 Max Timestamp: 10 days ago is 2015-05-03T21:19:46-04:00 (1430702386)
 Found 33 media(s), more to come...
@@ -217,7 +217,7 @@ oauth_callback_confirmed=true&oauth_token=[OAUTH-TOKEN]&oauth_token_secret=[OAUT
 
 In the examples presented in this document, `[FLICKR API KEY]` is to be replaced with your **FLICKR API KEY**, `[FLICKR API SECRET]` is to be replaced with your **FLICKR API SECRET**. For example:
 ```bash
-$ ragamints sync --access-token [INSTAGRAM ACCESS TOKEN] --user-id sebastienbarre --flickr-api-key [FLICKR API KEY] --flickr-api-secret [FLICKR API SECRET] --flickr-user-id altuwa
+$ ragamints sync --instagram-access-token [INSTAGRAM ACCESS TOKEN] --instagram-user-id sebastienbarre --flickr-api-key [FLICKR API KEY] --flickr-api-secret [FLICKR API SECRET] --flickr-user-id altuwa
 ```
 Alternatively, you may omit `--flickr-api-key` or `--flickr-api-secret`  by:
 1. setting the `RAGAMINTS_FLICKR_API_KEY` or `RAGAMINTS_FLICKR_API_SECRET` environment variables beforehand.
@@ -251,7 +251,7 @@ What `ragamints` *can* do, though, is look at the GPS location, infer the timezo
 Use `--verbose` to display which timezone was picked. In the example below, the first picture was taken in Tokyo and the second one in New York.
 
 ```
-$ ragamints download --access-token [INSTAGRAM ACCESS TOKEN] --user-id 26667401 --max-timestamp '23 days ago' --min-timestamp '30 days ago' --verbose
+$ ragamints download --instagram-access-token [INSTAGRAM ACCESS TOKEN] --instagram-user-id 26667401 --max-timestamp '23 days ago' --min-timestamp '30 days ago' --verbose
 Min Timestamp: 30 days ago is 2015-04-14T13:21:45-04:00 (1429030905)
 Max Timestamp: 23 days ago is 2015-04-21T13:21:45-04:00 (1429635705)
 Found 2 media(s), nothing more.
@@ -295,7 +295,7 @@ The following metadata fields are set on each JPEG file, if the corresponding In
 
 * All networks requests are performed in parallel whenever possible.
 * `ragamints` makes heavy use of [ES6 Promises & Generators][archibald:promises] and therefore requires an extra-step at run-time to transpile to ES5 for [Node.js]. Use [io.js] to avoid that overhead.
-* The `--user-id`, `--min-id`, and `--max-id` options require a round-trip to the Instagram API to resolve usernames and photo URLs back to user ids and photo ids, respectively. Use ids whenever possible.
+* The `--instagram-user-id`, `--min-id`, and `--max-id` options require a round-trip to the Instagram API to resolve usernames and photo URLs back to user ids and photo ids, respectively. Use ids whenever possible.
 
 ## Thanks
 

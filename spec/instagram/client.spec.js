@@ -1,25 +1,26 @@
 'use strict';
 
 var rewire     = require('rewire');
-var helpers    = require('./support/helpers');
 var Promise    = require('es6-promise').Promise;
 
-var instagram  = rewire('../lib/instagram.js');
+var helpers    = require('../support/helpers');
+var mediaData  = require('../data/media');
 
-var mediaData  = require('./data/media');
+var constants  = require('../../lib/instagram/constants');
 
-describe('instagram', function() {
-  var cache = instagram.__get__('cache');
-  var ig_node = instagram.__get__('ig_node');
-  var logger = instagram.__get__('logger');
+var client     = rewire('../../lib/instagram/client.js');
+
+describe('instagram.client', function() {
+  var cache = client.__get__('cache');
+  var ig_node = client.__get__('ig_node');
+  var logger = client.__get__('logger');
 
   var mock_user = {
     username: 'username',
     id: '12345678'
   };
 
-  describe('user_search', function() {
-    var user_search = instagram.__get__('user_search');
+  describe('instagram.client.user_search', function() {
 
     it('caches calls to ig_node.user_search', function(done) {
       spyOn(cache, 'get').and.callFake(function() {
@@ -30,7 +31,7 @@ describe('instagram', function() {
         callback(null, [mock_user]);
       };
       spyOn(ig_node, 'user_search').and.callFake(ig_node_user_search);
-      user_search(mock_user.username, {}, function(err, users) {
+      client.user_search(mock_user.username, {}, function(err, users) {
         if (err) {
           done.fail(err);
         }
@@ -51,7 +52,7 @@ describe('instagram', function() {
         callback(null, []);
       };
       spyOn(ig_node, 'user_search').and.callFake(ig_node_user_search);
-      user_search(mock_user.username, {}, function(err, users) {
+      client.user_search(mock_user.username, {}, function(err, users) {
         if (err) {
           done.fail(err);
         }
@@ -70,7 +71,7 @@ describe('instagram', function() {
       spyOn(cache, 'set');
       spyOn(ig_node, 'user_search');
       // spyOn(logger, 'log');
-      user_search(mock_user.username, {}, function(err, users) {
+      client.user_search(mock_user.username, {}, function(err, users) {
         if (err) {
           done.fail(err);
         }
@@ -85,9 +86,8 @@ describe('instagram', function() {
 
   });
 
-  describe('user_media_recent', function() {
-    var user_media_recent = instagram.__get__('user_media_recent');
-    var page_size = instagram.__get__('pageSize').user_media_recent;
+  describe('instagram.client.user_media_recent', function() {
+    var page_size = constants.PAGE_SIZE.user_media_recent;
     var half_page_size = Math.floor(page_size / 2);
 
     // This mock returns a full page of empty medias, indefinitely
@@ -126,7 +126,7 @@ describe('instagram', function() {
         count: page_size + half_page_size  // for pagination coverage
       };
       var current_count = 0;
-      user_media_recent(
+      client.user_media_recent(
         mock_user.id,
         options,
         function(err, medias, pagination) {
@@ -152,31 +152,6 @@ describe('instagram', function() {
       );
     });
 
-    it('uses the cache instead of ig_node.user_media_recent', function(done) {
-      spyOn(cache, 'get').and.callFake(function() {
-        // let's set a situation where the cache has actually more than
-        // we are requesting
-        return Promise.resolve(helpers.fillArray(page_size * 2));
-      });
-      spyOn(cache, 'set');
-      spyOn(ig_node, 'user_media_recent');
-      // spyOn(logger, 'log');
-      var options = {
-        count: page_size + half_page_size  // for pagination coverage
-      };
-      user_media_recent(mock_user.id, options, function(err, medias) {
-        if (err) {
-          done.fail(err);
-        }
-        expect(cache.get).toHaveBeenCalled();
-        expect(cache.set).not.toHaveBeenCalled();
-        expect(ig_node.user_media_recent).not.toHaveBeenCalled();
-        // expect(logger.log).toHaveBeenCalled();
-        expect(options.count).toEqual(medias.length);
-        done();
-      });
-    });
-
     it('caches calls to ig_node.user_media_recent (1 page)', function(done) {
       spyOn(cache, 'get').and.callFake(function() {
         return Promise.reject(); // Prevent the cache from finding anything
@@ -188,7 +163,7 @@ describe('instagram', function() {
         minId: '012345678',
         maxId: '123456789'
       };
-      user_media_recent(
+      client.user_media_recent(
         mock_user.id,
         options,
         function(err, medias, pagination) {
@@ -205,6 +180,31 @@ describe('instagram', function() {
       );
     });
 
+    it('uses the cache instead of ig_node.user_media_recent', function(done) {
+      spyOn(cache, 'get').and.callFake(function() {
+        // let's set a situation where the cache has actually more than
+        // we are requesting
+        return Promise.resolve(helpers.fillArray(page_size * 2));
+      });
+      spyOn(cache, 'set');
+      spyOn(ig_node, 'user_media_recent');
+      // spyOn(logger, 'log');
+      var options = {
+        count: page_size + half_page_size  // for pagination coverage
+      };
+      client.user_media_recent(mock_user.id, options, function(err, medias) {
+        if (err) {
+          done.fail(err);
+        }
+        expect(cache.get).toHaveBeenCalled();
+        expect(cache.set).not.toHaveBeenCalled();
+        expect(ig_node.user_media_recent).not.toHaveBeenCalled();
+        // expect(logger.log).toHaveBeenCalled();
+        expect(options.count).toEqual(medias.length);
+        done();
+      });
+    });
+
     it('bails on ig_node.user_media_recent error', function(done) {
       spyOn(cache, 'get').and.callFake(function() {
         return Promise.reject(); // Prevent the cache from finding anything
@@ -213,7 +213,7 @@ describe('instagram', function() {
       spyOn(ig_node, 'user_media_recent').and.callFake(
         ig_node_user_media_recent_fail);
       var options = {};
-      user_media_recent(
+      client.user_media_recent(
         mock_user.id,
         options,
         function(err, medias, pagination) {
@@ -234,8 +234,7 @@ describe('instagram', function() {
 
   });
 
-  describe('oembed', function() {
-    var oembed = instagram.__get__('oembed');
+  describe('instagram.client.oembed', function() {
     var mock_oembed = {
       media_id: mediaData.image.standard.id
     };
@@ -256,12 +255,12 @@ describe('instagram', function() {
 
     it('fetches and caches a oembed object', function(done) {
       fetch_spy = jasmine.createSpy('fetch').and.callFake(fetch_success);
-      instagram.__set__('fetch', fetch_spy);
+      client.__set__('fetch', fetch_spy);
       spyOn(cache, 'get').and.callFake(function() {
         return Promise.reject(); // Prevent the cache from finding anything
       });
       spyOn(cache, 'set');
-      oembed(mediaData.image.standard.link).then(function(oembed) {
+      client.oembed(mediaData.image.standard.link).then(function(oembed) {
         expect(cache.get).toHaveBeenCalled(); // this rejected
         expect(cache.set).toHaveBeenCalled();
         expect(fetch_spy).toHaveBeenCalled();
@@ -272,13 +271,13 @@ describe('instagram', function() {
 
     it('uses the cache instead of fetching a oembed object', function(done) {
       fetch_spy = jasmine.createSpy('fetch');
-      instagram.__set__('fetch', fetch_spy);
+      client.__set__('fetch', fetch_spy);
       spyOn(cache, 'get').and.callFake(function() {
         return Promise.resolve(mock_oembed);
       });
       spyOn(cache, 'set');
       // spyOn(logger, 'log');
-      oembed(mediaData.image.standard.link).then(function(oembed) {
+      client.oembed(mediaData.image.standard.link).then(function(oembed) {
         expect(cache.get).toHaveBeenCalled();
         expect(fetch_spy).not.toHaveBeenCalled();
         expect(cache.set).not.toHaveBeenCalled();
@@ -293,8 +292,8 @@ describe('instagram', function() {
         return Promise.reject(); // Prevent the cache from finding anything
       });
       fetch_spy = jasmine.createSpy('fetch').and.callFake(fetch_fail);
-      instagram.__set__('fetch', fetch_spy);
-      oembed(mediaData.image.standard.link).then(function() {
+      client.__set__('fetch', fetch_spy);
+      client.oembed(mediaData.image.standard.link).then(function() {
         done.fail();
       }, function(err) {
         expect(fetch_spy).toHaveBeenCalled();

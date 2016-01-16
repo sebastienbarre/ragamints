@@ -1,59 +1,57 @@
 'use strict';
 
-var _assign      = require('lodash/object/assign');
-var Promise      = require('es6-promise').Promise;
-var rewire       = require('rewire');
-var strip_ansi   = require('strip-ansi');
+var _assign    = require('lodash/object/assign');
+var Promise    = require('es6-promise').Promise;
+var rewire     = require('rewire');
+var strip_ansi = require('strip-ansi');
 
-var mediaData    = require('./data/media');
+var mediaData  = require('../data/media');
 
-var media        = rewire('../lib/media.js');
+var media      = rewire('../../lib/instagram/media.js');
 
-describe('media', function() {
+describe('instagram.media', function() {
   var logger = media.__get__('logger');
 
-  describe('isMediaId', function() {
-    var isMediaId = media.__get__('isMediaId');
+  describe('instagram.media.isMediaId', function() {
 
     it('checks if a media id is valid', function() {
-      expect(isMediaId(mediaData.image.standard.id)).toBe(true);
+      expect(media.isMediaId(mediaData.image.standard.id)).toBe(true);
     });
 
     it('checks if a media id is invalid', function() {
-      expect(isMediaId(mediaData.image.standard.link)).not.toBe(true);
+      expect(media.isMediaId(mediaData.image.standard.link)).not.toBe(true);
     });
   });
 
-  describe('isMediaUrl', function() {
-    var isMediaUrl = media.__get__('isMediaUrl');
+  describe('instagram.media.isMediaUrl', function() {
 
     it('returns the canonical form of a valid media url', function() {
-      expect(isMediaUrl(mediaData.image.standard.link)).toBe(
+      expect(media.isMediaUrl(mediaData.image.standard.link)).toBe(
         mediaData.image.standard.link);
     });
 
     it('returns false if a media url is invalid', function() {
-      expect(isMediaUrl(mediaData.image.standard.id)).not.toBe(true);
+      expect(media.isMediaUrl(mediaData.image.standard.id)).not.toBe(true);
     });
   });
 
-  describe('resolveMediaId', function() {
-    var instagram = media.__get__('instagram');
-    var resolveMediaId = media.__get__('resolveMediaId');
+  describe('instagram.media.resolveMediaId', function() {
+    var client = media.__get__('client');
 
     it('resolves a media id to itself', function(done) {
-      spyOn(instagram, 'oembed');
-      resolveMediaId(mediaData.image.standard.id).then(function(media_id) {
-        expect(instagram.oembed).not.toHaveBeenCalled();
+      spyOn(client, 'oembed');
+      media.resolveMediaId(mediaData.image.standard.id)
+      .then(function(media_id) {
+        expect(client.oembed).not.toHaveBeenCalled();
         expect(media_id).toEqual(mediaData.image.standard.id);
         done();
       });
     });
 
     it('rejects when the media url is invalid', function(done) {
-      spyOn(instagram, 'oembed');
-      resolveMediaId('foo').catch(function(err) {
-        expect(instagram.oembed).not.toHaveBeenCalled();
+      spyOn(client, 'oembed');
+      media.resolveMediaId('foo').catch(function(err) {
+        expect(client.oembed).not.toHaveBeenCalled();
         expect(err.message).toEqual(
           logger.formatErrorMessage('foo is not a valid Instagram media url'));
         done();
@@ -64,12 +62,13 @@ describe('media', function() {
       var mock_oembed = {
         media_id: mediaData.image.standard.id
       };
-      spyOn(instagram, 'oembed').and.callFake(function() {
+      spyOn(client, 'oembed').and.callFake(function() {
         return Promise.resolve(mock_oembed);
       });
       spyOn(logger, 'log');
-      resolveMediaId(mediaData.image.standard.link).then(function(media_id) {
-        expect(instagram.oembed).toHaveBeenCalled();
+      media.resolveMediaId(mediaData.image.standard.link)
+      .then(function(media_id) {
+        expect(client.oembed).toHaveBeenCalled();
         expect(logger.log).toHaveBeenCalled();
         expect(media_id).toEqual(mediaData.image.standard.id);
         done();
@@ -80,18 +79,15 @@ describe('media', function() {
 
   });
 
-  describe('createMediaFileName', function() {
-    var createMediaFileName = media.__get__('createMediaFileName');
+  describe('instagram.media.createMediaFileName', function() {
 
     it('creates a file name for the fetched file to be saved as', function() {
-      expect(
-        createMediaFileName(mediaData.image.standard)
-      ).toBe('2015-05-30_1433025688');
+      expect(media.createMediaFileName(mediaData.image.standard)).toBe(
+        '2015-05-30_1433025688');
     });
   });
 
-  describe('log', function() {
-    var log = media.__get__('log');
+  describe('instagram.media.log', function() {
 
     beforeEach(function() {
       spyOn(logger, 'log');
@@ -100,7 +96,7 @@ describe('media', function() {
     it('logs message w/ respect to a media', function() {
       var prefix = '[Flower girl is pic]';
       var msg = 'logging';
-      log(mediaData.image.standard, msg);
+      media.log(mediaData.image.standard, msg);
       expect(strip_ansi(logger.log.calls.argsFor(0)[0])).toEqual(prefix);
       expect(strip_ansi(logger.log.calls.argsFor(0)[1])).toEqual(msg);
     });
@@ -108,7 +104,7 @@ describe('media', function() {
     it('logs message w/ respect to a media w/o caption or msg', function() {
       var media_wo_caption = _assign({}, mediaData.image.standard);
       delete media_wo_caption.caption;
-      log(media_wo_caption);
+      media.log(media_wo_caption);
       var msg = '[996614167159212902]';
       expect(strip_ansi(logger.log.calls.argsFor(0)[0])).toEqual(msg);
     });

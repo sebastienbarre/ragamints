@@ -1,12 +1,10 @@
 'use strict';
 
-var rewire = require('rewire');
-
-var logger = rewire('../lib/logger.js');
+var logger = require('../lib/logger.js');
 
 describe('logger', function() {
 
-  describe('log', function() {
+  describe('logger.log', function() {
 
     it('calls console.log', function() {
       spyOn(console, 'log');

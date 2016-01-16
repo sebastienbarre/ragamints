@@ -176,15 +176,13 @@ describe('cache', function() {
 
   it('does not compress small cache entries', function(done) {
     var int_value = 3;
-    var decompress_spy = jasmine.createSpy('decompress');
-    decompress_spy.and.callFake(cache.__get__('decompress'));
-    cache.__set__('decompress', decompress_spy);
+    spyOn(cache, 'decompress');
     cache.set(key, int_value).then(function() {
       cache.get(key).then(function(value) {
         expect(value).toBe(int_value);
         // note that compress *is* always called to decide whether to store
         // the compressed version or not
-        expect(decompress_spy).not.toHaveBeenCalled();
+        expect(cache.decompress).not.toHaveBeenCalled();
         done();
       }, function(err) {
         done.fail(err || 'Could not get value set in cache');
@@ -196,15 +194,13 @@ describe('cache', function() {
 
   it('compresses large cache entries', function(done) {
     var object_value = mediaData.image.standard;
-    var decompress_spy = jasmine.createSpy('decompress');
-    decompress_spy.and.callFake(cache.__get__('decompress'));
-    cache.__set__('decompress', decompress_spy);
+    spyOn(cache, 'decompress').and.callThrough();
     cache.set(key, object_value).then(function() {
       cache.get(key).then(function(value) {
         expect(value).toEqual(object_value);
         // note that compress *is* always called to decide whether to store
         // the compressed version or not
-        expect(decompress_spy).toHaveBeenCalled();
+        expect(cache.decompress).toHaveBeenCalled();
         done();
       }, function(err) {
         done.fail(err || 'Could not get value set in cache');

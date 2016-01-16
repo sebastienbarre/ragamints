@@ -3,39 +3,38 @@
 var rewire     = require('rewire');
 var strip_ansi = require('strip-ansi');
 
-var helpers    = require('./support/helpers');
+var helpers    = require('../support/helpers');
 
-var user       = rewire('../lib/user.js');
-var instagram  = rewire('../lib/instagram.js');
+var constants  = require('../../lib/instagram/constants');
 
-describe('user', function() {
-  user.__set__('instagram', instagram);
+var user       = rewire('../../lib/instagram/user.js');
+
+describe('instagram.user', function() {
   var logger = user.__get__('logger');
+  var client = user.__get__('client');
 
   var mock_user = {
     username: 'username',
     id: '12345678'
   };
 
-  describe('isUserId', function() {
-    var isUserId = user.__get__('isUserId');
+  describe('instagram.user.isUserId', function() {
 
     it('checks if a user id is valid', function() {
-      expect(isUserId(mock_user.id)).toBe(true);
+      expect(user.isUserId(mock_user.id)).toBe(true);
     });
 
     it('checks if a user id is invalid', function() {
-      expect(isUserId(mock_user.username)).not.toBe(true);
+      expect(user.isUserId(mock_user.username)).not.toBe(true);
     });
   });
 
-  describe('resolveUserId', function() {
-    var resolveUserId = user.__get__('resolveUserId');
+  describe('instagram.user.resolveUserId', function() {
 
     it('resolves a user id to itself', function(done) {
-      spyOn(instagram, 'user_search');
-      resolveUserId(mock_user.id).then(function(user_id) {
-        expect(instagram.user_search).not.toHaveBeenCalled();
+      spyOn(client, 'user_search');
+      user.resolveUserId(mock_user.id).then(function(user_id) {
+        expect(client.user_search).not.toHaveBeenCalled();
         expect(user_id).toEqual(mock_user.id);
         done();
       });
@@ -45,10 +44,10 @@ describe('user', function() {
       var user_search = function(user_id, options, callback) {
         callback(null, [mock_user]);
       };
-      spyOn(instagram, 'user_search').and.callFake(user_search);
+      spyOn(client, 'user_search').and.callFake(user_search);
       spyOn(logger, 'log');
-      resolveUserId(mock_user.username).then(function(user_id) {
-        expect(instagram.user_search.calls.argsFor(0)[0]).toEqual(
+      user.resolveUserId(mock_user.username).then(function(user_id) {
+        expect(client.user_search.calls.argsFor(0)[0]).toEqual(
           mock_user.username);
         expect(logger.log).toHaveBeenCalled();
         expect(user_id).toEqual(mock_user.id);
@@ -62,11 +61,11 @@ describe('user', function() {
       var user_search = function(user_id, options, callback) {
         callback(Error('boom'));
       };
-      spyOn(instagram, 'user_search').and.callFake(user_search);
-      resolveUserId(mock_user.username).then(function(user_id) {
+      spyOn(client, 'user_search').and.callFake(user_search);
+      user.resolveUserId(mock_user.username).then(function(user_id) {
         done.fail(Error('Should not have found ' + user_id));
       }, function(err) {
-        expect(instagram.user_search.calls.argsFor(0)[0]).toEqual(
+        expect(client.user_search.calls.argsFor(0)[0]).toEqual(
           mock_user.username);
         expect(err.message).toEqual('boom');
         done();
@@ -77,11 +76,11 @@ describe('user', function() {
       var user_search = function(user_id, options, callback) {
         callback(null, []);
       };
-      spyOn(instagram, 'user_search').and.callFake(user_search);
-      resolveUserId(mock_user.username).then(function(user_id) {
+      spyOn(client, 'user_search').and.callFake(user_search);
+      user.resolveUserId(mock_user.username).then(function(user_id) {
         done.fail(Error('Should not have found ' + user_id));
       }, function(err) {
-        expect(instagram.user_search.calls.argsFor(0)[0]).toEqual(
+        expect(client.user_search.calls.argsFor(0)[0]).toEqual(
           mock_user.username);
         expect(err.message).toEqual(
           logger.formatErrorMessage('Could not find user ID for username'));
@@ -90,11 +89,10 @@ describe('user', function() {
     });
   });
 
-  describe('getRecentMedias', function() {
-    var getRecentMedias = user.__get__('getRecentMedias');
-    var page_size = instagram.__get__('pageSize').user_media_recent;
+  describe('instagram.user.getRecentMedias', function() {
+    var page_size = constants.PAGE_SIZE.user_media_recent;
 
-    // Our instagram.user_media_recent returns a page of empty media objects.
+    // Our client.user_media_recent returns a page of empty media objects.
     var next = function(callback) {
       setTimeout(function() {
         callback(null, helpers.fillArray(page_size), {next: next});
@@ -109,7 +107,7 @@ describe('user', function() {
     });
 
     it('fetches recent medias, page by page', function(done) {
-      spyOn(instagram, 'user_media_recent').and.callFake(user_media_recent);
+      spyOn(client, 'user_media_recent').and.callFake(user_media_recent);
       // Let's query more than one page, but less than two pages
       var half_page_size = Math.floor(page_size / 2);
       var count = page_size + half_page_size;
@@ -117,11 +115,11 @@ describe('user', function() {
       // Unfortunately, it does not seem that suspend and generators are
       // supported by jasmine. Let's manually wait for the two promises
       // we are supposed to get, since we are querying 1 and a half pages.
-      getRecentMedias(mock_user.id, {count: count}).then(function(chunk1) {
-        medias = medias.concat(chunk1.medias);
-        chunk1.next.then(function(chunk2) {
-          medias = medias.concat(chunk2.medias);
-          expect(instagram.user_media_recent.calls.argsFor(0)[0]).toBe(
+      user.getRecentMedias(mock_user.id, {count: count}).then(function(page1) {
+        medias = medias.concat(page1.medias);
+        page1.next.then(function(page2) {
+          medias = medias.concat(page2.medias);
+          expect(client.user_media_recent.calls.argsFor(0)[0]).toBe(
             mock_user.id);
           expect(medias.length).toEqual(count);
           expect(strip_ansi(logger.log.calls.argsFor(0)[0])).toEqual(
@@ -138,10 +136,10 @@ describe('user', function() {
     });
 
     it('fetches no medias without options', function(done) {
-      spyOn(instagram, 'user_media_recent').and.callFake(user_media_recent);
-      getRecentMedias(mock_user.id, {}).then(function(chunk) {
-        expect(instagram.user_media_recent).not.toHaveBeenCalled();
-        expect(chunk.medias).toEqual([]);
+      spyOn(client, 'user_media_recent').and.callFake(user_media_recent);
+      user.getRecentMedias(mock_user.id, {}).then(function(page) {
+        expect(client.user_media_recent).not.toHaveBeenCalled();
+        expect(page.medias).toEqual([]);
         done();
       }, function(err) {
         done.fail(err);
@@ -149,13 +147,13 @@ describe('user', function() {
     });
 
     it('rejects on errors', function(done) {
-      // Our instagram.user_media_recent just returns an error
+      // Our client.user_media_recent just returns an error
       var user_media_recent = function(user_id, options, callback) {
         callback(Error('boom'));
       };
-      spyOn(instagram, 'user_media_recent').and.callFake(user_media_recent);
-      getRecentMedias(mock_user.id, {count: 3}).catch(function(err) {
-        expect(instagram.user_media_recent.calls.argsFor(0)[0]).toEqual(
+      spyOn(client, 'user_media_recent').and.callFake(user_media_recent);
+      user.getRecentMedias(mock_user.id, {count: 3}).catch(function(err) {
+        expect(client.user_media_recent.calls.argsFor(0)[0]).toEqual(
           mock_user.id);
         expect(err.message).toEqual('boom');
         done();
@@ -163,8 +161,7 @@ describe('user', function() {
     });
   });
 
-  describe('forEachRecentMedias', function() {
-    var forEachRecentMedias = user.__get__('forEachRecentMedias');
+  describe('instagram.user.forEachRecentMedias', function() {
     var requested_count = 4;
 
     // This fake getRecentMedias will first return a page with 2 empty
@@ -213,8 +210,7 @@ describe('user', function() {
 
     beforeEach(function() {
       spyOn(logger, 'log');
-      getRecentMediasSpy = jasmine.createSpy('getRecentMedias');
-      user.__set__('getRecentMedias', getRecentMediasSpy);
+      getRecentMediasSpy = spyOn(user, 'getRecentMedias');
       callbackSpy = jasmine.createSpy('callbackSpy');
 
       // The default, working mock workflow
@@ -228,7 +224,7 @@ describe('user', function() {
         count: requested_count,
         includeVideos: false
       };
-      forEachRecentMedias(
+      user.forEachRecentMedias(
         mock_user.id,
         options,
         callbackSpy
@@ -268,7 +264,7 @@ describe('user', function() {
         sequential: true,
         includeVideos: false
       };
-      forEachRecentMedias(
+      user.forEachRecentMedias(
         mock_user.id,
         options,
         callbackSpy
@@ -302,7 +298,7 @@ describe('user', function() {
 
     it('rejects on getting a recent medias error', function(done) {
       getRecentMediasSpy.and.callFake(helpers.promiseRejectError);
-      forEachRecentMedias(mock_user.id,{}).then(function() {
+      user.forEachRecentMedias(mock_user.id,{}).then(function() {
         done.fail(new Error('should not have succeeded'));
       }, function(err) {
         expect(err.message).toEqual('boom');
@@ -317,7 +313,7 @@ describe('user', function() {
         count: requested_count,
         includeVideos: true
       };
-      forEachRecentMedias(
+      user.forEachRecentMedias(
         mock_user.id,
         options,
         callbackSpy
@@ -344,7 +340,7 @@ describe('user', function() {
         sequential: true,
         includeVideos: true
       };
-      forEachRecentMedias(
+      user.forEachRecentMedias(
         mock_user.id,
         options,
         callbackSpy
