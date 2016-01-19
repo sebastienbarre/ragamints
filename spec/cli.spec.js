@@ -1,42 +1,31 @@
 'use strict';
 
-var rewire    = require('rewire');
+var path    = require('path');
+var rewire  = require('rewire');
 
-var helpers   = require('./support/helpers');
+var helpers = require('./support/helpers');
 
-var cli       = rewire('../lib/cli.js');
+var cli     = rewire('../lib/cli.js');
 
 describe('cli', function() {
   var logger = cli.__get__('logger');
 
   describe('cli.resolveOptions', function() {
     var cache = cli.__get__('cache');
-    var instagram = cli.__get__('instagram');
-    var reverseSetProcess;
 
     beforeEach(function() {
       spyOn(cache, 'clear').and.callFake(helpers.promiseValue);
       spyOn(logger, 'log');
-      spyOn(instagram.client, 'use');
-      var env = {};
-      env[instagram.constants.ACCESS_TOKEN_ENV_VAR] = 'token';
-      reverseSetProcess = cli.__set__('process', {env: env});
     });
 
-    afterEach(function() {
-      reverseSetProcess();
-    });
-
-    it('resolves options', function(done) {
+    it('resolves command-line options', function(done) {
       var options = {
         verbose: true
       };
       var resolved_options = {
         verbose: true,
-        instagramAccessToken: 'token'
       };
       cli.resolveOptions(options).then(function(res) {
-        expect(instagram.client.use).toHaveBeenCalled();
         expect(cache.clear).not.toHaveBeenCalled();
         expect(res).toEqual(resolved_options);
         done();
@@ -57,19 +46,11 @@ describe('cli', function() {
       });
     });
 
-    it('rejects when no access token is found', function(done) {
-      cli.__set__('process', {env: {}});
-      cli.resolveOptions({}).then(function() {
-        done.fail(new Error('should not have succeeded'));
-      }, function(err) {
-        expect(err.message).toEqual(
-          logger.formatErrorMessage('Need Instagram access token'));
-        done();
-      });
-    });
   });
 
   describe('cli.main', function() {
+    var fs = cli.__get__('fs');
+    var JSON = cli.__get__('JSON');
     var commands = [{
       name: 'dummy',
       description: 'dummy command',
@@ -80,7 +61,8 @@ describe('cli', function() {
           type: 'string',
           default: './'
         }
-      }
+      },
+      run: helpers.promiseValue.bind(null, 'OK')
     }];
     cli.__set__('commands', commands);
 
@@ -127,11 +109,52 @@ describe('cli', function() {
     });
 
     it('runs a command when given one', function(done) {
-      commands[0].run = helpers.promiseValue.bind(null, 'OK');
       var argv = [
         'dummy'
       ];
       cli.main(argv).then(function(output) {
+        expect(output).toBe('OK');
+        done();
+      }, function(err) {
+        done.fail(err);
+      });
+    });
+
+    it('reads command options from a config file', function(done) {
+      var filename = '.foorc';
+      var argv = [
+        'dummy',
+        '--config',
+        filename,
+      ];
+      spyOn(cli, 'resolveOptions').and.callThrough();
+      spyOn(fs, 'readFileSync').and.callFake(function() {
+        return JSON.stringify({foo: true});
+      });
+      cli.main(argv).then(function(output) {
+        expect(fs.readFileSync.calls.argsFor(0)[0]).toBe(
+          path.resolve(filename));
+        expect(cli.resolveOptions.calls.argsFor(0)[0].foo).toBe(true);
+        expect(output).toBe('OK');
+        done();
+      }, function(err) {
+        done.fail(err);
+      });
+    });
+
+    it('fails silently if a config file does not exist', function(done) {
+      var filename = '.foorc';
+      var argv = [
+        'dummy',
+        '--config',
+        filename,
+      ];
+      spyOn(JSON, 'parse');
+      spyOn(fs, 'readFileSync').and.callFake(function() {
+        throw new Error('boom');
+      });
+      cli.main(argv).then(function(output) {
+        expect(JSON.parse).not.toHaveBeenCalled();
         expect(output).toBe('OK');
         done();
       }, function(err) {

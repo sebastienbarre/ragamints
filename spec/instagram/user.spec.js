@@ -3,11 +3,11 @@
 var rewire     = require('rewire');
 var strip_ansi = require('strip-ansi');
 
-var helpers    = require('../support/helpers');
+var helpers   = require('../support/helpers');
 
-var constants  = require('../../lib/instagram/constants');
+var constants = require('../../lib/instagram/constants');
 
-var user       = rewire('../../lib/instagram/user.js');
+var user      = rewire('../../lib/instagram/user.js');
 
 describe('instagram.user', function() {
   var logger = user.__get__('logger');
@@ -17,6 +17,50 @@ describe('instagram.user', function() {
     username: 'username',
     id: '12345678'
   };
+
+  describe('instagram.user.resolveOptions', function() {
+    var reverseSetProcess;
+
+    beforeEach(function() {
+      spyOn(logger, 'log');
+      spyOn(client, 'use');
+      var env = {};
+      env[constants.ACCESS_TOKEN_ENV_VAR] = 'token';
+      reverseSetProcess = user.__set__('process', {env: env});
+    });
+
+    afterEach(function() {
+      reverseSetProcess();
+    });
+
+    it('resolves options', function(done) {
+      var options = {
+        verbose: true
+      };
+      var resolved_options = {
+        verbose: true,
+        instagramAccessToken: 'token'
+      };
+      user.resolveOptions(options).then(function(res) {
+        expect(client.use).toHaveBeenCalled();
+        expect(res).toEqual(resolved_options);
+        done();
+      }, function(err) {
+        done.fail(err);
+      });
+    });
+
+    it('rejects when no access token is found', function(done) {
+      user.__set__('process', {env: {}});
+      user.resolveOptions({}).then(function() {
+        done.fail(new Error('should not have succeeded'));
+      }, function(err) {
+        expect(err.message).toEqual(
+          logger.formatErrorMessage('Need Instagram access token'));
+        done();
+      });
+    });
+  });
 
   describe('instagram.user.isUserId', function() {
 

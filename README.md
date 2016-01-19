@@ -71,7 +71,7 @@ Alternatively, you may omit `--instagram-access-token` by:
 ```bash
 $ export RAGAMINTS_INSTAGRAM_ACCESS_TOKEN=[INSTAGRAM ACCESS TOKEN]
 ```
-2. setting the corresponding option in the default `.ragamints.json` configuration file in your `HOME` directory, or any other configuration file of your choosing using the `--config` option.
+2. setting the corresponding option in the default `.ragamintsrc` configuration file in your `HOME` directory, or any other configuration file of your choosing using the `--config` option.
 ```json
 {
   "instagram-access-token": [INSTAGRAM ACCESS TOKEN]
@@ -128,7 +128,7 @@ Options:
   -l, --clear-cache             Clear the cache  [boolean] [default: false]
   -v, --verbose                 Output more info  [boolean] [default: false]
   -q, --quiet                   Output less info  [boolean] [default: false]
-  --config                      Load config file  [default: "/Volumes/Users/barre/.ragamints.json"]
+  --config                      Load config file  [default: "/Volumes/Users/barre/.ragamintsrc"]
   -h, --help                    Show help  [boolean]
 
 Check the man page or README file for more
@@ -225,7 +225,7 @@ Alternatively, you may omit `--flickr-api-key` or `--flickr-api-secret`  by:
 $ export RAGAMINTS_FLICKR_API_KEY=[FLICKR API KEY]
 $ export RAGAMINTS_FLICKR_API_SECRET=[FLICKR API SECRET]
 ```
-2. setting the corresponding options in the default `.ragamints.json` configuration file in your `HOME` directory, or any other configuration file of your choosing using the `--config` option.
+2. setting the corresponding options in the default `.ragamintsrc` configuration file in your `HOME` directory, or any other configuration file of your choosing using the `--config` option.
 ```json
 {
   "flickr-api-key": [FLICKR API KEY],

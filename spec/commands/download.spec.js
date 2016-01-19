@@ -353,6 +353,7 @@ describe('commands.download', function() {
 
     beforeEach(function() {
       spyOn(logger, 'log');
+      spyOn(instagram.user, 'resolveOptions');
       spyOn(instagram.user, 'resolveUserId').and.callFake(
         helpers.promiseValue.bind(null, '12345678'));
       spyOn(instagram.media, 'resolveMediaId').and.callFake(
@@ -361,8 +362,9 @@ describe('commands.download', function() {
 
     it('resolves options', function(done) {
       var options = {
-        maxId: mediaData.image.standard.link,
         minId: mediaData.image.standard.link,
+        maxId: mediaData.image.standard.link,
+        instagramAccessToken: 'token',
         instagramUserId: 'username',
         maxTimestamp: 'Thu, 09 Apr 2015 01:19:46 +0000',
         minTimestamp: 'Thu, 09 Apr 2015 01:19:46 +0000',
@@ -373,6 +375,7 @@ describe('commands.download', function() {
       var resolved_options = {
         minTimestamp: 1428542386,
         maxTimestamp: 1428542386,
+        instagramAccessToken: 'token',
         instagramUserId: '12345678',
         minId: mediaData.image.standard.id,
         maxId: mediaData.image.standard.id,
@@ -385,6 +388,7 @@ describe('commands.download', function() {
       };
       resolveOptions(options).then(function(res) {
         let link = mediaData.image.standard.link;
+        expect(instagram.user.resolveOptions).toHaveBeenCalled();
         expect(instagram.user.resolveUserId.calls.argsFor(0)).toEqual(
           ['username']);
         expect(instagram.media.resolveMediaId.calls.argsFor(0)[0]).toEqual(
@@ -410,11 +414,6 @@ describe('commands.download', function() {
   });
 
   describe('commands.download.run', function() {
-  // var instagram    = require('../../lib/instagram');
-  // var media        = rewire('../../lib/instagram/media.js');
-  // var user         = rewire('../../lib/instagram/instagram.user.js');
-  // download_cmd.__set__('user', user);
-  // download_cmd.__set__('media', media);
 
     var pageTotal = 3;
     var medias = helpers.fillArray(pageTotal, false, mediaData.image.standard);
