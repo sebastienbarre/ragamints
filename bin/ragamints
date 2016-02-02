@@ -5,22 +5,23 @@ var iojs  = require('is-iojs');
 
 // Thanks for maximilianschmitt for this launcher
 // https://gist.github.com/maximilianschmitt/8ef57cb679fbf764b108
-if (!iojs) {
+if (!iojs && Number(process.version.match(/^v(\d+)/)[1]) < 4) {
   var pjson = require('../package.json');
   require('babel/register')({
     ignore: new RegExp(pjson.name + '/node_modules')
   });
 }
 
-var cli    = require('../lib/cli');
-var logger = require('../lib/logger');
+var cli  = require('../lib/cli');
+var core = require('../lib/core');
 
 cli.main(process.argv.slice(2)).then(function() {
   process.exit(0);
 }).catch(function(err) {
   if (err) {
-    logger.log(logger.error(err.error_message || err.message || err.body));
-    // logger.log(err.stack);
+    core.logger.log(
+      core.logger.error(err.error_message || err.message || err.body));
+    // core.logger.log(err.stack);
   }
   process.exit(1);
 });

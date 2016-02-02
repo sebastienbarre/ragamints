@@ -1,10 +1,10 @@
 'use strict';
 
-var logger = require('../lib/logger.js');
+var logger = require('../../lib/core/logger.js');
 
-describe('logger', function() {
+describe('core.logger', function() {
 
-  describe('logger.log', function() {
+  describe('core.logger.log', function() {
 
     it('calls console.log', function() {
       spyOn(console, 'log');

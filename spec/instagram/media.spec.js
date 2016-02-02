@@ -10,7 +10,7 @@ var mediaData  = require('../data/media');
 var media      = rewire('../../lib/instagram/media.js');
 
 describe('instagram.media', function() {
-  var logger = media.__get__('logger');
+  var core = media.__get__('core');
 
   describe('instagram.media.isMediaId', function() {
 
@@ -53,7 +53,8 @@ describe('instagram.media', function() {
       media.resolveMediaId('foo').catch(function(err) {
         expect(client.oembed).not.toHaveBeenCalled();
         expect(err.message).toEqual(
-          logger.formatErrorMessage('foo is not a valid Instagram media url'));
+          core.logger.formatErrorMessage(
+            'foo is not a valid Instagram media url'));
         done();
       });
     });
@@ -65,11 +66,11 @@ describe('instagram.media', function() {
       spyOn(client, 'oembed').and.callFake(function() {
         return Promise.resolve(mock_oembed);
       });
-      spyOn(logger, 'log');
+      spyOn(core.logger, 'log');
       media.resolveMediaId(mediaData.image.standard.link)
       .then(function(media_id) {
         expect(client.oembed).toHaveBeenCalled();
-        expect(logger.log).toHaveBeenCalled();
+        expect(core.logger.log).toHaveBeenCalled();
         expect(media_id).toEqual(mediaData.image.standard.id);
         done();
       }, function(err) {
@@ -90,15 +91,15 @@ describe('instagram.media', function() {
   describe('instagram.media.log', function() {
 
     beforeEach(function() {
-      spyOn(logger, 'log');
+      spyOn(core.logger, 'log');
     });
 
     it('logs message w/ respect to a media', function() {
       var prefix = '[Flower girl is pic]';
       var msg = 'logging';
       media.log(mediaData.image.standard, msg);
-      expect(strip_ansi(logger.log.calls.argsFor(0)[0])).toEqual(prefix);
-      expect(strip_ansi(logger.log.calls.argsFor(0)[1])).toEqual(msg);
+      expect(strip_ansi(core.logger.log.calls.argsFor(0)[0])).toEqual(prefix);
+      expect(strip_ansi(core.logger.log.calls.argsFor(0)[1])).toEqual(msg);
     });
 
     it('logs message w/ respect to a media w/o caption or msg', function() {
@@ -106,7 +107,7 @@ describe('instagram.media', function() {
       delete media_wo_caption.caption;
       media.log(media_wo_caption);
       var msg = '[996614167159212902]';
-      expect(strip_ansi(logger.log.calls.argsFor(0)[0])).toEqual(msg);
+      expect(strip_ansi(core.logger.log.calls.argsFor(0)[0])).toEqual(msg);
     });
   });
 

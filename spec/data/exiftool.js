@@ -1,7 +1,7 @@
 'use strict';
 
 var moment    = require('moment-timezone');
-var constants = require('../../lib/constants');
+var core      = require('../../lib/core');
 var mediaData = require('./media');
 
 var standard_args_common = [
@@ -9,8 +9,8 @@ var standard_args_common = [
   '-q',
   '-codedcharacterset=utf8',
   '-overwrite_original',
-  '-EXIF:Software=' + constants.SOFTWARE,
-  '-XMP:CreatorTool=' + constants.SOFTWARE,
+  '-EXIF:Software=' + core.constants.SOFTWARE,
+  '-XMP:CreatorTool=' + core.constants.SOFTWARE,
   '-EXIF:ImageDescription=Flower girl is picture-shy. #farmwedding #shy',
   '-IPTC:Caption-Abstract=Flower girl is picture-shy. #farmwedding #shy',
   '-XMP:Description=Flower girl is picture-shy. #farmwedding #shy',
@@ -53,8 +53,8 @@ var high_args_with_gps = [
   '-q',
   '-codedcharacterset=utf8',
   '-overwrite_original',
-  '-EXIF:Software=' + constants.SOFTWARE,
-  '-XMP:CreatorTool=' + constants.SOFTWARE,
+  '-EXIF:Software=' + core.constants.SOFTWARE,
+  '-XMP:CreatorTool=' + core.constants.SOFTWARE,
   '-EXIF:Artist=Sébastien B',
   '-EXIF:Copyright=Copyright Sébastien B',
   '-IPTC:CopyrightNotice=Copyright Sébastien B',

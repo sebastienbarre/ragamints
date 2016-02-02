@@ -8,14 +8,13 @@ var helpers = require('./support/helpers');
 var cli     = rewire('../lib/cli.js');
 
 describe('cli', function() {
-  var logger = cli.__get__('logger');
+  var core = cli.__get__('core');
 
   describe('cli.resolveOptions', function() {
-    var cache = cli.__get__('cache');
 
     beforeEach(function() {
-      spyOn(cache, 'clear').and.callFake(helpers.promiseValue);
-      spyOn(logger, 'log');
+      spyOn(core.cache, 'clear').and.callFake(helpers.promiseValue);
+      spyOn(core.logger, 'log');
     });
 
     it('resolves command-line options', function(done) {
@@ -26,7 +25,7 @@ describe('cli', function() {
         verbose: true,
       };
       cli.resolveOptions(options).then(function(res) {
-        expect(cache.clear).not.toHaveBeenCalled();
+        expect(core.cache.clear).not.toHaveBeenCalled();
         expect(res).toEqual(resolved_options);
         done();
       }, function(err) {
@@ -39,7 +38,7 @@ describe('cli', function() {
         clearCache: true
       };
       cli.resolveOptions(options).then(function() {
-        expect(cache.clear).toHaveBeenCalled();
+        expect(core.cache.clear).toHaveBeenCalled();
         done();
       }, function(err) {
         done.fail(err);
@@ -67,7 +66,7 @@ describe('cli', function() {
     cli.__set__('commands', commands);
 
     beforeEach(function() {
-      spyOn(logger, 'log');
+      spyOn(core.logger, 'log');
     });
 
     it('lists commands (then rejects) when none is provided', function(done) {
@@ -75,7 +74,7 @@ describe('cli', function() {
       cli.main(argv).then(function() {
         done.fail();
       }).catch(function() {
-        var output = logger.log.calls.argsFor(0)[0];
+        var output = core.logger.log.calls.argsFor(0)[0];
         expect(output.indexOf('dummy  dummy command')).not.toBe(-1);
         expect(output.indexOf('-h, --help')).not.toBe(-1);
         done();
@@ -87,7 +86,7 @@ describe('cli', function() {
         '--help'
       ];
       cli.main(argv).catch(function() {
-        var output = logger.log.calls.argsFor(0)[0];
+        var output = core.logger.log.calls.argsFor(0)[0];
         expect(output.indexOf('dummy  dummy command')).not.toBe(-1);
         expect(output.indexOf('-h, --help')).not.toBe(-1);
         done();
@@ -100,7 +99,7 @@ describe('cli', function() {
         '--help'
       ];
       cli.main(argv).catch(function() {
-        var output = logger.log.calls.argsFor(0)[0];
+        var output = core.logger.log.calls.argsFor(0)[0];
         expect(output.indexOf('-d, --dest')).not.toBe(-1);
         expect(output.indexOf('-v, --verbose')).not.toBe(-1);
         expect(output.indexOf('-h, --help')).not.toBe(-1);
@@ -171,7 +170,8 @@ describe('cli', function() {
         done.fail();
       }, function(err) {
         expect(err.message).toBe('boom');
-        expect(logger.log.calls.argsFor(0)[0].indexOf('--help')).not.toBe(-1);
+        expect(
+          core.logger.log.calls.argsFor(0)[0].indexOf('--help')).not.toBe(-1);
         done();
       });
     });

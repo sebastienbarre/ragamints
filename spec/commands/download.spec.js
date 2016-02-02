@@ -15,7 +15,7 @@ var helpers      = require('../support/helpers');
 var download_cmd = rewire('../../lib/commands/download.js');
 
 describe('commands.download', function() {
-  var logger = download_cmd.__get__('logger');
+  var core = download_cmd.__get__('core');
   var instagram = download_cmd.__get__('instagram');
 
   describe('commands.download.getExifToolArgs', function() {
@@ -97,7 +97,7 @@ describe('commands.download', function() {
       }).catch(function(err) {
         expect(child_process.spawn).toHaveBeenCalled();
         expect(err.message).toBe(
-          logger.formatErrorMessage('Could not spawn exiftool (boom)'));
+          core.logger.formatErrorMessage('Can not spawn exiftool (boom)'));
         done();
       });
     });
@@ -115,7 +115,7 @@ describe('commands.download', function() {
         mediaData.image.standard, 'foo', {quiet: true}
       ).catch(function(err) {
         expect(child_process.spawn).toHaveBeenCalled();
-        expect(err.message).toBe(logger.formatErrorMessage('boom'));
+        expect(err.message).toBe(core.logger.formatErrorMessage('boom'));
         done();
       });
     });
@@ -239,7 +239,7 @@ describe('commands.download', function() {
         expect(fs.lstat).not.toHaveBeenCalled();
         expect(DownloadSpy).not.toHaveBeenCalled();
         expect(err.message).toEqual(
-          logger.formatErrorMessage('Could not find resolution: foobar'));
+          core.logger.formatErrorMessage('Can not find resolution: foobar'));
         done();
       });
     });
@@ -352,7 +352,7 @@ describe('commands.download', function() {
     var resolveOptions = download_cmd.__get__('resolveOptions');
 
     beforeEach(function() {
-      spyOn(logger, 'log');
+      spyOn(core.logger, 'log');
       spyOn(instagram.user, 'resolveOptions');
       spyOn(instagram.user, 'resolveUserId').and.callFake(
         helpers.promiseValue.bind(null, '12345678'));
@@ -407,7 +407,7 @@ describe('commands.download', function() {
         done.fail(new Error('should not have succeeded'));
       }, function(err) {
         expect(err.message).toEqual(
-          logger.formatErrorMessage('Need Instagram user ID or name'));
+          core.logger.formatErrorMessage('Need Instagram user ID/name'));
         done();
       });
     });
@@ -439,7 +439,7 @@ describe('commands.download', function() {
     var saveMediaObjectSpy;
 
     beforeEach(function() {
-      spyOn(logger, 'log');
+      spyOn(core.logger, 'log');
       resolveOptionsSpy = jasmine.createSpy('resolveOptions');
       download_cmd.__set__('resolveOptions', resolveOptionsSpy);
       forEachRecentMediasSpy = spyOn(instagram.user, 'forEachRecentMedias');

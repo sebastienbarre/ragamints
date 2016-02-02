@@ -10,7 +10,7 @@ var constants = require('../../lib/instagram/constants');
 var user      = rewire('../../lib/instagram/user.js');
 
 describe('instagram.user', function() {
-  var logger = user.__get__('logger');
+  var core = user.__get__('core');
   var client = user.__get__('client');
 
   var mock_user = {
@@ -22,7 +22,7 @@ describe('instagram.user', function() {
     var reverseSetProcess;
 
     beforeEach(function() {
-      spyOn(logger, 'log');
+      spyOn(core.logger, 'log');
       spyOn(client, 'use');
       var env = {};
       env[constants.ACCESS_TOKEN_ENV_VAR] = 'token';
@@ -56,7 +56,7 @@ describe('instagram.user', function() {
         done.fail(new Error('should not have succeeded'));
       }, function(err) {
         expect(err.message).toEqual(
-          logger.formatErrorMessage('Need Instagram access token'));
+          core.logger.formatErrorMessage('Need Instagram access token'));
         done();
       });
     });
@@ -89,11 +89,11 @@ describe('instagram.user', function() {
         callback(null, [mock_user]);
       };
       spyOn(client, 'user_search').and.callFake(user_search);
-      spyOn(logger, 'log');
+      spyOn(core.logger, 'log');
       user.resolveUserId(mock_user.username).then(function(user_id) {
         expect(client.user_search.calls.argsFor(0)[0]).toEqual(
           mock_user.username);
-        expect(logger.log).toHaveBeenCalled();
+        expect(core.logger.log).toHaveBeenCalled();
         expect(user_id).toEqual(mock_user.id);
         done();
       }, function(err) {
@@ -127,7 +127,8 @@ describe('instagram.user', function() {
         expect(client.user_search.calls.argsFor(0)[0]).toEqual(
           mock_user.username);
         expect(err.message).toEqual(
-          logger.formatErrorMessage('Could not find user ID for username'));
+          core.logger.formatErrorMessage(
+            'Could not find user ID for username'));
         done();
       });
     });
@@ -147,7 +148,7 @@ describe('instagram.user', function() {
     };
 
     beforeEach(function() {
-      spyOn(logger, 'log');
+      spyOn(core.logger, 'log');
     });
 
     it('fetches recent medias, page by page', function(done) {
@@ -166,9 +167,9 @@ describe('instagram.user', function() {
           expect(client.user_media_recent.calls.argsFor(0)[0]).toBe(
             mock_user.id);
           expect(medias.length).toEqual(count);
-          expect(strip_ansi(logger.log.calls.argsFor(0)[0])).toEqual(
+          expect(strip_ansi(core.logger.log.calls.argsFor(0)[0])).toEqual(
             `Found ${page_size} media(s), more to come...`);
-          expect(strip_ansi(logger.log.calls.argsFor(1)[0])).toEqual(
+          expect(strip_ansi(core.logger.log.calls.argsFor(1)[0])).toEqual(
             `Found another ${half_page_size} media(s), nothing more.`);
           done();
         }, function(err) {
@@ -253,7 +254,7 @@ describe('instagram.user', function() {
     var callbackSpy;
 
     beforeEach(function() {
-      spyOn(logger, 'log');
+      spyOn(core.logger, 'log');
       getRecentMediasSpy = spyOn(user, 'getRecentMedias');
       callbackSpy = jasmine.createSpy('callbackSpy');
 
@@ -280,13 +281,13 @@ describe('instagram.user', function() {
           [{index: 0}, options]);
         expect(callbackSpy.calls.argsFor(actual_total - 1)).toEqual(
           [{index: actual_total - 1}, options]);
-        expect(strip_ansi(logger.log.calls.argsFor(0)[0])).toEqual(
+        expect(strip_ansi(core.logger.log.calls.argsFor(0)[0])).toEqual(
           'Skipped');
-        expect(strip_ansi(logger.log.calls.argsFor(0)[1])).toEqual(
+        expect(strip_ansi(core.logger.log.calls.argsFor(0)[1])).toEqual(
           (requested_count - actual_total).toString());
-        expect(strip_ansi(logger.log.calls.argsFor(1)[0])).toEqual(
+        expect(strip_ansi(core.logger.log.calls.argsFor(1)[0])).toEqual(
           'Done iterating over');
-        expect(strip_ansi(logger.log.calls.argsFor(1)[1])).toEqual(
+        expect(strip_ansi(core.logger.log.calls.argsFor(1)[1])).toEqual(
           actual_total.toString());
         // No matter how long each promise took, the resulting array of indices
         // should be in order. The side effect var, however, should be in
@@ -320,13 +321,13 @@ describe('instagram.user', function() {
           [{index: 0}, options]);
         expect(callbackSpy.calls.argsFor(actual_total - 1)).toEqual(
           [{index: actual_total - 1}, options]);
-        expect(strip_ansi(logger.log.calls.argsFor(0)[0])).toEqual(
+        expect(strip_ansi(core.logger.log.calls.argsFor(0)[0])).toEqual(
           'Skipped');
-        expect(strip_ansi(logger.log.calls.argsFor(0)[1])).toEqual(
+        expect(strip_ansi(core.logger.log.calls.argsFor(0)[1])).toEqual(
           (requested_count - actual_total).toString());
-        expect(strip_ansi(logger.log.calls.argsFor(1)[0])).toEqual(
+        expect(strip_ansi(core.logger.log.calls.argsFor(1)[0])).toEqual(
           'Done iterating over');
-        expect(strip_ansi(logger.log.calls.argsFor(1)[1])).toEqual(
+        expect(strip_ansi(core.logger.log.calls.argsFor(1)[1])).toEqual(
           actual_total.toString());
         // No matter how long each promise took, the resulting array of indices
         // should be in order. The side effect var should be in order as well,

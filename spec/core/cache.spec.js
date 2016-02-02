@@ -2,7 +2,7 @@
 
 var rewire       = require('rewire');
 
-var mediaData    = require('./data/media');
+var mediaData    = require('../data/media');
 
 // store.js uses localStorage. Let's provide an implementation
 // if we are running in node.js, ones that point at a temporary directory
@@ -16,10 +16,10 @@ var mediaData    = require('./data/media');
 // var LocalStorage = require('node-localstorage').LocalStorage;
 // global.localStorage = new LocalStorage(temp_dir);
 
-var cache        = rewire('../lib/cache.js');
+var cache        = rewire('../../lib/core/cache.js');
 
 /*eslint-disable max-nested-callbacks */
-describe('cache', function() {
+describe('core.cache', function() {
   var store = cache.__get__('store');
   var key = '__test__';
 
@@ -176,7 +176,7 @@ describe('cache', function() {
 
   it('does not compress small cache entries', function(done) {
     var int_value = 3;
-    spyOn(cache, 'decompress');
+    spyOn(cache, 'decompress').and.callThrough();
     cache.set(key, int_value).then(function() {
       cache.get(key).then(function(value) {
         expect(value).toBe(int_value);
