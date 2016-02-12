@@ -22,7 +22,7 @@
   "config": {
     "ghooks": {
       "pre-commit": "npm run lint && npm run test",
-      "pre-push": "npm run coverage && npm run coverage:check",
+      "pre-push": "([ \"master\" != `git symbolic-ref --short HEAD` ] && true) || (npm run coverage && npm run coverage:check)",
       "_post-merge": "npm install",
       "_post-rewrite": "npm install"
     },
