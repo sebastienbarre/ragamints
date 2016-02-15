@@ -6,6 +6,7 @@
 coverage
 data
 dist
+jsdoc
 doc/*.1
 node_modules
 npm-debug.log

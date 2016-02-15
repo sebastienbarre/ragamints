@@ -5,6 +5,7 @@
   "scripts": {
     "commit": "git-cz",
     "doc:man": "pandoc -V title=\"ragamints\" -V section=1 -f markdown_github -t man -s README.md  > doc/ragamints.1",
+    "doc:jsdoc": "jsdoc -r lib -d jsdoc",
     "doc": "mkdirp doc && npm run doc:man",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -w -r 0",
     "lint": "lint lib/ bin/ spec/",
