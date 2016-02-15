@@ -25,7 +25,7 @@ describe('instagram.user', function() {
       spyOn(core.logger, 'log');
       spyOn(client, 'use');
       var env = {};
-      env[constants.ACCESS_TOKEN_ENV_VAR] = 'token';
+      env[constants.ENV_VARS.ACCESS_TOKEN] = 'token';
       reverseSetProcess = user.__set__('process', {env: env});
     });
 
