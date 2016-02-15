@@ -80,7 +80,7 @@
     "suspend": "^0.7.0",
     "throat": "^2.0.2",
     "tz-lookup": "^6.0.1",
-    "yargs": "^3.30.0"
+    "yargs": "^4.1.0"
   },
   "devDependencies": {
     "codecov.io": "^0.1.6",
