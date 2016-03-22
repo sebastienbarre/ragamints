@@ -1,6 +1,6 @@
 'use strict';
 
-var _assign    = require('lodash/object/assign');
+var _assign    = require('lodash/assign');
 var Promise    = require('es6-promise').Promise;
 var rewire     = require('rewire');
 var strip_ansi = require('strip-ansi');

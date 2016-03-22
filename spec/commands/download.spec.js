@@ -1,8 +1,8 @@
 'use strict';
 
-var _assign      = require('lodash/object/assign');
-var _get         = require('lodash/object/get');
-var _set         = require('lodash/object/set');
+var _assign      = require('lodash/assign');
+var _get         = require('lodash/get');
+var _set         = require('lodash/set');
 var path         = require('path');
 var Promise      = require('es6-promise').Promise;
 var rewire       = require('rewire');

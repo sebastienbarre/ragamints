@@ -1,6 +1,6 @@
 'use strict';
 
-var _assign = require('lodash/object/assign');
+var _assign = require('lodash/assign');
 
 var image_standard_resolution = require('./image_standard_resolution.json');
 var image_high_resolution     = require('./image_high_resolution.json');

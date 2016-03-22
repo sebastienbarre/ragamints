@@ -6,10 +6,11 @@ var iojs  = require('is-iojs');
 // Thanks for maximilianschmitt for this launcher
 // https://gist.github.com/maximilianschmitt/8ef57cb679fbf764b108
 if (!iojs && Number(process.version.match(/^v(\d+)/)[1]) < 4) {
-  var pjson = require('../package.json');
-  require('babel/register')({
-    ignore: new RegExp(pjson.name + '/node_modules')
+  // var pjson = require('../package.json');
+  require('babel-register')({
+    // ignore: new RegExp(pjson.name + '/node_modules')
   });
+  require('babel-polyfill');
 }
 
 var cli  = require('../lib/cli');

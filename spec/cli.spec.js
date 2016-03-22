@@ -1,7 +1,8 @@
 'use strict';
 
-var path    = require('path');
-var rewire  = require('rewire');
+var path     = require('path');
+var rewire   = require('rewire');
+var _flatten = require('lodash/flatten');
 
 var helpers = require('./support/helpers');
 
@@ -120,20 +121,24 @@ describe('cli', function() {
     });
 
     it('reads command options from a config file', function(done) {
-      var filename = '.foorc';
+      var filename = path.resolve('.foorc');
       var argv = [
         'dummy',
         '--config',
         filename,
       ];
+      var payload = {foo: true};
       spyOn(cli, 'resolveOptions').and.callThrough();
-      spyOn(fs, 'readFileSync').and.callFake(function() {
-        return JSON.stringify({foo: true});
+      var original_fs_readFileSync = fs.readFileSync;
+      spyOn(fs, 'readFileSync').and.callFake(function(file, options) {
+        if (file === filename) {
+          return JSON.stringify(payload);
+        }
+        return original_fs_readFileSync(file, options);
       });
       cli.main(argv).then(function(output) {
-        expect(fs.readFileSync.calls.argsFor(0)[0]).toBe(
-          path.resolve(filename));
-        expect(cli.resolveOptions.calls.argsFor(0)[0].foo).toBe(true);
+        expect(_flatten(fs.readFileSync.calls.allArgs()).indexOf(filename)).not.toBe(-1);
+        expect(cli.resolveOptions.calls.argsFor(0)[0].foo).toBe(payload.foo);
         expect(output).toBe('OK');
         done();
       }, function(err) {
@@ -142,18 +147,23 @@ describe('cli', function() {
     });
 
     it('fails silently if a config file does not exist', function(done) {
-      var filename = '.foorc';
+      var filename = path.resolve('.foorc');
       var argv = [
         'dummy',
         '--config',
         filename,
       ];
-      spyOn(JSON, 'parse');
-      spyOn(fs, 'readFileSync').and.callFake(function() {
-        throw new Error('boom');
+      spyOn(cli, 'resolveOptions').and.callThrough();
+      var original_fs_readFileSync = fs.readFileSync;
+      spyOn(fs, 'readFileSync').and.callFake(function(file, options) {
+        if (file === filename) {
+          throw new Error('boom');
+        }
+        return original_fs_readFileSync(file, options);
       });
       cli.main(argv).then(function(output) {
-        expect(JSON.parse).not.toHaveBeenCalled();
+        expect(_flatten(fs.readFileSync.calls.allArgs()).indexOf(filename)).not.toBe(-1);
+        expect(cli.resolveOptions.calls.argsFor(0)[0].foo).toBe(undefined);
         expect(output).toBe('OK');
         done();
       }, function(err) {
