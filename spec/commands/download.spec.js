@@ -27,7 +27,7 @@ describe('commands.download', function() {
 
     it('gathers args for exiftool and uses GPS location', function() {
       expect(getExifToolArgs(
-        mediaData.image.standard, {verbose: true})
+        mediaData.image.standard, { verbose: true })
       ).toEqual(exiftoolData.image.standard);
       expect(getExifToolArgs(
         mediaData.image.high)
@@ -37,7 +37,7 @@ describe('commands.download', function() {
 
     it('gathers args for exiftool and assumes local when no GPS', function() {
       expect(
-        getExifToolArgs(mediaData.image.no_gps, {verbose: true})
+        getExifToolArgs(mediaData.image.no_gps, { verbose: true })
       ).toEqual(exiftoolData.image.no_gps);
       expect(instagram.media.log.calls.count()).toEqual(2);
     });
@@ -91,7 +91,7 @@ describe('commands.download', function() {
       var child_process = download_cmd.__get__('child_process');
       spyOn(child_process, 'spawn').and.returnValue(process);
       updateFileMetadata(
-        mediaData.image.standard, 'foo', {quiet: true}
+        mediaData.image.standard, 'foo', { quiet: true }
       ).then(function() {
         done.fail();
       }).catch(function(err) {
@@ -112,7 +112,7 @@ describe('commands.download', function() {
       var child_process = download_cmd.__get__('child_process');
       spyOn(child_process, 'spawn').and.returnValue(process);
       updateFileMetadata(
-        mediaData.image.standard, 'foo', {quiet: true}
+        mediaData.image.standard, 'foo', { quiet: true }
       ).catch(function(err) {
         expect(child_process.spawn).toHaveBeenCalled();
         expect(err.message).toBe(core.logger.formatErrorMessage('boom'));
@@ -153,7 +153,7 @@ describe('commands.download', function() {
           return this;
         },
         run: function(callback) {
-          callback(null, [{path: path.join(_dest, _basename)}]);
+          callback(null, [{ path: path.join(_dest, _basename) }]);
         }
       };
     };
@@ -184,7 +184,7 @@ describe('commands.download', function() {
       fetchMedia(
         mediaData.image.standard,
         instagram.constants.RESOLUTIONS.standard,
-        {dest: dest}
+        { dest: dest }
       ).then(function(filename) {
         expect(DownloadSpy).toHaveBeenCalled();
         expect(instagram.media.log).toHaveBeenCalled();
@@ -199,7 +199,7 @@ describe('commands.download', function() {
     it('fetches a media even if it exists when forcing', function(done) {
       spyOn(fs, 'lstat').and.callFake(lstat_file_exists);
       fetchMedia(
-        mediaData.video.standard, undefined, {alwaysDownload: true}
+        mediaData.video.standard, undefined, { alwaysDownload: true }
       ).then(function(filename) {
         expect(DownloadSpy).toHaveBeenCalled();
         expect(instagram.media.log).toHaveBeenCalled();

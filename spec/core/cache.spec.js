@@ -98,7 +98,7 @@ describe('core.cache', function() {
   });
 
   it('sets an object that can be retrieved then removed', function(done) {
-    var object_value = {foo: 'bar', bill: 1, meh: true};
+    var object_value = { foo: 'bar', bill: 1, meh: true };
     cache.set(key, object_value).then(function() {
       cache.get(key).then(function(value) {
         expect(value).toEqual(object_value);
@@ -285,7 +285,7 @@ describe('core.cache', function() {
   });
 
   it('creates a stable hash given an object', function() {
-    var object_value = {foo: 'bar', bill: 1, meh: true};
+    var object_value = { foo: 'bar', bill: 1, meh: true };
     var hash = cache.hash(object_value);
     expect(hash).toEqual('d2415012f4d369bd4a9ce0f4eda3c0d4');
   });

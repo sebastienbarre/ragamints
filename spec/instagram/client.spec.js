@@ -92,7 +92,7 @@ describe('instagram.client', function() {
     // This mock returns a full page of empty medias, indefinitely
     var next = function(callback) {
       setTimeout(function() {
-        callback(null, helpers.fillArray(page_size), {next: next});
+        callback(null, helpers.fillArray(page_size), { next: next });
       }, 0);
     };
     var ig_node_user_media_recent = function(user_id, options, callback) {

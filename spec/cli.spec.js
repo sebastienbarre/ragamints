@@ -127,7 +127,7 @@ describe('cli', function() {
         '--config',
         filename,
       ];
-      var payload = {foo: true};
+      var payload = { foo: true };
       spyOn(cli, 'resolveOptions').and.callThrough();
       var original_fs_readFileSync = fs.readFileSync;
       spyOn(fs, 'readFileSync').and.callFake(function(file, options) {

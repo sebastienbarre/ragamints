@@ -26,7 +26,7 @@ describe('instagram.user', function() {
       spyOn(client, 'use');
       var env = {};
       env[constants.ENV_VARS.ACCESS_TOKEN] = 'token';
-      reverseSetProcess = user.__set__('process', {env: env});
+      reverseSetProcess = user.__set__('process', { env: env });
     });
 
     afterEach(function() {
@@ -51,7 +51,7 @@ describe('instagram.user', function() {
     });
 
     it('rejects when no access token is found', function(done) {
-      user.__set__('process', {env: {}});
+      user.__set__('process', { env: {} });
       user.resolveOptions({}).then(function() {
         done.fail(new Error('should not have succeeded'));
       }, function(err) {
@@ -140,7 +140,7 @@ describe('instagram.user', function() {
     // Our client.user_media_recent returns a page of empty media objects.
     var next = function(callback) {
       setTimeout(function() {
-        callback(null, helpers.fillArray(page_size), {next: next});
+        callback(null, helpers.fillArray(page_size), { next: next });
       }, 0);
     };
     var user_media_recent = function(user_id, options, callback) {
@@ -160,7 +160,7 @@ describe('instagram.user', function() {
       // Unfortunately, it does not seem that suspend and generators are
       // supported by jasmine. Let's manually wait for the two promises
       // we are supposed to get, since we are querying 1 and a half pages.
-      user.getRecentMedias(mock_user.id, {count: count}).then(function(page1) {
+      user.getRecentMedias(mock_user.id, { count: count }).then(function(page1) {
         medias = medias.concat(page1.medias);
         page1.next.then(function(page2) {
           medias = medias.concat(page2.medias);
@@ -197,7 +197,7 @@ describe('instagram.user', function() {
         callback(Error('boom'));
       };
       spyOn(client, 'user_media_recent').and.callFake(user_media_recent);
-      user.getRecentMedias(mock_user.id, {count: 3}).catch(function(err) {
+      user.getRecentMedias(mock_user.id, { count: 3 }).catch(function(err) {
         expect(client.user_media_recent.calls.argsFor(0)[0]).toEqual(
           mock_user.id);
         expect(err.message).toEqual('boom');
@@ -278,9 +278,9 @@ describe('instagram.user', function() {
         expect(getRecentMediasSpy).toHaveBeenCalledWith(mock_user.id, options);
         expect(callbackSpy.calls.count()).toEqual(actual_total);
         expect(callbackSpy.calls.argsFor(0)).toEqual(
-          [{index: 0}, options]);
+          [{ index: 0 }, options]);
         expect(callbackSpy.calls.argsFor(actual_total - 1)).toEqual(
-          [{index: actual_total - 1}, options]);
+          [{ index: actual_total - 1 }, options]);
         expect(strip_ansi(core.logger.log.calls.argsFor(0)[0])).toEqual(
           'Skipped');
         expect(strip_ansi(core.logger.log.calls.argsFor(0)[1])).toEqual(
@@ -318,9 +318,9 @@ describe('instagram.user', function() {
         expect(getRecentMediasSpy).toHaveBeenCalledWith(mock_user.id, options);
         expect(callbackSpy.calls.count()).toEqual(actual_total);
         expect(callbackSpy.calls.argsFor(0)).toEqual(
-          [{index: 0}, options]);
+          [{ index: 0 }, options]);
         expect(callbackSpy.calls.argsFor(actual_total - 1)).toEqual(
-          [{index: actual_total - 1}, options]);
+          [{ index: actual_total - 1 }, options]);
         expect(strip_ansi(core.logger.log.calls.argsFor(0)[0])).toEqual(
           'Skipped');
         expect(strip_ansi(core.logger.log.calls.argsFor(0)[1])).toEqual(

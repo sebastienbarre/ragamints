@@ -16,6 +16,8 @@
     "coverage:check": "node --harmony node_modules/istanbul/lib/cli.js check-coverage --statements 100 --branches 85 --functions 100 --lines 100",
     "coverage:push:codecov": "cat ./coverage/lcov.info | ./node_modules/codecov.io/bin/codecov.io.js",
     "publish:pre": "npm prune && npm run doc",
+    "_compile": "babel -d lib/ src/",
+    "_prepublish": "npm run compile",
     "prepublish": "in-publish && npm run publish:pre || true",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
