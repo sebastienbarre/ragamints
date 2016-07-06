@@ -8,6 +8,15 @@ Ragamints may come handy when importing Instagram photos back to applications th
 
 <img src="doc/ragamints.gif" width="564px" height="170px" />
 
+**WARNING: ON JUNE 1, 2016 INSTAGRAM SEVERELY RESTRICTED WHAT ANY THIRD-PARTY INSTAGRAM APPLICATION CAN DO.**
+
+It is very unfortunate that Instagram decided to turn their back on developers. Tools such as `ragamints` are now considered [invalid use cases][instagram-invalid-use-cases] and constrained to a [Sandbox mode][instagram-sandbox-mode]. This effectively blocks most of `ragamints` functionalities. You will need to generate a new access token, which will grant you access to your 20 most recent media, with reduced API [rate limits][instagram-rate-limits]. That's about it. You will no longer be able to download photos from other Instagram accounts, perform searches, or access any of your photos past the first 20. I will keep `ragamints` alive for the time being, should Instagram relax its policy.
+
+For more on this issue:
+- [Instagram hates developers]
+- [Instagram to third-party developers: drop dead]
+- [I quit Instagram]
+
 ## Table of Contents
 
 <!-- MarkdownTOC autolink=true bracket=round -->
@@ -46,19 +55,21 @@ Don't forget `-g`. Note that there are two specific **requirements** to meet for
 
 Since `ragamints` talks to the Instagram API, it does require an API Client Key, which I can't provide in this source code. Fortunately, obtaining such Access Token is a breeze.
 
-1. Head to the [Instagram Developers Page],
-2. Click on [Register Your Application][instagram-register-app] to register a new client,
+1. Head to the [Instagram Developers Page], and click on **Register Your Application**,
+2. Click on **Register a New Client** from the [Manage Clients][instagram-register-app] page,
 3. Set **Application Name** to any identifier, say, `ineedatoken`,
-6. Set **Redirect URI(s)** to `http://localhost`,
-4. Set **Description** and **Website URL** to anything,
-7. In the **Security** tab, uncheck **[ ] Disable implicit OAuth**,
+4. Set **Description**, **Company Name**, and **Website URL** to anything,
+5. Set **Valid redirect URIs** to `http://localhost`,
+4. Set **Contact email** to your email,
+5. In the **Security** tab, uncheck **[ ] Disable implicit OAuth:**, and uncheck **[ ] Enforce signed requests:**,
+7. Answer the Captcha challenge,
 8. Click on the **Register** button to submit your client,
 9. Write down your new **CLIENT ID**, a 32-characters long string,
-10. Navigate to the following URL in your web browser, replacing `[CLIENT_ID]` with your actual **CLIENT ID**: `https://instagram.com/oauth/authorize/?client_id=[CLIENT_ID]&redirect_uri=http://localhost&response_type=token`
+10. Navigate to the following URL in your web browser, replacing `[CLIENT_ID]` with your actual **CLIENT ID**: `https://instagram.com/oauth/authorize/?client_id=[CLIENT_ID]&redirect_uri=http://localhost&response_type=token&scope=public_content`
 11. Click on **Authorize** when Instagram asks you to grant access to your account.
 12. Once redirected to your localhost, your newly generated **ACCESS TOKEN** will be appended to the url after `http://localhost/#access_token=`. It should be about 50-characters long. Congratulations. Write it down, do not share it.
 
-If the above doesn't work, I'd recommend reading [How to generate an Instagram Access Token], [Retrieve the access token for your Instagram account], or [How to get an Instagram Access Token].
+If the above doesn't work, I'd recommend reading [How to get Instagram API access token] by Brandon Webster.
 
 ### ExifTool
 
@@ -95,8 +106,6 @@ Options:
   -c, --count            Maximum count of medias to download
   -m, --min-id           Only medias posted later than this media id/url (included)  [string]
   -n, --max-id           Only medias posted earlier than this media id/url (excluded)  [string]
-  -o, --min-timestamp    Only medias after this UNIX timestamp/datetime  [string]
-  -p, --max-timestamp    Only medias before this UNIX timestamp/datetime  [string]
   -s, --sequential       Process sequentially (slower)  [boolean] [default: false]
   -i, --include-videos   Include videos (skipped by default)  [boolean] [default: false]
   -d, --dest             Destination directory  [string] [default: "./"]
@@ -116,11 +125,13 @@ Check the man page or README file for more
 ## Examples
 
 In the examples presented below, `[ACCESS TOKEN]` is to be replaced with your **Instagram Access Token** (see the [Requirements](#requirements) section). Alternatively, you may omit `--access-token` by:
-1. setting the `RAGAMINTS_ACCESS_TOKEN` environment variable beforehand.
+
+* setting the `RAGAMINTS_ACCESS_TOKEN` environment variable beforehand.
 ```bash
 $ export RAGAMINTS_ACCESS_TOKEN=[ACCESS_TOKEN]
 ```
-2. setting the corresponding option in a default `.ragamints.json` configuration file in your `HOME` directory, or any other configuration file of your choosing using the `--config` option.
+
+* or setting the corresponding option in a default `.ragamints.json` configuration file in your `HOME` directory, or any other configuration file of your choosing using the `--config` option.
 ```json
 {
   "access-token": [ACCESS_TOKEN]
@@ -128,6 +139,8 @@ $ export RAGAMINTS_ACCESS_TOKEN=[ACCESS_TOKEN]
 ```
 
 ### Fetch your last *n* medias
+
+**WARNING: THIS FUNCTIONALITY WAS AFFECTED BY THE NEW INSTAGRAM API AS OF JUNE 1, 2016. YOU WILL NO LONGER BE ABLE TO FETCH MORE THAN YOUR FIRST 20 MEDIAS.**
 
 Let's fetch the last 3 medias from my [Instagram feed][sebastienbarre:Instagram]. `ragamints` will output how it interpreted some of its arguments, and what is being done for each media. Each step references a media by an index (`#0001`, `#0002`, ...) followed by a short excerpt from its caption (`[Back home. Done sp]`). In this example two steps can be identified for each media -- fetching the file and updating its metadata.
 
@@ -155,6 +168,8 @@ The highest known image resolution is fetched by default but `--resolution` can 
 
 ### Fetch all medias found between two specific medias
 
+**WARNING: THIS FUNCTIONALITY WAS DISABLED BY THE NEW INSTAGRAM API AS OF JUNE 1, 2016.**
+
 Let's fetch the medias I had posted *later in time than (but including)* https://instagram.com/p/2QY1JYJYqN/ (`--min-id`), and *earlier in time than (but excluding)* https://instagram.com/p/2QZcrCpYrM/ (`--max-id`). I'm using my user ID here (`26667401`) instead of my username (`sebastienbarre`) to save a round-trip. The Instagram API expects both `--min-id` and `--max-id` to reference media IDs, but these can be difficult to gather -- use photo URLs instead and `ragamints` will look-up these IDs for you.
 
 ```
@@ -172,6 +187,8 @@ Done processing 2 media(s). Easy peasy.
 Note that `#0001` was *not* fetched, as it had been saved already in our previous example -- a photo can not be replaced on Instagram, it is assumed its contents has not changed; its metadata *is* updated though, since captions *can* be edited. Use `--always-download` to force `ragamints` to always fetch.
 
 ### Fetch all medias found between two timestamps
+
+**WARNING: THIS FUNCTIONALITY WAS COMPLETELY REMOVED FROM THE INSTAGRAM API AS OF JUNE 1, 2016.**
 
 Let's fetch the medias I had posted *later in time than* 5 weeks ago (`--min-timestamp`), but *earlier in time than* 10 days ago (`--max-timestamp`). The Instagram API expects both `--min-timestamp` and `--max-timestamp` to reference a [Unix Timestamp] but `ragamints` will accept [a variety of date formats][sugarjs], for convenience. The `--dest` parameter can be used to save to a specific folder (here, `archive`).
 
@@ -265,6 +282,10 @@ The following metadata fields are set on each JPEG file, if the corresponding In
 
 You may see this message when installing `ragamints` on Windows. It is *not* indicative of a problem and originates from the [chokidar] npm module, a dependency of the [babel] module, the ES6 transpiler. [FSEvents][fsevents:wiki] is an API only available on OS X. The [fsevents][fsevents:github] npm module, which provides a node interface to that OS API, cannot be built on systems other than OS X and thus is marked as "optional dependency" by modules such as [chokidar], and reported as such.
 
+### `This request requires scope=public_content, but this access token is not authorized with this scope. The user must re-authorize your application with scope=public_content to be granted this permissions.`
+
+You may encounter this error if you generated an Instagram token before Instagram made changes to its API in June of 2016. You will need to create a new token.
+
 ## Authors
 
 **Sebastien Barre**
@@ -321,11 +342,16 @@ All notable changes to this project are documented automatically on the Github [
 [FSEvents:wiki]: http://en.wikipedia.org/wiki/FSEvents
 [Google+]: https://plus.google.com/
 [Homebrew]: http://brew.sh/
-[How to generate an Instagram Access Token]: http://jelled.com/instagram/access-token
-[How to get an Instagram Access Token]: http://stackoverflow.com/questions/16496511/how-to-get-an-instagram-access-token
+[How to get Instagram API access token]: https://medium.com/@bkwebster/how-to-get-instagram-api-access-token-and-fix-your-broken-feed-c8ad470e3f02#.z5xed2tbz
+[I quit Instagram]: https://inbound.org/discuss/i-quit-instagram
 [Instagram Developers Page]: https://instagram.com/developer/
+[Instagram hates developers]: https://writing.natwelch.com/post/585
+[Instagram to third-party developers: drop dead]: http://www.zeldman.com/2016/06/04/instagram-third-party-developers-drop-dead/
+[instagram-invalid-use-cases]: https://www.instagram.com/developer/authorization/
 [instagram-node]: https://github.com/totemstech/instagram-node
+[instagram-rate-limits]: https://www.instagram.com/developer/limits/
 [instagram-register-app]: https://instagram.com/developer/clients/manage/
+[instagram-sandbox-mode]: https://www.instagram.com/developer/sandbox/
 [Instagram]: http://instagram.com
 [io.js]: https://iojs.org/
 [iojs-nodejs-compatibility]: https://gist.github.com/maximilianschmitt/8ef57cb679fbf764b108
@@ -341,7 +367,6 @@ All notable changes to this project are documented automatically on the Github [
 [Node.js]: https://nodejs.org/
 [npm]: https://www.npmjs.com/
 [pandoc]: http://pandoc.org/
-[Retrieve the access token for your Instagram account]: http://jenwachter.com/2013/04/22/retrive-the-access-token-for-your-instagram-account/
 [sebastienbarre:email]: mailto:sebastien.barre@gmail.com
 [sebastienbarre:Instagram]: https://instagram.com/sebastienbarre/
 [sebastienbarre:Twitter]: https://twitter.com/sebastienbarre/
@@ -354,3 +379,4 @@ All notable changes to this project are documented automatically on the Github [
 [tzwhere]: https://github.com/mattbornski/tzwhere
 [Unix Timestamp]: http://en.wikipedia.org/wiki/Unix_time
 [XMP]: http://en.wikipedia.org/wiki/Extensible_Metadata_Platform
+
