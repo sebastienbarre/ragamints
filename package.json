@@ -86,7 +86,7 @@
   "devDependencies": {
     "codecov.io": "^0.1.6",
     "commitizen": "^2.4.6",
-    "conventional-changelog": "^0.5.1",
+    "conventional-changelog": "^1.0.1",
     "cz-conventional-changelog": "^1.1.4",
     "eslint-config-sebastienbarre": "^2.0.2",
     "ghooks": "^1.0.1",
