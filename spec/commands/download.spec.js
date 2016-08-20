@@ -362,24 +362,20 @@ describe('commands.download', function() {
 
     it('resolves options', function(done) {
       var options = {
-        minId: mediaData.image.standard.link,
-        maxId: mediaData.image.standard.link,
         instagramAccessToken: 'token',
         instagramUserId: 'username',
-        maxTimestamp: 'Thu, 09 Apr 2015 01:19:46 +0000',
-        minTimestamp: 'Thu, 09 Apr 2015 01:19:46 +0000',
         json: 'foo,bar',
+        maxId: mediaData.image.standard.link,
+        minId: mediaData.image.standard.link,
         resolution: 'thumbnail,low_resolution',
         verbose: true
       };
       var resolved_options = {
-        minTimestamp: 1428542386,
-        maxTimestamp: 1428542386,
         instagramAccessToken: 'token',
         instagramUserId: '12345678',
-        minId: mediaData.image.standard.id,
-        maxId: mediaData.image.standard.id,
         json: ['foo', 'bar'],
+        maxId: mediaData.image.standard.id,
+        minId: mediaData.image.standard.id,
         resolution: [
           instagram.constants.RESOLUTIONS.thumbnail,
           instagram.constants.RESOLUTIONS.low,
