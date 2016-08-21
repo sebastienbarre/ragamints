@@ -80,6 +80,8 @@
     "lodash": "^4.9.0",
     "lz-string": "^1.4.4",
     "moment-timezone": "^0.5.3",
+    "nightmare": "^2.6.1",
+    "nightmare-load-filter": "^0.2.0",
     "node-fetch": "^1.5.0",
     "node-localstorage": "^1.2.0",
     "openurl": "^1.1.1",
@@ -90,6 +92,7 @@
     "suspend": "^0.7.0",
     "throat": "^2.0.2",
     "tz-lookup": "^6.0.2",
+    "vo": "^4.0.2",
     "yargs": "^4.4.0"
   },
   "devDependencies": {
