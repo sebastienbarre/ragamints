@@ -60,33 +60,23 @@ var filtered_urls = [
   '*://www.instagram.com/ajax/*',
 ];
 
-var getCurrentHeight = function() {
-  return function(nightmare) {
-    nightmare.evaluate(function() {
-      return document.body.scrollHeight;
-    });
-  };
+var getCurrentHeight = () => function(nightmare) {
+  nightmare.evaluate(() => document.body.scrollHeight);
 };
 
-var getMedias = function() {
-  return function(nightmare) {
-    nightmare.evaluate(function() {
-      var nodes = document.querySelectorAll('article > div > div > div > a');
-      var hrefs = [];
-      for (var i = 0; i < nodes.length; ++i) {
-        hrefs.push(nodes[i].href);
-      }
-      return hrefs;
-    });
-  };
+var getMedias = () => function(nightmare) {
+  nightmare.evaluate(() => {
+    var nodes = document.querySelectorAll('article > div > div > div > a');
+    return Array.from(nodes).map(node => node.href);
+  });
 };
 
 var run = function*(url) {
   yield nightmare
     .filter({
       urls: filtered_urls
-    }, function(details, cb) {
-      console.log(details.url); // use DEBUG=electron:stdout to show
+    }, (details, cb) => {
+      // console.log('Cancelling:', details.url); // use DEBUG=electron:stdout to show
       return cb({ cancel: true });
     })
     .goto(url)
@@ -101,8 +91,8 @@ var run = function*(url) {
   yield nightmare.scrollTo(currentHeight, 0).wait(1000);
 
   // Let's scroll down to bring another page (36 + 12 = 48)
-  var currentHeight = yield nightmare.use(getCurrentHeight());
-  yield nightmare.scrollTo(currentHeight, 0).wait(1000);
+  // var currentHeight = yield nightmare.use(getCurrentHeight());
+  // yield nightmare.scrollTo(currentHeight, 0).wait(1000);
 
   // Get medias
   var result = yield nightmare.use(getMedias());
@@ -111,7 +101,7 @@ var run = function*(url) {
 };
 
 var url = 'https://www.instagram.com/sebastienbarre/';
-vo(run)(url, function(err, result) {
+vo(run)(url, (err, result) => {
   if (err) {
     console.error('an error occurred: ' + err);
   }
