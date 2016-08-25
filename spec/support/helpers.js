@@ -1,10 +1,6 @@
-var promiseRejectError = function() {
-  return Promise.reject(Error('boom'));
-};
+const promiseRejectError = () => Promise.reject(Error('boom'));
 
-var promiseValue = function(value) {
-  return Promise.resolve(value);
-};
+const promiseValue = value => Promise.resolve(value);
 
 /**
  * Get an array of specific size, with index and value.
@@ -15,11 +11,11 @@ var promiseValue = function(value) {
  * @returns {Array} The array.
  */
 function fillArray(size, with_index, value) {
-  return Array.apply(null, new Array(size)).map(function(currentValue, index) {
+  return Array(...new Array(size)).map((currentValue, index) => {
     if (with_index === true) {
       return index;
     }
-    var data = value || {};
+    const data = value || {};
     if (with_index) {
       data[with_index] = index;
     }
@@ -28,7 +24,7 @@ function fillArray(size, with_index, value) {
 }
 
 module.exports = {
-  promiseRejectError: promiseRejectError,
-  promiseValue: promiseValue,
-  fillArray: fillArray
+  promiseRejectError,
+  promiseValue,
+  fillArray,
 };

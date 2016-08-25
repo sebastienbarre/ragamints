@@ -1,16 +1,11 @@
-'use strict';
+const logger = require('../../lib/core/logger');
 
-var logger = require('../../lib/core/logger.js');
-
-describe('core.logger', function() {
-
-  describe('core.logger.log', function() {
-
-    it('calls console.log', function() {
+describe('core.logger', () => {
+  describe('core.logger.log', () => {
+    it('calls console.log', () => {
       spyOn(console, 'log');
       logger.log('foo');
       expect(console.log).toHaveBeenCalled();
     });
   });
-
 });

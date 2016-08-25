@@ -60,6 +60,7 @@ var filtered_urls = [
   '*://www.instagram.com/ajax/*',
 ];
 
+// or as an action: https://github.com/segmentio/nightmare#extending-nightmare
 var getCurrentHeight = () => function(nightmare) {
   nightmare.evaluate(() => document.body.scrollHeight);
 };

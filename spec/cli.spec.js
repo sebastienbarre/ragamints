@@ -1,57 +1,52 @@
-'use strict';
+const path = require('path');
+const rewire = require('rewire');
+const flatten = require('lodash/flatten');
 
-var path     = require('path');
-var rewire   = require('rewire');
-var _flatten = require('lodash/flatten');
+const helpers = require('./support/helpers');
 
-var helpers = require('./support/helpers');
+const cli = rewire('../lib/cli.js');
 
-var cli     = rewire('../lib/cli.js');
-
-describe('cli', function() {
-  var core = cli.__get__('core');
-
-  describe('cli.resolveOptions', function() {
-
-    beforeEach(function() {
+describe('cli', () => {
+  const core = cli.__get__('core');
+  describe('cli.resolveOptions', () => {
+    beforeEach(() => {
       spyOn(core.cache, 'clear').and.callFake(helpers.promiseValue);
       spyOn(core.logger, 'log');
     });
 
-    it('resolves command-line options', function(done) {
-      var options = {
-        verbose: true
-      };
-      var resolved_options = {
+    it('resolves command-line options', (done) => {
+      const options = {
         verbose: true,
       };
-      cli.resolveOptions(options).then(function(res) {
+      const resolved_options = {
+        verbose: true,
+      };
+      cli.resolveOptions(options).then((res) => {
         expect(core.cache.clear).not.toHaveBeenCalled();
         expect(res).toEqual(resolved_options);
         done();
-      }, function(err) {
+      }, (err) => {
         done.fail(err);
       });
     });
 
-    it('clears the cache before resolving options', function(done) {
-      var options = {
-        clearCache: true
+    it('clears the cache before resolving options', (done) => {
+      const options = {
+        clearCache: true,
       };
-      cli.resolveOptions(options).then(function() {
+      cli.resolveOptions(options).then(() => {
         expect(core.cache.clear).toHaveBeenCalled();
         done();
-      }, function(err) {
+      }, (err) => {
         done.fail(err);
       });
     });
-
   });
 
-  describe('cli.main', function() {
-    var fs = cli.__get__('fs');
-    var JSON = cli.__get__('JSON');
-    var commands = [{
+  describe('cli.main', () => {
+    const fs = cli.__get__('fs');
+    const JSON = cli.__get__('JSON');
+    const dummy_command = {
       name: 'dummy',
       description: 'dummy command',
       options: {
@@ -59,48 +54,48 @@ describe('cli', function() {
           alias: 'dest',
           describe: 'Destination directory',
           type: 'string',
-          default: './'
-        }
+          default: './',
+        },
       },
-      run: helpers.promiseValue.bind(null, 'OK')
-    }];
-    cli.__set__('commands', commands);
+      run: helpers.promiseValue.bind(null, 'OK'),
+    };
+    cli.addCommand(dummy_command);
 
-    beforeEach(function() {
+    beforeEach(() => {
       spyOn(core.logger, 'log');
     });
 
-    it('lists commands (then rejects) when none is provided', function(done) {
-      var argv = [];
-      cli.main(argv).then(function() {
+    it('lists commands (then rejects) when none is provided', (done) => {
+      const argv = [];
+      cli.main(argv).then(() => {
         done.fail();
-      }).catch(function() {
-        var output = core.logger.log.calls.argsFor(0)[0];
-        expect(output.indexOf('dummy  dummy command')).not.toBe(-1);
+      }).catch(() => {
+        const output = core.logger.log.calls.argsFor(0)[0];
+        expect(output.indexOf('dummy command')).not.toBe(-1);
         expect(output.indexOf('-h, --help')).not.toBe(-1);
         done();
       });
     });
 
-    it('lists commands (then rejects) on --help', function(done) {
-      var argv = [
-        '--help'
+    it('lists commands (then rejects) on --help', (done) => {
+      const argv = [
+        '--help',
       ];
-      cli.main(argv).catch(function() {
-        var output = core.logger.log.calls.argsFor(0)[0];
-        expect(output.indexOf('dummy  dummy command')).not.toBe(-1);
+      cli.main(argv).catch(() => {
+        const output = core.logger.log.calls.argsFor(0)[0];
+        expect(output.indexOf('dummy command')).not.toBe(-1);
         expect(output.indexOf('-h, --help')).not.toBe(-1);
         done();
       });
     });
 
-    it('lists options for a command on --help', function(done) {
-      var argv = [
+    it('lists options for a command on --help', (done) => {
+      const argv = [
         'dummy',
-        '--help'
+        '--help',
       ];
-      cli.main(argv).catch(function() {
-        var output = core.logger.log.calls.argsFor(0)[0];
+      cli.main(argv).catch(() => {
+        const output = core.logger.log.calls.argsFor(0)[0];
         expect(output.indexOf('-d, --dest')).not.toBe(-1);
         expect(output.indexOf('-v, --verbose')).not.toBe(-1);
         expect(output.indexOf('-h, --help')).not.toBe(-1);
@@ -108,84 +103,86 @@ describe('cli', function() {
       });
     });
 
-    it('runs a command when given one', function(done) {
-      var argv = [
-        'dummy'
+    it('runs a command when given one', (done) => {
+      const argv = [
+        'dummy',
       ];
-      cli.main(argv).then(function(output) {
+      cli.main(argv).then((output) => {
         expect(output).toBe('OK');
         done();
-      }, function(err) {
+      }, (err) => {
         done.fail(err);
       });
     });
 
-    it('reads command options from a config file', function(done) {
-      var filename = path.resolve('.foorc');
-      var argv = [
+    it('reads command options from a config file', (done) => {
+      const filename = path.resolve('.foorc');
+      const argv = [
         'dummy',
         '--config',
         filename,
       ];
-      var payload = { foo: true };
+      const payload = { foo: true };
       spyOn(cli, 'resolveOptions').and.callThrough();
-      var original_fs_readFileSync = fs.readFileSync;
-      spyOn(fs, 'readFileSync').and.callFake(function(file, options) {
+      const original_fs_readFileSync = fs.readFileSync;
+      spyOn(fs, 'readFileSync').and.callFake((file, options) => {
         if (file === filename) {
           return JSON.stringify(payload);
         }
         return original_fs_readFileSync(file, options);
       });
-      cli.main(argv).then(function(output) {
-        expect(_flatten(fs.readFileSync.calls.allArgs()).indexOf(filename)).not.toBe(-1);
+      cli.main(argv).then((output) => {
+        expect(flatten(fs.readFileSync.calls.allArgs()).indexOf(filename)).not.toBe(-1);
         expect(cli.resolveOptions.calls.argsFor(0)[0].foo).toBe(payload.foo);
         expect(output).toBe('OK');
         done();
-      }, function(err) {
+      }, (err) => {
         done.fail(err);
       });
     });
 
-    it('fails silently if a config file does not exist', function(done) {
-      var filename = path.resolve('.foorc');
-      var argv = [
+    it('fails silently if a config file does not exist', (done) => {
+      const filename = path.resolve('.foorc');
+      const argv = [
         'dummy',
         '--config',
         filename,
       ];
       spyOn(cli, 'resolveOptions').and.callThrough();
-      var original_fs_readFileSync = fs.readFileSync;
-      spyOn(fs, 'readFileSync').and.callFake(function(file, options) {
+      const original_fs_readFileSync = fs.readFileSync;
+      spyOn(fs, 'readFileSync').and.callFake((file, options) => {
         if (file === filename) {
           throw new Error('boom');
         }
         return original_fs_readFileSync(file, options);
       });
-      cli.main(argv).then(function(output) {
-        expect(_flatten(fs.readFileSync.calls.allArgs()).indexOf(filename)).not.toBe(-1);
+      cli.main(argv).then((output) => {
+        expect(flatten(fs.readFileSync.calls.allArgs()).indexOf(filename)).not.toBe(-1);
         expect(cli.resolveOptions.calls.argsFor(0)[0].foo).toBe(undefined);
         expect(output).toBe('OK');
         done();
-      }, function(err) {
+      }, (err) => {
         done.fail(err);
       });
     });
 
-    it('rejects when a command fails', function(done) {
-      commands[0].run = helpers.promiseRejectError;
-      var argv = [
-        'dummy'
+    it('rejects when a command fails', (done) => {
+      const failing_command = {
+        name: 'failing',
+        run: helpers.promiseRejectError,
+      };
+      cli.addCommand(failing_command);
+      const argv = [
+        'failing',
       ];
-      cli.main(argv).then(function() {
+      cli.main(argv).then(() => {
         done.fail();
-      }, function(err) {
+      }, (err) => {
         expect(err.message).toBe('boom');
         expect(
           core.logger.log.calls.argsFor(0)[0].indexOf('--help')).not.toBe(-1);
         done();
       });
     });
-
   });
-
 });

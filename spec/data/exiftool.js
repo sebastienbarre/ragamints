@@ -1,16 +1,14 @@
-'use strict';
+const moment = require('moment-timezone');
+const core = require('../../lib/core');
+const mediaData = require('./media');
 
-var moment    = require('moment-timezone');
-var core      = require('../../lib/core');
-var mediaData = require('./media');
-
-var standard_args_common = [
+const standard_args_common = [
   '-q',
   '-q',
   '-codedcharacterset=utf8',
   '-overwrite_original',
-  '-EXIF:Software=' + core.constants.SOFTWARE,
-  '-XMP:CreatorTool=' + core.constants.SOFTWARE,
+  `-EXIF:Software=${core.constants.SOFTWARE}`,
+  `-XMP:CreatorTool=${core.constants.SOFTWARE}`,
   '-EXIF:ImageDescription=Flower girl is picture-shy. #farmwedding #shy',
   '-IPTC:Caption-Abstract=Flower girl is picture-shy. #farmwedding #shy',
   '-XMP:Description=Flower girl is picture-shy. #farmwedding #shy',
@@ -22,10 +20,10 @@ var standard_args_common = [
   '-sep',
   ', ',
   '-IPTC:Keywords=farmwedding, shy',
-  '-XMP:Subject=farmwedding, shy'
+  '-XMP:Subject=farmwedding, shy',
 ];
 
-var standard_args_with_gps = standard_args_common.concat([
+const standard_args_with_gps = standard_args_common.concat([
   '-EXIF:DateTimeOriginal=2015:05:30 18:41:28-04:00',
   '-IPTC:DateCreated=2015:05:30',
   '-IPTC:TimeCreated=18:41:28-04:00',
@@ -33,28 +31,28 @@ var standard_args_with_gps = standard_args_common.concat([
   '-EXIF:GPSLatitude=42.6550407',
   '-EXIF:GPSLatitudeRef=N',
   '-EXIF:GPSLongitude=-73.9760895',
-  '-EXIF:GPSLongitudeRef=W'
+  '-EXIF:GPSLongitudeRef=W',
 ]);
 
-var created = moment.unix(mediaData.image.standard.created_time); // local time
-var created_ymd = created.format('YYYY:MM:DD');
-var created_hms = created.format('HH:mm:ssZ');
-var created_ymd_hms = `${created_ymd} ${created_hms}`;
+const created = moment.unix(mediaData.image.standard.created_time); // local time
+const created_ymd = created.format('YYYY:MM:DD');
+const created_hms = created.format('HH:mm:ssZ');
+const created_ymd_hms = `${created_ymd} ${created_hms}`;
 
-var standard_args_without_gps = standard_args_common.concat([
-  '-EXIF:DateTimeOriginal=' + created_ymd_hms,
-  '-IPTC:DateCreated=' + created_ymd,
-  '-IPTC:TimeCreated=' + created_hms,
-  '-XMP:DateCreated=' + created_ymd_hms
+const standard_args_without_gps = standard_args_common.concat([
+  `-EXIF:DateTimeOriginal=${created_ymd_hms}`,
+  `-IPTC:DateCreated=${created_ymd}`,
+  `-IPTC:TimeCreated=${created_hms}`,
+  `-XMP:DateCreated=${created_ymd_hms}`,
 ]);
 
-var high_args_with_gps = [
+const high_args_with_gps = [
   '-q',
   '-q',
   '-codedcharacterset=utf8',
   '-overwrite_original',
-  '-EXIF:Software=' + core.constants.SOFTWARE,
-  '-XMP:CreatorTool=' + core.constants.SOFTWARE,
+  `-EXIF:Software=${core.constants.SOFTWARE}`,
+  `-XMP:CreatorTool=${core.constants.SOFTWARE}`,
   '-EXIF:Artist=Sébastien B',
   '-EXIF:Copyright=Copyright Sébastien B',
   '-IPTC:CopyrightNotice=Copyright Sébastien B',
@@ -67,13 +65,13 @@ var high_args_with_gps = [
   '-EXIF:GPSLatitude=-42.657302',
   '-EXIF:GPSLatitudeRef=S',
   '-EXIF:GPSLongitude=73.773118',
-  '-EXIF:GPSLongitudeRef=E'
+  '-EXIF:GPSLongitudeRef=E',
 ];
 
 module.exports = {
   image: {
     standard: standard_args_with_gps,
     high: high_args_with_gps,
-    no_gps: standard_args_without_gps
-  }
+    no_gps: standard_args_without_gps,
+  },
 };

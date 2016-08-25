@@ -1,6 +1,8 @@
+<img src="https://gist.githubusercontent.com/sebastienbarre/6f8ce4bc7488bbd2238801eaa8a58fc9/raw/42414fef149734b8e757f986de1327c76432c941/separator.png" />
+
 # Ragamints
 
-[![Build Status][_self_:build-status:shield]][_self_:build-status] [![Coverage Status][_self_:coverage:shield]][_self_:coverage] [![Dependencies Status][_self_:dependencies-status:shield]][_self_:dependencies-status] [![Node Version][_self_:node-version:shield]][_self_:node-version] [![License][_self_:license:shield]][BSD License] [![semantic-release][semantic-release:shield]][semantic-release] [![Commitizen friendly][commitizen:shield]][commitizen]
+[![Build Status][_self_:build-status:badge]][_self_:build-status] [![Coverage Status][_self_:coverage:badge]][_self_:coverage] [![License][BSD License:badge]][BSD License] [![semantic-release][semantic-release:badge]][semantic-release] [![Commitizen Friendly][commitizen:badge]][commitizen] [![Code Style][airbnb:javascript:badge]][airbnb:javascript]
 
 Ragamints is a command-line interface for Node.js. It is intended for downloading Instagram photos while preserving caption, photographer name, geolocation, tags, and creation time as EXIF, IPTC, and XMP fields.
 
@@ -36,7 +38,7 @@ For more on this issue:
 - [Authors](#authors)
 - [Contribute](#contribute)
 - [License](#license)
-- [Change Log](#change-log)
+- [Changelog](#changelog)
 
 <!-- /MarkdownTOC -->
 
@@ -356,55 +358,54 @@ You may encounter this error if you generated an Instagram token before Instagra
 **Sebastien Barre**
 
 * Email: sebastien.barre@gmail.com
+* Web: http://barre.io
 * Twitter: [sebastienbarre][sebastienbarre:Twitter]
 * Instagram: [sebastienbarre][sebastienbarre:Instagram]
 
 ## Contribute
 
-* Check for [open issues][_self_:issues], especially the ones [up-for-grabs][_self_:issues:up-for-grabs], or open a fresh issue to start a discussion around a feature idea or a bug.
-* If you feel uncomfortable or uncertain about an issue or your changes, feel free to [email me][sebastienbarre:email] and I will happily give you a hand.
+* Check for [open issues][_self_:issues], especially the ones already [available][_self_:issues:available], or open a fresh issue to start a discussion around a feature idea or a bug.
+* If you feel uncomfortable or uncertain about an issue or your changes, feel free to [email me][sebastienbarre:email] and I will give you a hand.
 * Fork the [repository][_self_:repo] on GitHub to start making your changes to the *master* branch (or branch off of it).
-* Write a test which shows that the bug was fixed or that the feature works as expected.
-* Do *not* use `git commit` to commit your code; use `npm run commit` instead; this will ensure a [Commitizen]-friendly commit message will be generated, a convention that will in turn be leveraged by [semantic-release].
+* Write a test which shows that a bug exists, was fixed, or that a feature works as expected.
+* Use `npm run commit` instead of `git commit` if you are unfamiliar with the [conventional-changelog] guidelines; this will ensure a [Commitizen]-friendly commit message will be generated, a convention that will in turn be leveraged by [semantic-release].
 * Send a pull request and notify me :) Thanks.
 
 ## License
 
 This software is released under the [BSD License].
 
-## Change Log
+## Changelog
 
-All notable changes to this project are documented automatically on the Github [releases][_self_:releases] page. This project believes in [Semantic Versioning] and [Keep a CHANGELOG]. It uses [commitizen] and [semantic-release] to help with that endeavor.
+All notable changes to this project are documented automatically on the Github [releases][_self_:releases] page. This project believes in [Semantic Versioning] and [Keep a CHANGELOG]. It uses [commitizen] and [semantic-release] to help.
 
-[_self_:build-status:shield]: https://img.shields.io/travis/sebastienbarre/ragamints.svg
+[_self_:build-status:badge]: https://img.shields.io/travis/sebastienbarre/ragamints.svg
 [_self_:build-status]: https://travis-ci.org/sebastienbarre/ragamints
-[_self_:coverage:shield]: https://img.shields.io/codecov/c/github/sebastienbarre/ragamints.svg
+[_self_:coverage:badge]: https://img.shields.io/codecov/c/github/sebastienbarre/ragamints.svg
 [_self_:coverage]: https://codecov.io/github/sebastienbarre/ragamints
-[_self_:dependencies-status:shield]: https://img.shields.io/gemnasium/sebastienbarre/ragamints.svg
-[_self_:dependencies-status]: https://gemnasium.com/sebastienbarre/ragamints
-[_self_:issues:up-for-grabs]: https://github.com/sebastienbarre/ragamints/labels/up-for-grabs
+[_self_:issues:available]: https://github.com/sebastienbarre/ragamints/labels/Status%3A%20Available
 [_self_:issues]: https://github.com/sebastienbarre/ragamints/issues
-[_self_:license:shield]: https://img.shields.io/npm/l/ragamints.svg
-[_self_:node-version:shield]: https://img.shields.io/node/v/ragamints.svg
-[_self_:node-version]: https://www.npmjs.com/package/ragamints
 [_self_:npm:badge]: https://nodei.co/npm/ragamints.png?downloads=true
 [_self_:npm]: https://nodei.co/npm/ragamints/
 [_self_:releases]: https://github.com/sebastienbarre/ragamints/releases
 [_self_:repo]: https://github.com/sebastienbarre/ragamints
 [Adobe Lightroom]: https://lightroom.adobe.com/
+[airbnb:javascript:badge]: https://img.shields.io/badge/code%20style-airbnb-blue.svg
+[airbnb:javascript]: https://github.com/airbnb/javascript
 [archibald:promises]: http://www.html5rocks.com/en/tutorials/es6/promises/
 [babel]: https://github.com/babel/babel
+[BSD License:badge]: https://img.shields.io/badge/license-BSD--3--Clause-blue.svg
 [BSD License]: http://opensource.org/licenses/BSD-3-Clause
 [chokidar]: https://github.com/paulmillr/chokidar
-[commitizen:shield]: https://img.shields.io/badge/commitizen-friendly-brightgreen.svg
+[commitizen:badge]: https://img.shields.io/badge/commitizen-friendly-brightgreen.svg
 [commitizen]: https://github.com/commitizen/cz-cli
 [darkskyapp]: https://github.com/darkskyapp
 [EDT]: http://www.timeanddate.com/time/zones/edt
 [EXIF]: http://en.wikipedia.org/wiki/Exchangeable_image_file_format
 [ExifTool FAQ]: http://www.sno.phy.queensu.ca/~phil/exiftool/faq.html#Q5
 [ExifTool]:  http://www.sno.phy.queensu.ca/~phil/exiftool/
-[Flickr API]: https://www.flickr.com/services/api/
 [Flickr API:Get Key]: https://www.flickr.com/services/apps/create/apply/
+[Flickr API]: https://www.flickr.com/services/api/
 [fsevents:github]: https://github.com/strongloop/fsevents
 [FSEvents:wiki]: http://en.wikipedia.org/wiki/FSEvents
 [Google+]: https://plus.google.com/
@@ -438,7 +439,7 @@ All notable changes to this project are documented automatically on the Github [
 [sebastienbarre:Instagram]: https://instagram.com/sebastienbarre/
 [sebastienbarre:Twitter]: https://twitter.com/sebastienbarre/
 [Semantic Versioning]: http://semver.org/
-[semantic-release:shield]: https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg
+[semantic-release:badge]: https://img.shields.io/badge/%F0%9F%93%A6-semantic--release-e10079.svg
 [semantic-release]: https://github.com/semantic-release/semantic-release
 [sugarjs]: http://sugarjs.com/features#date
 [totemstech]: https://github.com/totemstech
@@ -446,4 +447,3 @@ All notable changes to this project are documented automatically on the Github [
 [tzwhere]: https://github.com/mattbornski/tzwhere
 [Unix Timestamp]: http://en.wikipedia.org/wiki/Unix_time
 [XMP]: http://en.wikipedia.org/wiki/Extensible_Metadata_Platform
-

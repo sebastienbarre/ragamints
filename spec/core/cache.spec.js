@@ -1,8 +1,6 @@
-'use strict';
+const rewire = require('rewire');
 
-var rewire       = require('rewire');
-
-var mediaData    = require('../data/media');
+const mediaData = require('../data/media');
 
 // store.js uses localStorage. Let's provide an implementation
 // if we are running in node.js, ones that point at a temporary directory
@@ -10,308 +8,307 @@ var mediaData    = require('../data/media');
 // UPDATE: reverting that. This would not test if caching will really
 // work for the user, and coverage would go down. In practice, testing
 // will only be done by CI or contributors.
-// var constants    = require('../lib/constants');
-// var temp = require('temp').track();
-// var temp_dir = temp.mkdirSync(constants.SOFTWARE);
-// var LocalStorage = require('node-localstorage').LocalStorage;
+// const constants    = require('../lib/constants');
+// const temp = require('temp').track();
+// const temp_dir = temp.mkdirSync(constants.SOFTWARE);
+// const LocalStorage = require('node-localstorage').LocalStorage;
 // global.localStorage = new LocalStorage(temp_dir);
 
-var cache        = rewire('../../lib/core/cache.js');
+const cache = rewire('../../lib/core/cache.js');
 
-/*eslint-disable max-nested-callbacks */
-describe('core.cache', function() {
-  var store = cache.__get__('store');
-  var key = '__test__';
+/* eslint-disable max-nested-callbacks */
+describe('core.cache', () => {
+  const store = cache.__get__('store');
+  const key = '__test__';
 
-  afterEach(function() {
+  afterEach(() => {
     cache.enable();
     store.enabled = true;
   });
 
-  it('sets an integer that can be retrieved then removed', function(done) {
-    var int_value = 3;
-    cache.set(key, int_value).then(function() {
-      cache.get(key).then(function(value) {
+  it('sets an integer that can be retrieved then removed', (done) => {
+    const int_value = 3;
+    cache.set(key, int_value).then(() => {
+      cache.get(key).then((value) => {
         expect(value).toBe(int_value);
-        cache.remove(key).then(function() {
-          cache.get(key).then(function() {
-            done.fail(key + ' key was not removed');
-          }, function(err) {
+        cache.remove(key).then(() => {
+          cache.get(key).then(() => {
+            done.fail(`${key} key was not removed`);
+          }, (err) => {
             expect(err).toBeUndefined();
             done();
           });
-        }, function(err) {
+        }, (err) => {
           done.fail(err);
         });
-      }, function(err) {
+      }, (err) => {
         done.fail(err);
       });
-    }, function(err) {
+    }, (err) => {
       done.fail(err);
     });
   });
 
-  it('sets a string that can be retrieved then removed', function(done) {
-    var string_value = 'foo';
-    cache.set(key, string_value).then(function() {
-      cache.get(key).then(function(value) {
+  it('sets a string that can be retrieved then removed', (done) => {
+    const string_value = 'foo';
+    cache.set(key, string_value).then(() => {
+      cache.get(key).then((value) => {
         expect(value).toBe(string_value);
-        cache.remove(key).then(function() {
-          cache.get(key).then(function() {
-            done.fail(key + ' key was not removed');
-          }, function(err) {
+        cache.remove(key).then(() => {
+          cache.get(key).then(() => {
+            done.fail(`${key} key was not removed`);
+          }, (err) => {
             expect(err).toBeUndefined();
             done();
           });
-        }, function(err) {
+        }, (err) => {
           done.fail(err);
         });
-      }, function(err) {
+      }, (err) => {
         done.fail(err);
       });
-    }, function(err) {
+    }, (err) => {
       done.fail(err);
     });
   });
 
-  it('sets an array that can be retrieved then removed', function(done) {
-    var array_value = [1, 'foo', true];
-    cache.set(key, array_value).then(function() {
-      cache.get(key).then(function(value) {
+  it('sets an array that can be retrieved then removed', (done) => {
+    const array_value = [1, 'foo', true];
+    cache.set(key, array_value).then(() => {
+      cache.get(key).then((value) => {
         expect(value).toEqual(array_value);
-        cache.remove(key).then(function() {
-          cache.get(key).then(function() {
-            done.fail(key + ' key was not removed');
-          }, function(err) {
+        cache.remove(key).then(() => {
+          cache.get(key).then(() => {
+            done.fail(`${key} key was not removed`);
+          }, (err) => {
             expect(err).toBeUndefined();
             done();
           });
-        }, function(err) {
+        }, (err) => {
           done.fail(err);
         });
-      }, function(err) {
+      }, (err) => {
         done.fail(err);
       });
-    }, function(err) {
+    }, (err) => {
       done.fail(err);
     });
   });
 
-  it('sets an object that can be retrieved then removed', function(done) {
-    var object_value = { foo: 'bar', bill: 1, meh: true };
-    cache.set(key, object_value).then(function() {
-      cache.get(key).then(function(value) {
+  it('sets an object that can be retrieved then removed', (done) => {
+    const object_value = { foo: 'bar', bill: 1, meh: true };
+    cache.set(key, object_value).then(() => {
+      cache.get(key).then((value) => {
         expect(value).toEqual(object_value);
-        cache.remove(key).then(function() {
-          cache.get(key).then(function() {
-            done.fail(key + ' key was not removed');
-          }, function(err) {
+        cache.remove(key).then(() => {
+          cache.get(key).then(() => {
+            done.fail(`${key} key was not removed`);
+          }, (err) => {
             expect(err).toBeUndefined();
             done();
           });
-        }, function(err) {
+        }, (err) => {
           done.fail(err);
         });
-      }, function(err) {
+      }, (err) => {
         done.fail(err);
       });
-    }, function(err) {
+    }, (err) => {
       done.fail(err);
     });
   });
 
-  it('sets a cache entry with a TTL and rejects when expired', function(done) {
-    var int_value = 3;
-    var ttl = 30;
-    cache.set(key, int_value, ttl).then(function() {
-      setTimeout(function() {
-        cache.get(key).then(function(value) {
+  it('sets a cache entry with a TTL and rejects when expired', (done) => {
+    const int_value = 3;
+    const ttl = 30;
+    cache.set(key, int_value, ttl).then(() => {
+      setTimeout(() => {
+        cache.get(key).then((value) => {
           expect(value).toBe(int_value);
-          setTimeout(function() {
-            cache.get(key).then(function() {
+          setTimeout(() => {
+            cache.get(key).then(() => {
               done.fail();
-            }, function(err) {
+            }, (err) => {
               expect(err).toBeUndefined();
-              cache.remove(key).then(function() {
+              cache.remove(key).then(() => {
                 done();
               });
             });
           }, ttl * 2);
-        }, function(err) {
+        }, (err) => {
           done.fail(err);
         });
       }, ttl / 2);
-    }, function(err) {
+    }, (err) => {
       done.fail(err);
     });
   });
 
-  it('clears all cache entries', function(done) {
-    var int_value = 3;
-    var key2 = key + '2';
-    cache.set(key, int_value).then(function() {
-      cache.set(key2, int_value).then(function() {
-        cache.clear().then(function() {
-          cache.get(key).then(function() {
-            done.fail(key + ' key was not removed');
-          }, function(err) {
+  it('clears all cache entries', (done) => {
+    const int_value = 3;
+    const key2 = `${key}2`;
+    cache.set(key, int_value).then(() => {
+      cache.set(key2, int_value).then(() => {
+        cache.clear().then(() => {
+          cache.get(key).then(() => {
+            done.fail(`${key} key was not removed`);
+          }, (err) => {
             expect(err).toBeUndefined();
-            cache.get(key2).then(function() {
-              done.fail(key2 + ' key was not removed');
-            }, function(err) {
-              expect(err).toBeUndefined();
+            cache.get(key2).then(() => {
+              done.fail(`${key2} key was not removed`);
+            }, (err2) => {
+              expect(err2).toBeUndefined();
               done();
             });
           });
-        }, function(err) {
+        }, (err) => {
           done.fail(err);
         });
-      }, function(err) {
+      }, (err) => {
         done.fail(err);
       });
-    }, function(err) {
+    }, (err) => {
       done.fail(err);
     });
   });
 
-  it('does not compress small cache entries', function(done) {
-    var int_value = 3;
+  it('does not compress small cache entries', (done) => {
+    const int_value = 3;
     spyOn(cache, 'decompress').and.callThrough();
-    cache.set(key, int_value).then(function() {
-      cache.get(key).then(function(value) {
+    cache.set(key, int_value).then(() => {
+      cache.get(key).then((value) => {
         expect(value).toBe(int_value);
         // note that compress *is* always called to decide whether to store
         // the compressed version or not
         expect(cache.decompress).not.toHaveBeenCalled();
         done();
-      }, function(err) {
+      }, (err) => {
         done.fail(err || 'Could not get value set in cache');
       });
-    }, function(err) {
+    }, (err) => {
       done.fail(err || 'Could not set value in cache');
     });
   });
 
-  it('compresses large cache entries', function(done) {
-    var object_value = mediaData.image.standard;
+  it('compresses large cache entries', (done) => {
+    const object_value = mediaData.image.standard;
     spyOn(cache, 'decompress').and.callThrough();
-    cache.set(key, object_value).then(function() {
-      cache.get(key).then(function(value) {
+    cache.set(key, object_value).then(() => {
+      cache.get(key).then((value) => {
         expect(value).toEqual(object_value);
         // note that compress *is* always called to decide whether to store
         // the compressed version or not
         expect(cache.decompress).toHaveBeenCalled();
         done();
-      }, function(err) {
+      }, (err) => {
         done.fail(err || 'Could not get value set in cache');
       });
-    }, function(err) {
+    }, (err) => {
       done.fail(err || 'Could not set value in cache');
     });
   });
 
-  it('fails to set when the cache is disabled', function(done) {
-    var int_value = 3;
+  it('fails to set when the cache is disabled', (done) => {
+    const int_value = 3;
     cache.disable();
-    cache.set(key, int_value).then(function() {
+    cache.set(key, int_value).then(() => {
       done.fail('cache is disabled, set should not succeed');
-    }, function(err) {
+    }, (err) => {
       expect(err).toBeUndefined();
       done();
     });
   });
 
-  it('fails to get when the cache is disabled', function(done) {
-    var int_value = 3;
-    cache.set(key, int_value).then(function() {
-      cache.get(key).then(function(value) {
+  it('fails to get when the cache is disabled', (done) => {
+    const int_value = 3;
+    cache.set(key, int_value).then(() => {
+      cache.get(key).then((value) => {
         expect(value).toBe(int_value);
         cache.disable();
-        cache.get(key).then(function() {
+        cache.get(key).then(() => {
           done.fail('cache is disabled, get should not succeed');
-        }, function(err) {
+        }, (err) => {
           expect(err).toBeUndefined();
           cache.enable();
           cache.remove(key).then(done);
         });
-      }, function(err) {
+      }, (err) => {
         done.fail(err);
       });
-    }, function(err) {
+    }, (err) => {
       done.fail(err);
     });
   });
 
-  it('fails to remove when the cache is disabled', function(done) {
-    var int_value = 3;
-    cache.set(key, int_value).then(function() {
-      cache.get(key).then(function(value) {
+  it('fails to remove when the cache is disabled', (done) => {
+    const int_value = 3;
+    cache.set(key, int_value).then(() => {
+      cache.get(key).then((value) => {
         expect(value).toBe(int_value);
         cache.disable();
-        cache.remove(key).then(function() {
+        cache.remove(key).then(() => {
           done.fail('cache is disabled, remove should not succeed');
-        }, function(err) {
+        }, (err) => {
           expect(err).toBeUndefined();
           cache.enable();
           cache.remove(key).then(done);
         });
-      }, function(err) {
+      }, (err) => {
         done.fail(err);
       });
-    }, function(err) {
+    }, (err) => {
       done.fail(err);
     });
   });
 
-  it('fails to clear when the cache is disabled', function(done) {
-    var int_value = 3;
-    cache.set(key, int_value).then(function() {
-      cache.get(key).then(function(value) {
+  it('fails to clear when the cache is disabled', (done) => {
+    const int_value = 3;
+    cache.set(key, int_value).then(() => {
+      cache.get(key).then((value) => {
         expect(value).toBe(int_value);
         cache.disable();
-        cache.clear().then(function() {
+        cache.clear().then(() => {
           done.fail('cache is disabled, clear should not succeed');
-        }, function(err) {
+        }, (err) => {
           expect(err).toBeUndefined();
           cache.enable();
           cache.clear(key).then(done);
         });
-      }, function(err) {
+      }, (err) => {
         done.fail(err);
       });
-    }, function(err) {
+    }, (err) => {
       done.fail(err);
     });
   });
 
-  it('creates a stable hash given an object', function() {
-    var object_value = { foo: 'bar', bill: 1, meh: true };
-    var hash = cache.hash(object_value);
+  it('creates a stable hash given an object', () => {
+    const object_value = { foo: 'bar', bill: 1, meh: true };
+    const hash = cache.hash(object_value);
     expect(hash).toEqual('d2415012f4d369bd4a9ce0f4eda3c0d4');
   });
 
-  it('rejects when the internal store is not set properly', function(done) {
+  it('rejects when the internal store is not set properly', (done) => {
     store.enabled = false;
-    var int_value = 3;
-    cache.set(key, int_value).then(function() {
+    const int_value = 3;
+    cache.set(key, int_value).then(() => {
       done.fail();
-    }, function(err) {
+    }, (err) => {
       expect(err.message).toBe('Local storage is not supported.');
-      cache.get(key).then(function() {
+      cache.get(key).then(() => {
         done.fail();
-      }, function() {
-        cache.remove(key).then(function() {
+      }, () => {
+        cache.remove(key).then(() => {
           done.fail();
-        }, function() {
-          cache.clear().then(function() {
+        }, () => {
+          cache.clear().then(() => {
             done.fail();
-          }, function() {
+          }, () => {
             done();
           });
         });
       });
     });
   });
-
 });
-/*eslint-enable max-nested-callbacks */
+/* eslint-enable max-nested-callbacks */

@@ -1,30 +1,25 @@
-'use strict';
+const utils = require('../../lib/core/utils');
 
-var utils = require('../../lib/core/utils.js');
-
-describe('core.utils', function() {
-
-  describe('core.utils.padRight', function() {
-    it('pads a string to the right', function() {
-      expect(utils.padRight('foo',
-      ' ', 5)).toEqual('foo  ');
+describe('core.utils', () => {
+  describe('core.utils.padRight', () => {
+    it('pads a string to the right', () => {
+      expect(utils.padRight('foo', ' ', 5)).toEqual('foo  ');
     });
   });
 
-  describe('core.utils.padLeftZero', function() {
-    it('pads a number to the left with zeros', function() {
+  describe('core.utils.padLeftZero', () => {
+    it('pads a number to the left with zeros', () => {
       expect(utils.padLeftZero(15, 4)).toEqual('0015');
     });
   });
 
-  describe('core.utils.isUnixTimestamp', function() {
-    it('checks if a timestamp is valid', function() {
+  describe('core.utils.isUnixTimestamp', () => {
+    it('checks if a timestamp is valid', () => {
       expect(utils.isUnixTimestamp('1430734958')).toBe(true);
     });
 
-    it('checks if a timestamp is invalid', function() {
+    it('checks if a timestamp is invalid', () => {
       expect(utils.isUnixTimestamp('foobar')).not.toBe(true);
     });
   });
-
 });

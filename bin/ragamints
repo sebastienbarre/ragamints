@@ -1,24 +1,10 @@
 #!/usr/bin/env node
-'use strict';
+const cli = require('../lib/cli');
+const core = require('../lib/core');
 
-var iojs  = require('is-iojs');
-
-// Thanks for maximilianschmitt for this launcher
-// https://gist.github.com/maximilianschmitt/8ef57cb679fbf764b108
-if (!iojs && Number(process.version.match(/^v(\d+)/)[1]) < 4) {
-  // var pjson = require('../package.json');
-  require('babel-register')({
-    // ignore: new RegExp(pjson.name + '/node_modules')
-  });
-  require('babel-polyfill');
-}
-
-var cli  = require('../lib/cli');
-var core = require('../lib/core');
-
-cli.main(process.argv.slice(2)).then(function() {
+cli.main(process.argv.slice(2)).then(() => {
   process.exit(0);
-}).catch(function(err) {
+}).catch((err) => {
   if (err) {
     core.logger.log(
       core.logger.error(err.error_message || err.message || err.body));
