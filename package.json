@@ -63,7 +63,7 @@
   "preferGlobal": true,
   "bin": "./bin/ragamints",
   "dependencies": {
-    "babel": "^5.8.29",
+    "babel": "^6.1.18",
     "chalk": "^1.1.1",
     "download": "^4.4.3",
     "es6-promise": "^3.0.2",
